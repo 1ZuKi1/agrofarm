@@ -103,5 +103,72 @@ if ($action === 'save_product') {
   exit;
 }
 
+if ($action === 'save_variant') {
+  $id = $_POST['id'] ?? '';
+  $productId = (int)($_POST['product_id'] ?? 0);
+  $nameMn = trim($_POST['name_mn'] ?? '');
+  $nameEn = trim($_POST['name_en'] ?? '') ?: null;
+  $price = (int)($_POST['price'] ?? -1);
+  $stock = (int)($_POST['stock'] ?? -1);
+  $weightLabel = trim($_POST['weight_label'] ?? '') ?: null;
+  $standardCode = trim($_POST['standard_code'] ?? '') ?: null;
+  $storageTextMn = trim($_POST['storage_text_mn'] ?? '') ?: null;
+  $storageTextEn = trim($_POST['storage_text_en'] ?? '') ?: null;
+  $benefitsTextMn = trim($_POST['benefits_text_mn'] ?? '') ?: null;
+  $benefitsTextEn = trim($_POST['benefits_text_en'] ?? '') ?: null;
+  $usageTextMn = trim($_POST['usage_text_mn'] ?? '') ?: null;
+  $usageTextEn = trim($_POST['usage_text_en'] ?? '') ?: null;
+  $imagePath = trim($_POST['image_path'] ?? '') ?: null;
+  $active = ($_POST['active'] ?? '1') === '1' ? 1 : 0;
+  $sortOrder = (int)($_POST['sort_order'] ?? 0);
+
+  if ($productId <= 0) {
+    http_response_code(400);
+    echo json_encode(['error' => 'product_id is required']);
+    exit;
+  }
+  if ($nameMn === '') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Variant name (Mongolian) is required']);
+    exit;
+  }
+  if ($price < 0) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Price must be zero or a positive whole number']);
+    exit;
+  }
+  if ($stock < 0) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Stock must be zero or a positive whole number']);
+    exit;
+  }
+
+  $fields = [
+    $productId, $nameMn, $nameEn, $price, $stock, $weightLabel, $standardCode,
+    $storageTextMn, $storageTextEn, $benefitsTextMn, $benefitsTextEn,
+    $usageTextMn, $usageTextEn, $imagePath, $active, $sortOrder,
+  ];
+
+  if ($id !== '') {
+    $stmt = $pdo->prepare(
+      'UPDATE product_variants SET product_id=?, name_mn=?, name_en=?, price=?, stock=?, weight_label=?,
+       standard_code=?, storage_text_mn=?, storage_text_en=?, benefits_text_mn=?, benefits_text_en=?,
+       usage_text_mn=?, usage_text_en=?, image_path=?, active=?, sort_order=? WHERE id=?'
+    );
+    $stmt->execute([...$fields, (int)$id]);
+    echo json_encode(['id' => (int)$id]);
+  } else {
+    $stmt = $pdo->prepare(
+      'INSERT INTO product_variants (product_id, name_mn, name_en, price, stock, weight_label,
+       standard_code, storage_text_mn, storage_text_en, benefits_text_mn, benefits_text_en,
+       usage_text_mn, usage_text_en, image_path, active, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    $stmt->execute($fields);
+    echo json_encode(['id' => (int)$pdo->lastInsertId()]);
+  }
+  exit;
+}
+
 http_response_code(400);
 echo json_encode(['error' => 'Unknown action']);
