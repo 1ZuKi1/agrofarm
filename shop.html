@@ -41,6 +41,9 @@
     <span class="cart-toggle__badge" id="cartBadge" hidden>0</span>
   </a>
   <button class="lang-toggle" id="langToggle" aria-label="Switch language">MN</button>
+  <button class="nav__burger" id="burger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
 </header>
 
 <main>
@@ -49,13 +52,13 @@
   <div class="cart-drawer__backdrop" id="cartDrawerBackdrop"></div>
   <div class="cart-drawer__panel">
     <div class="cart-drawer__head">
-      <h2>Cart</h2>
+      <h2 data-en="Cart" data-mn="Сагс">Cart</h2>
       <button type="button" id="cartDrawerClose" aria-label="Close cart">✕</button>
     </div>
     <div class="cart-drawer__items" id="cartDrawerItems"></div>
     <div class="cart-drawer__footer">
       <p class="cart-drawer__total" id="cartDrawerTotal"></p>
-      <button type="button" class="btn btn--gold" id="cartCheckoutBtn" disabled title="Coming soon">Proceed to checkout</button>
+      <button type="button" class="btn btn--gold" id="cartCheckoutBtn" disabled title="Coming soon" data-en="Proceed to checkout" data-mn="Захиалга үргэлжлүүлэх">Proceed to checkout</button>
     </div>
   </div>
 </div>

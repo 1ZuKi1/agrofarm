@@ -155,30 +155,37 @@
   }, { threshold: 0.5 });
   document.querySelectorAll(".stat__num").forEach((el) => counterObserver.observe(el));
 
-  /* ---------- Scroll-spy dots + dark-section inversion ---------- */
+  /* ---------- Scroll-spy dots + dark-section inversion ----------
+     #dots is homepage-only — shop.html and news.html have no such element,
+     so skip this setup entirely there rather than throwing (a throw here
+     would abort every later top-level statement in this IIFE, including the
+     burger-menu wiring and the window.fetchNews/window.renderNewsPost
+     assignments those pages depend on). */
   const dotsNav = document.getElementById("dots");
-  const dotLinks = [...dotsNav.querySelectorAll("a")];
-  const darkSections = new Set(["hero", "farms", "recognition"]);
-  // Fires when a section's boundary crosses the vertical middle of the
-  // viewport, so it works regardless of how tall the section is (a
-  // threshold-based ratio like 0.45 never reaches that fraction for
-  // sections much taller than the viewport, e.g. Journey, Recognition).
-  const spyObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      const id = entry.target.id;
-      dotLinks.forEach((a) => a.classList.toggle("is-active", a.dataset.spy === id));
-      // Invert dot colors while a dark section fills the viewport
-      dotsNav.classList.toggle("dots--light", darkSections.has(id));
-      // Mirror active state in the header links
-      document.querySelectorAll(".nav__links a").forEach((a) =>
-        a.classList.toggle("is-active", a.getAttribute("href") === "#" + id));
+  if (dotsNav) {
+    const dotLinks = [...dotsNav.querySelectorAll("a")];
+    const darkSections = new Set(["hero", "farms", "recognition"]);
+    // Fires when a section's boundary crosses the vertical middle of the
+    // viewport, so it works regardless of how tall the section is (a
+    // threshold-based ratio like 0.45 never reaches that fraction for
+    // sections much taller than the viewport, e.g. Journey, Recognition).
+    const spyObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const id = entry.target.id;
+        dotLinks.forEach((a) => a.classList.toggle("is-active", a.dataset.spy === id));
+        // Invert dot colors while a dark section fills the viewport
+        dotsNav.classList.toggle("dots--light", darkSections.has(id));
+        // Mirror active state in the header links
+        document.querySelectorAll(".nav__links a").forEach((a) =>
+          a.classList.toggle("is-active", a.getAttribute("href") === "#" + id));
+      });
+    }, { rootMargin: "-50% 0px -50% 0px", threshold: 0 });
+    dotLinks.forEach((a) => {
+      const section = document.getElementById(a.dataset.spy);
+      if (section) spyObserver.observe(section);
     });
-  }, { rootMargin: "-50% 0px -50% 0px", threshold: 0 });
-  dotLinks.forEach((a) => {
-    const section = document.getElementById(a.dataset.spy);
-    if (section) spyObserver.observe(section);
-  });
+  }
 
   /* ---------- rAF-throttled scroll handler ----------
      A single passive listener sets a flag; the work happens at most once per

@@ -11,6 +11,23 @@
     return document.documentElement.lang || "en";
   }
 
+  /** Pick the EN/MN string for the current language, read fresh at render time.
+   * script.js's setLanguage() sets document.documentElement.lang synchronously
+   * before any shop.js render can run (script.js executes first and applies
+   * the saved preference before DOMContentLoaded), so this is always accurate
+   * — including for content shop.js creates AFTER a language toggle, which
+   * setLanguage()'s one-time querySelectorAll sweep would otherwise miss. */
+  function t(en, mn) {
+    return newsLangSafe() === "mn" ? mn : en;
+  }
+
+  /** Product/variant display name per the spec's carve-out: names translate
+   * normally (falling back to the MN name until name_en is populated), unlike
+   * benefits/usage/storage/ingredients which stay Mongolian-only. */
+  function variantDisplayName(v) {
+    return t(v.name_en || v.name_mn, v.name_mn);
+  }
+
   function escHtmlShop(str) {
     const div = document.createElement("div");
     div.textContent = str == null ? "" : String(str);
@@ -29,12 +46,25 @@
       const data = await res.json();
       shopProducts = data.products || [];
     } catch {
-      root.innerHTML = '<p class="news-archive__empty" style="display:block">Could not load products — try again later.</p>';
+      const msgEn = "Could not load products — try again later.";
+      const msgMn = "Бүтээгдэхүүн ачаалж чадсангүй — дараа дахин оролдоно уу.";
+      root.innerHTML = `<p class="news-archive__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
       return;
     }
 
+    // shopProducts is now populated — if the cart drawer should be showing
+    // (either the #cart deep link on first load, or something opened it
+    // while this fetch was still in flight), sync it now so it never renders
+    // against the still-empty pre-fetch shopProducts array.
+    const drawer = document.getElementById("cartDrawer");
+    if (location.hash === "#cart" || drawer?.classList.contains("is-open")) {
+      openCartDrawer();
+    }
+
     if (!shopProducts.length || !shopProducts[0].variants.length) {
-      root.innerHTML = '<p class="news-archive__empty" style="display:block">No products yet — check back soon.</p>';
+      const msgEn = "No products yet — check back soon.";
+      const msgMn = "Одоогоор бүтээгдэхүүн алга — удахгүй дахин орно уу.";
+      root.innerHTML = `<p class="news-archive__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
       return;
     }
 
@@ -49,7 +79,7 @@
       <div class="shop-product">
         <div class="shop-product__switcher" role="tablist">
           ${product.variants.map((v) => `
-            <button type="button" class="variant-pill${v.id === activeVariantId ? ' is-active' : ''}" data-variant-id="${v.id}">${escHtmlShop(v.name_mn)}</button>
+            <button type="button" class="variant-pill${v.id === activeVariantId ? ' is-active' : ''}" data-variant-id="${v.id}" data-en="${escAttrShop(v.name_en || v.name_mn)}" data-mn="${escAttrShop(v.name_mn)}">${escHtmlShop(variantDisplayName(v))}</button>
           `).join('')}
         </div>
         <div id="shopVariantDetail"></div>
@@ -68,28 +98,32 @@
   }
 
   function renderVariantDetail(product) {
-    const variant = product.variants.find((v) => v.id === activeVariantId);
+    const variant = product.variants.find((v) => Number(v.id) === Number(activeVariantId));
     const detail = document.getElementById("shopVariantDetail");
     const inStock = variant.stock > 0;
+    const displayName = variantDisplayName(variant);
+
+    const stockEn = inStock ? `In stock: ${variant.stock}` : "Out of stock";
+    const stockMn = inStock ? `Нөөцөд бий: ${variant.stock}` : "Дууссан";
 
     detail.innerHTML = `
       <div class="shop-variant">
-        ${variant.image_path ? `<img class="shop-variant__img" src="${escAttrShop(variant.image_path)}" alt="${escAttrShop(variant.name_mn)}">` : ''}
+        ${variant.image_path ? `<img class="shop-variant__img" src="${escAttrShop(variant.image_path)}" alt="${escAttrShop(displayName)}">` : ''}
         <div class="shop-variant__body">
-          <h2 class="shop-variant__name">${escHtmlShop(variant.name_mn)}</h2>
+          <h2 class="shop-variant__name" data-en="${escAttrShop(variant.name_en || variant.name_mn)}" data-mn="${escAttrShop(variant.name_mn)}">${escHtmlShop(displayName)}</h2>
           <p class="shop-variant__price">${variant.price.toLocaleString()}₮ <span class="shop-variant__weight">${escHtmlShop(variant.weight_label || '')}</span></p>
-          <p class="shop-variant__stock">${inStock ? `In stock: ${variant.stock}` : 'Out of stock'}</p>
+          <p class="shop-variant__stock" data-en="${escAttrShop(stockEn)}" data-mn="${escAttrShop(stockMn)}">${escHtmlShop(t(stockEn, stockMn))}</p>
           ${variant.benefits_text_mn ? `<p class="shop-variant__benefits">${escHtmlShop(variant.benefits_text_mn)}</p>` : ''}
           <div class="shop-variant__qty">
-            <label for="shopQty">Qty</label>
+            <label for="shopQty" data-en="Qty" data-mn="Тоо ширхэг">${escHtmlShop(t("Qty", "Тоо ширхэг"))}</label>
             <input type="number" id="shopQty" min="1" max="${variant.stock}" value="1" ${inStock ? '' : 'disabled'}>
-            <button type="button" class="btn btn--gold" id="shopAddToCart" ${inStock ? '' : 'disabled'}>Add to cart</button>
+            <button type="button" class="btn btn--gold" id="shopAddToCart" data-en="Add to cart" data-mn="Сагслах" ${inStock ? '' : 'disabled'}>${escHtmlShop(t("Add to cart", "Сагслах"))}</button>
           </div>
-          ${variant.usage_text_mn ? `<div class="shop-variant__section"><h3>Usage</h3><p>${escHtmlShop(variant.usage_text_mn)}</p></div>` : ''}
-          ${variant.storage_text_mn ? `<div class="shop-variant__section"><h3>Storage</h3><p>${escHtmlShop(variant.storage_text_mn)}</p></div>` : ''}
+          ${variant.usage_text_mn ? `<div class="shop-variant__section"><h3 data-en="Usage" data-mn="Хэрэглээ">${escHtmlShop(t("Usage", "Хэрэглээ"))}</h3><p>${escHtmlShop(variant.usage_text_mn)}</p></div>` : ''}
+          ${variant.storage_text_mn ? `<div class="shop-variant__section"><h3 data-en="Storage" data-mn="Хадгалалт">${escHtmlShop(t("Storage", "Хадгалалт"))}</h3><p>${escHtmlShop(variant.storage_text_mn)}</p></div>` : ''}
           ${variant.ingredients.length ? `
             <div class="shop-variant__section">
-              <h3>Ingredients</h3>
+              <h3 data-en="Ingredients" data-mn="Найрлага">${escHtmlShop(t("Ingredients", "Найрлага"))}</h3>
               <div class="ingredient-table">
                 ${variant.ingredients.map((ing) => `<div class="ingredient-table__row"><span>${escHtmlShop(ing.name)}</span><span>${escHtmlShop(ing.percentage)}</span></div>`).join('')}
               </div>
@@ -123,7 +157,7 @@
     const totalEl = document.getElementById("cartDrawerTotal");
 
     if (!cart.length) {
-      items.innerHTML = '<p class="cart-drawer__empty">Your cart is empty.</p>';
+      items.innerHTML = `<p class="cart-drawer__empty" data-en="Your cart is empty." data-mn="Таны сагс хоосон байна.">${escHtmlShop(t("Your cart is empty.", "Таны сагс хоосон байна."))}</p>`;
       totalEl.textContent = "";
       return;
     }
@@ -137,9 +171,10 @@
       if (!variant) return "";
       const lineTotal = variant.price * line.quantity;
       total += lineTotal;
+      const displayName = variantDisplayName(variant);
       return `
         <div class="cart-drawer__item" data-variant-id="${variant.id}">
-          <div class="cart-drawer__item-name">${escHtmlShop(variant.name_mn)}</div>
+          <div class="cart-drawer__item-name" data-en="${escAttrShop(variant.name_en || variant.name_mn)}" data-mn="${escAttrShop(variant.name_mn)}">${escHtmlShop(displayName)}</div>
           <div class="cart-drawer__item-row">
             <input type="number" class="cart-drawer__qty" min="1" max="${variant.stock}" step="1" value="${line.quantity}" data-variant-id="${escAttrShop(variant.id)}">
             <span>${lineTotal.toLocaleString()}₮</span>
@@ -149,7 +184,7 @@
       `;
     }).join("");
 
-    totalEl.textContent = `Total: ${total.toLocaleString()}₮`;
+    totalEl.innerHTML = `<span data-en="Total" data-mn="Нийт">${escHtmlShop(t("Total", "Нийт"))}</span>: ${total.toLocaleString()}₮`;
 
     items.querySelectorAll(".cart-drawer__qty").forEach((input) => {
       input.addEventListener("change", () => {
@@ -184,6 +219,9 @@
     }
     document.getElementById("cartDrawerClose")?.addEventListener("click", closeCartDrawer);
     document.getElementById("cartDrawerBackdrop")?.addEventListener("click", closeCartDrawer);
-    if (location.hash === "#cart") openCartDrawer();
+    // The #cart deep-link open is handled inside loadShop()'s success path
+    // (above), after shopProducts is populated — opening it here too would
+    // race the still-in-flight fetch and render the drawer against an empty
+    // shopProducts array (see loadShop's comment).
   });
 })();
