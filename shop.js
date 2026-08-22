@@ -3,6 +3,7 @@
 
   let shopProducts = [];
   let activeVariantId = null;
+  let qrPollInterval = null; // active QPay status-poll interval, if any (see stopQrPolling)
 
   function newsLangSafe() {
     // Mirrors script.js's newsLang() but shop.js is a separate file — this
@@ -217,12 +218,25 @@
     document.querySelector(".cart-drawer__footer").style.display = "";
   }
 
+  /** Clears the QPay status-poll interval started by renderQrScreen, if one
+   * is running. Called whenever the drawer leaves the QR screen (closed via
+   * #cartDrawerClose/backdrop, or reopened to the cart view) so the poll
+   * never keeps firing after its screen is gone. */
+  function stopQrPolling() {
+    if (qrPollInterval) {
+      clearInterval(qrPollInterval);
+      qrPollInterval = null;
+    }
+  }
+
   function openCartDrawer() {
+    stopQrPolling();
     resetCartPanelToCartView();
     renderCartDrawer();
     document.getElementById("cartDrawer").classList.add("is-open");
   }
   function closeCartDrawer() {
+    stopQrPolling();
     document.getElementById("cartDrawer").classList.remove("is-open");
   }
 
@@ -379,6 +393,101 @@
     });
   }
 
+  /* ---------- QR payment screen + polling ----------
+     Rendered by renderCheckoutForm's submit handler once order-create.php
+     returns successfully (window.renderQrScreen call above). Repurposes
+     #cartDrawerItems the same way renderCheckoutForm does, and leaves
+     #cartDrawerClose alone — it's already bound once at the bottom of this
+     file and, via closeCartDrawer's stopQrPolling() call, stops the poll
+     when clicked without needing a listener here. */
+  function renderQrScreen(orderData) {
+    stopQrPolling();
+
+    const heading = document.querySelector(".cart-drawer__head h2");
+    heading.dataset.en = "Scan to pay";
+    heading.dataset.mn = "Сканнердаж төлнө үү";
+    heading.textContent = t("Scan to pay", "Сканнердаж төлнө үү");
+    document.querySelector(".cart-drawer__footer").style.display = "none";
+
+    const items = document.getElementById("cartDrawerItems");
+    // qr_image can be null if QPay's response omitted it (order-create.php
+    // falls back to null) — skip the <img> rather than rendering a broken
+    // image; the waiting text below still makes the state clear.
+    const qrImg = orderData.qr_image
+      ? `<img class="qr-screen__img" src="data:image/png;base64,${escAttrShop(orderData.qr_image)}" alt="QPay QR code">`
+      : "";
+    items.innerHTML = `
+      <div class="qr-screen">
+        ${qrImg}
+        <p class="qr-screen__total">${orderData.total.toLocaleString()}₮</p>
+        <p class="qr-screen__waiting" data-en="Waiting for payment…" data-mn="Төлбөр хүлээгдэж байна…">${escHtmlShop(t("Waiting for payment…", "Төлбөр хүлээгдэж байна…"))}</p>
+      </div>
+    `;
+
+    const token = orderData.token;
+    qrPollInterval = setInterval(() => {
+      fetch(`order-status.php?token=${encodeURIComponent(token)}`)
+        .then((r) => r.json())
+        .then((status) => {
+          if (status.status === "paid") {
+            stopQrPolling();
+            renderConfirmation(token, status);
+          } else if (status.status === "expired" || status.status === "cancelled") {
+            stopQrPolling();
+            const waiting = document.querySelector(".qr-screen__waiting");
+            if (waiting) {
+              const enMsg = "This order expired — please try again";
+              const mnMsg = "Энэ захиалга хугацаа дууссан — дахин оролдоно уу";
+              waiting.dataset.en = enMsg;
+              waiting.dataset.mn = mnMsg;
+              waiting.textContent = t(enMsg, mnMsg);
+            }
+          }
+        })
+        .catch(() => {}); // transient network error — next poll retries
+    }, 3000);
+  }
+  window.renderQrScreen = renderQrScreen;
+
+  function renderConfirmation(token, status) {
+    const heading = document.querySelector(".cart-drawer__head h2");
+    heading.dataset.en = "Payment received";
+    heading.dataset.mn = "Төлбөр хүлээн авлаа";
+    heading.textContent = t("Payment received", "Төлбөр хүлээн авлаа");
+    document.querySelector(".cart-drawer__footer").style.display = "none";
+
+    const items = document.getElementById("cartDrawerItems");
+    const orderLink = `${location.origin}/shop.html?order=${token}`;
+    // "Delivery"/"Order link" labels are wrapped in their own data-en/data-mn
+    // span (same pattern as #cartDrawerTotal in renderCartDrawer above) so a
+    // language toggle only swaps the label, not the dynamic value after it —
+    // putting data-en/data-mn on the whole <p> would have setLanguage()
+    // overwrite the date/slot/link with the static attribute text.
+    items.innerHTML = `
+      <div class="order-confirmation">
+        <svg class="order-confirmation__check" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        <p class="order-confirmation__total">${status.total.toLocaleString()}₮</p>
+        <p><span data-en="Delivery" data-mn="Хүргэлт">${escHtmlShop(t("Delivery", "Хүргэлт"))}</span>: ${escHtmlShop(status.delivery_date)} · ${escHtmlShop(status.delivery_slot)}</p>
+        <p class="order-confirmation__link"><span data-en="Order link" data-mn="Захиалгын холбоос">${escHtmlShop(t("Order link", "Захиалгын холбоос"))}</span>: ${escHtmlShop(orderLink)}</p>
+      </div>
+    `;
+  }
+
+  /** Shown for the ?order=<token> deep link (see the DOMContentLoaded
+   * handler below) when the order isn't paid — pending, expired/cancelled,
+   * or not found. Reuses .cart-drawer__empty's centered-message styling
+   * rather than adding a new class for what's just a sentence of text. */
+  function renderOrderStatusMessage(headingEn, headingMn, bodyEn, bodyMn) {
+    const heading = document.querySelector(".cart-drawer__head h2");
+    heading.dataset.en = headingEn;
+    heading.dataset.mn = headingMn;
+    heading.textContent = t(headingEn, headingMn);
+    document.querySelector(".cart-drawer__footer").style.display = "none";
+
+    const items = document.getElementById("cartDrawerItems");
+    items.innerHTML = `<p class="cart-drawer__empty" data-en="${escAttrShop(bodyEn)}" data-mn="${escAttrShop(bodyMn)}">${escHtmlShop(t(bodyEn, bodyMn))}</p>`;
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     const toggle = document.getElementById("cartToggle");
     if (toggle) {
@@ -396,6 +505,31 @@
       checkoutBtn.disabled = false;
       checkoutBtn.removeAttribute("title");
       checkoutBtn.addEventListener("click", renderCheckoutForm);
+    }
+
+    // Bookmarkable confirmation link: ?order=<token> (a query param, distinct
+    // from the #cart hash handled inside loadShop()) opens the drawer
+    // straight to that order's current status. Independent of shopProducts —
+    // order-status.php doesn't need product data — so no race to guard here.
+    const orderToken = new URLSearchParams(location.search).get("order");
+    if (orderToken) {
+      document.getElementById("cartDrawer")?.classList.add("is-open");
+      fetch(`order-status.php?token=${encodeURIComponent(orderToken)}`)
+        .then((r) => r.json())
+        .then((status) => {
+          if (status.status === "paid") {
+            renderConfirmation(orderToken, status);
+          } else if (status.status === "pending") {
+            renderOrderStatusMessage("Order pending", "Захиалга хүлээгдэж байна", "This order hasn't been paid yet.", "Энэ захиалга төлөгдөөгүй байна.");
+          } else if (status.status === "expired" || status.status === "cancelled") {
+            renderOrderStatusMessage("Order expired", "Захиалгын хугацаа дууссан", "This order is no longer active.", "Энэ захиалга идэвхгүй боллоо.");
+          } else {
+            renderOrderStatusMessage("Order not found", "Захиалга олдсонгүй", "We couldn't find that order.", "Тухайн захиалга олдсонгүй.");
+          }
+        })
+        .catch(() => {
+          renderOrderStatusMessage("Order not found", "Захиалга олдсонгүй", "We couldn't find that order.", "Тухайн захиалга олдсонгүй.");
+        });
     }
   });
 })();

@@ -1050,3 +1050,14 @@ input, textarea, select{ font-size:16px !important; }
 .slot-picker__slots{ display:flex; gap:.5rem; flex-wrap:wrap; }
 .slot-btn{ font-size:.8rem; padding:.4rem 1rem; }
 #checkoutBackBtn{ background:none; border:none; color:var(--ink-soft); cursor:pointer; text-decoration:underline; padding:.5rem; align-self:center; }
+
+/* ============ QR payment + confirmation (inside cart drawer) ============ */
+.qr-screen{ text-align:center; padding:1.5rem 0; }
+.qr-screen__img{ width:220px; height:220px; margin:0 auto 1.2rem; border-radius:12px; box-shadow:var(--shadow-1); }
+.qr-screen__total{ font-family:var(--serif); font-size:1.8rem; color:var(--green); margin-bottom:.8rem; }
+.qr-screen__waiting{ color:var(--ink-soft); animation:qrPulse 1.8s ease-in-out infinite; }
+@keyframes qrPulse{ 0%,100%{ opacity:.5; } 50%{ opacity:1; } }
+.order-confirmation{ text-align:center; padding:1.5rem 0; }
+.order-confirmation__check{ width:56px; height:56px; margin-bottom:1rem; }
+.order-confirmation__total{ font-family:var(--serif); font-size:1.6rem; color:var(--green); margin-bottom:.8rem; }
+.order-confirmation__link{ font-size:.75rem; color:var(--ink-soft); word-break:break-all; margin-top:1rem; }
