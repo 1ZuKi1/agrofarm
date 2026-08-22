@@ -177,5 +177,55 @@ if ($action === 'save_variant') {
   exit;
 }
 
+if ($action === 'save_ingredients') {
+  $variantId = (int)($_POST['variant_id'] ?? 0);
+  $ingredientsJson = $_POST['ingredients'] ?? '[]';
+  $ingredients = json_decode($ingredientsJson, true);
+
+  if ($variantId <= 0) {
+    http_response_code(400);
+    echo json_encode(['error' => 'variant_id is required']);
+    exit;
+  }
+  if (!is_array($ingredients)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid ingredients format']);
+    exit;
+  }
+
+  try {
+    $pdo->beginTransaction();
+    $pdo->prepare('DELETE FROM variant_ingredients WHERE variant_id = ?')->execute([$variantId]);
+    $insert = $pdo->prepare('INSERT INTO variant_ingredients (variant_id, name, percentage, sort_order) VALUES (?, ?, ?, ?)');
+    foreach ($ingredients as $i => $ing) {
+      $name = trim($ing['name'] ?? '');
+      $percentage = trim($ing['percentage'] ?? '');
+      if ($name === '' || $percentage === '') continue;
+      $insert->execute([$variantId, $name, $percentage, $i]);
+    }
+    $pdo->commit();
+
+    echo json_encode(['ok' => true]);
+  } catch (PDOException $e) {
+    http_response_code(400);
+    echo json_encode(['error' => str_contains($e->getMessage(), 'foreign key')
+      ? 'Could not save ingredients — check that the variant still exists'
+      : 'Could not save ingredients']);
+  }
+  exit;
+}
+
+if ($action === 'delete_variant') {
+  $id = (int)($_POST['id'] ?? 0);
+  if ($id <= 0) {
+    http_response_code(400);
+    echo json_encode(['error' => 'id is required']);
+    exit;
+  }
+  $pdo->prepare('DELETE FROM product_variants WHERE id = ?')->execute([$id]);
+  echo json_encode(['ok' => true]);
+  exit;
+}
+
 http_response_code(400);
 echo json_encode(['error' => 'Unknown action']);
