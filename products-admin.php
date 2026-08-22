@@ -219,8 +219,13 @@ if ($action === 'delete_variant') {
     echo json_encode(['error' => 'id is required']);
     exit;
   }
-  $pdo->prepare('DELETE FROM product_variants WHERE id = ?')->execute([$id]);
-  echo json_encode(['ok' => true]);
+  try {
+    $pdo->prepare('DELETE FROM product_variants WHERE id = ?')->execute([$id]);
+    echo json_encode(['ok' => true]);
+  } catch (PDOException $e) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Could not delete — this variant has existing orders. Deactivate it instead.']);
+  }
   exit;
 }
 
