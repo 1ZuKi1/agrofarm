@@ -42,6 +42,51 @@
   langToggle.addEventListener("click", () => setLanguage(currentLang === "mn" ? "en" : "mn"));
   if (currentLang !== "en") setLanguage(currentLang); // apply saved preference on load
 
+  /* ---------- Cart (shared across every page via localStorage) ----------
+     Holds {variantId, quantity} only — never a price. Display price is always
+     looked up live from shop-data.php's response, matching the site's
+     "price is server-authoritative" principle end to end. */
+  const CART_KEY = "naf_cart";
+
+  function getCart() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function setCart(items) {
+    localStorage.setItem(CART_KEY, JSON.stringify(items));
+    updateCartBadge();
+  }
+
+  function addToCart(variantId, quantity) {
+    const cart = getCart();
+    const existing = cart.find((item) => Number(item.variantId) === Number(variantId));
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      cart.push({ variantId, quantity });
+    }
+    setCart(cart);
+  }
+
+  function updateCartBadge() {
+    const badge = document.getElementById("cartBadge");
+    if (!badge) return;
+    const count = getCart().reduce((sum, item) => sum + item.quantity, 0);
+    badge.textContent = String(count);
+    badge.hidden = count === 0;
+  }
+
+  window.getCart = getCart;
+  window.setCart = setCart;
+  window.addToCart = addToCart;
+  window.updateCartBadge = updateCartBadge;
+  updateCartBadge(); // reflect existing cart state on every page load
+
   /* ---------- Hero headline: staggered line-mask reveal ----------
      Each .line clips its inner span; adding .in slides the span up.
      150 ms stagger per line gives the "typeset" feel. */

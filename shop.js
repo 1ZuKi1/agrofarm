@@ -110,4 +110,80 @@
 
   window.getShopProducts = () => shopProducts;
   document.addEventListener("DOMContentLoaded", loadShop);
+
+  /* ---------- Cart drawer ----------
+     Renders window.getCart() lines against the product data already loaded
+     by loadShop() above. Variant ids come from JSON (shop-data.php) on one
+     side and from localStorage (via window.addToCart) on the other, so all
+     lookups compare with Number(...) === Number(...) rather than raw ===
+     to stay safe regardless of how either side's id was typed. */
+  function renderCartDrawer() {
+    const cart = getCart();
+    const items = document.getElementById("cartDrawerItems");
+    const totalEl = document.getElementById("cartDrawerTotal");
+
+    if (!cart.length) {
+      items.innerHTML = '<p class="cart-drawer__empty">Your cart is empty.</p>';
+      totalEl.textContent = "";
+      return;
+    }
+
+    // Resolve each line against the currently loaded product data.
+    const allVariants = shopProducts.flatMap((p) => p.variants);
+    let total = 0;
+
+    items.innerHTML = cart.map((line) => {
+      const variant = allVariants.find((v) => Number(v.id) === Number(line.variantId));
+      if (!variant) return "";
+      const lineTotal = variant.price * line.quantity;
+      total += lineTotal;
+      return `
+        <div class="cart-drawer__item" data-variant-id="${variant.id}">
+          <div class="cart-drawer__item-name">${escHtmlShop(variant.name_mn)}</div>
+          <div class="cart-drawer__item-row">
+            <input type="number" class="cart-drawer__qty" min="1" max="${variant.stock}" step="1" value="${line.quantity}" data-variant-id="${escAttrShop(variant.id)}">
+            <span>${lineTotal.toLocaleString()}₮</span>
+            <button type="button" class="cart-drawer__remove" data-variant-id="${escAttrShop(variant.id)}" aria-label="Remove">✕</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    totalEl.textContent = `Total: ${total.toLocaleString()}₮`;
+
+    items.querySelectorAll(".cart-drawer__qty").forEach((input) => {
+      input.addEventListener("change", () => {
+        const id = Number(input.dataset.variantId);
+        const qty = Math.max(1, Number(input.value) || 1);
+        const cart = getCart();
+        const line = cart.find((l) => Number(l.variantId) === id);
+        if (line) { line.quantity = qty; setCart(cart); renderCartDrawer(); }
+      });
+    });
+    items.querySelectorAll(".cart-drawer__remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.dataset.variantId);
+        setCart(getCart().filter((l) => Number(l.variantId) !== id));
+        renderCartDrawer();
+      });
+    });
+  }
+
+  function openCartDrawer() {
+    renderCartDrawer();
+    document.getElementById("cartDrawer").classList.add("is-open");
+  }
+  function closeCartDrawer() {
+    document.getElementById("cartDrawer").classList.remove("is-open");
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("cartToggle");
+    if (toggle) {
+      toggle.addEventListener("click", (e) => { e.preventDefault(); openCartDrawer(); });
+    }
+    document.getElementById("cartDrawerClose")?.addEventListener("click", closeCartDrawer);
+    document.getElementById("cartDrawerBackdrop")?.addEventListener("click", closeCartDrawer);
+    if (location.hash === "#cart") openCartDrawer();
+  });
 })();
