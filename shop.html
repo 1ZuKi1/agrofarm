@@ -3,20 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>News — Nuudelchin Agro Farm LLC</title>
-<meta name="description" content="News and updates from Nuudelchin Agro Farm LLC — Mongolia's pioneer of cluster dairy farming.">
+<title>Shop — Nuudelchin Agro Farm LLC</title>
+<meta name="description" content="Shop Nuudelchin Agro Farm LLC products — Mongolia's pioneer of cluster dairy farming.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
-<style>
-/* Facebook feed section */
-.fb-feed{ padding:1rem var(--gutter) 5rem; text-align:center; }
-.fb-feed__head{ max-width:720px; margin:0 auto 2rem; }
-.fb-feed__note{ color:var(--ink-soft); font-size:.95rem; margin-top:.6rem; }
-.fb-feed__embed{ display:flex; justify-content:center; text-align:left; }
-.fb-feed__embed .sk-ww-facebook-page-posts{ width:100%; max-width:1300px; text-align:left; }
-</style>
 </head>
 <body>
 
@@ -53,27 +45,14 @@
 
 <main>
 
-<!-- ============ NEWS ARCHIVE ============ -->
+<!-- ============ SHOP ============ -->
 <section class="news-archive">
   <div class="news-archive__head">
-    <p class="kicker reveal" data-en="Updates" data-mn="Мэдээлэл">Updates</p>
-    <h1 class="reveal" data-en="News &amp; <em>Updates</em>" data-mn="Мэдээ &amp; <em>Мэдээлэл</em>">News &amp; <em>Updates</em></h1>
+    <p class="kicker reveal" data-en="Shop" data-mn="Дэлгүүр">Shop</p>
+    <h1 class="reveal" data-en="Our <em>shop</em>" data-mn="Манай <em>дэлгүүр</em>">Our <em>shop</em></h1>
   </div>
-  <div class="news-archive__list" id="newsArchiveList">
-    <p class="news-archive__empty" id="archiveEmpty" data-en="No news yet — check back later." data-mn="Мэдээ байхгүй байна.">No news yet — check back later.</p>
-    <div class="news__loader" id="archiveLoader">Loading…</div>
-  </div>
-</section>
-
-<!-- ============ FACEBOOK FEED ============ -->
-<section class="fb-feed">
-  <div class="fb-feed__head">
-    <p class="kicker reveal" data-en="Facebook" data-mn="Фэйсбүүк">Facebook</p>
-    <h2 class="reveal" data-en="From our <em>Facebook</em>" data-mn="Манай <em>Фэйсбүүк</em>">From our <em>Facebook</em></h2>
-    <p class="fb-feed__note reveal" data-en="Live updates straight from our official Facebook page." data-mn="Албан ёсны Фэйсбүүк хуудаснаас шууд орж ирэх шинэ мэдээлэл.">Live updates straight from our official Facebook page.</p>
-  </div>
-  <div class="fb-feed__embed reveal">
-    <div class="sk-ww-facebook-page-posts" data-embed-id="25699003"></div>
+  <div id="shopRoot">
+    <p class="news-archive__empty" id="shopLoading" data-en="Loading…" data-mn="Ачааллаж байна…">Loading…</p>
   </div>
 </section>
 
@@ -86,41 +65,5 @@
 </footer>
 
 <script src="script.js"></script>
-<script>
-/* Archive page: load and render all posts */
-(async function() {
-  const list = document.getElementById("newsArchiveList");
-  const loader = document.getElementById("archiveLoader");
-  const empty = document.getElementById("archiveEmpty");
-  if (!list) return;
-
-  const posts = await fetchNews();
-  if (loader) loader.remove();
-
-  if (!posts.length) {
-    if (empty) empty.style.display = "block";
-    return;
-  }
-
-  if (empty) empty.style.display = "none";
-
-  posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  posts.forEach((post) => {
-    const html = renderNewsPost(post);
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = html;
-    const el = wrapper.firstElementChild;
-    if (el) {
-      el.classList.add("reveal");
-      list.appendChild(el);
-      observeReveal(el);
-    }
-  });
-})();
-</script>
-
-<!-- SociableKit — renders the Facebook Page feed in the section above. -->
-<script src="https://widgets.sociablekit.com/facebook-page-posts/widget.js" defer></script>
 </body>
 </html>

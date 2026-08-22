@@ -223,6 +223,14 @@ section{ position:relative; }
 }
 .nav__cta:hover{ border-color:var(--gold); background:rgba(212,165,74,.12); }
 
+/* Cart icon + badge — sits right before the language toggle */
+.cart-toggle{ position:relative; display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; }
+.cart-toggle__badge{
+  position:absolute; top:2px; right:0; min-width:18px; height:18px; padding:0 4px;
+  border-radius:999px; background:var(--gold); color:var(--charcoal);
+  font-size:.68rem; font-weight:700; line-height:18px; text-align:center;
+}
+
 /* Language toggle — small pill next to the CTA; inherits nav color state */
 .lang-toggle{
   min-width:44px; min-height:44px; padding:.4rem .9rem;
