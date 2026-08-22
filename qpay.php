@@ -87,3 +87,38 @@ function qpay_check_payment(string $token, string $invoiceId): array {
   }
   return $data;
 }
+
+/**
+ * Sums the settled payment amount from a qpay_check_payment() response.
+ *
+ * NOTE: the PAID response shape (paid_amount, rows[].payment_amount,
+ * rows[].payment_status) was implemented from researched but NOT
+ * live-verified QPay documentation — only the count:0/rows:[] "unpaid" shape
+ * has been live-verified against the sandbox. This MUST be re-confirmed
+ * against a real completed sandbox payment before config.php is switched to
+ * production QPay credentials.
+ *
+ * Favors false negatives: prefers the top-level paid_amount when present and
+ * numeric, otherwise sums rows[].payment_amount. A row with an explicit
+ * payment_status is only counted if that status case-insensitively contains
+ * "PAID" or "SUCCESS"; a row with no payment_status key at all is counted
+ * toward the sum regardless (the field's presence/name is the uncertain
+ * part, so its absence is not treated as a failure signal).
+ */
+function qpay_paid_amount(array $check): float {
+  if (isset($check['paid_amount']) && is_numeric($check['paid_amount'])) {
+    return (float)$check['paid_amount'];
+  }
+  $sum = 0.0;
+  foreach (($check['rows'] ?? []) as $row) {
+    if (!is_array($row)) continue;
+    if (isset($row['payment_status'])) {
+      $status = strtoupper((string)$row['payment_status']);
+      if (strpos($status, 'PAID') === false && strpos($status, 'SUCCESS') === false) {
+        continue;
+      }
+    }
+    $sum += (float)($row['payment_amount'] ?? 0);
+  }
+  return $sum;
+}

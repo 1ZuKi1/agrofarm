@@ -64,7 +64,7 @@ $pdo = naf_db();
 $pdo->exec("UPDATE orders SET status='expired' WHERE status='pending' AND expires_at < NOW()");
 
 $slotCountStmt = $pdo->prepare(
-  "SELECT COUNT(*) FROM orders WHERE delivery_date=? AND delivery_slot=? AND status IN ('pending','paid')"
+  "SELECT COUNT(*) FROM orders WHERE delivery_date=? AND delivery_slot=? AND status IN ('pending','paid','fulfilled')"
 );
 $slotCountStmt->execute([$deliveryDate, $deliverySlot]);
 if ((int)$slotCountStmt->fetchColumn() >= 5) {
@@ -77,7 +77,7 @@ $variantStmt = $pdo->prepare('SELECT id, name_mn, price, stock FROM product_vari
 $reservedStmt = $pdo->prepare(
   "SELECT COALESCE(SUM(oi.quantity),0) FROM order_items oi
    JOIN orders o ON o.id = oi.order_id
-   WHERE oi.variant_id = ? AND o.status IN ('pending','paid')"
+   WHERE oi.variant_id = ? AND o.status IN ('pending','paid','fulfilled')"
 );
 
 // Merge quantities by variant_id first, so a request that lists the same
@@ -145,15 +145,16 @@ try {
   exit;
 }
 
-$expiresAt = (new DateTime('+20 minutes'))->format('Y-m-d H:i:s');
-
 $pdo->beginTransaction();
 try {
+  // expires_at is computed via MySQL's own NOW() rather than a PHP-computed
+  // value, so it's always consistent with the NOW() used by every lazy-
+  // expiry sweep, regardless of any PHP/MySQL timezone mismatch.
   $orderStmt = $pdo->prepare(
     "INSERT INTO orders (public_token, status, buyer_name, buyer_phone, buyer_address, buyer_note, delivery_date, delivery_slot, subtotal, total, qpay_invoice_id, expires_at)
-     VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+     VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 20 MINUTE))"
   );
-  $orderStmt->execute([$publicToken, $buyerName, $buyerPhone, $buyerAddress, $buyerNote, $deliveryDate, $deliverySlot, $total, $total, $invoice['invoice_id'], $expiresAt]);
+  $orderStmt->execute([$publicToken, $buyerName, $buyerPhone, $buyerAddress, $buyerNote, $deliveryDate, $deliverySlot, $total, $total, $invoice['invoice_id']]);
   $orderId = (int)$pdo->lastInsertId();
 
   $itemStmt = $pdo->prepare(

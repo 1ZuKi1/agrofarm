@@ -37,7 +37,14 @@ if ($order['status'] === 'pending') {
   try {
     $qpayToken = qpay_token();
     $check = qpay_check_payment($qpayToken, $order['qpay_invoice_id']);
-    if (($check['count'] ?? 0) > 0) {
+    // count:0 (no payment row on file) is definitely not-paid and leaves
+    // $order['status'] untouched below. A count > 0 alone does NOT prove a
+    // settled full payment — see qpay.php's qpay_paid_amount() docblock:
+    // this amount check was implemented from researched (not
+    // live-verified-against-a-real-payment) QPay response field names, and
+    // MUST be re-confirmed against a real completed sandbox payment before
+    // switching config.php to production QPay credentials.
+    if (($check['count'] ?? 0) > 0 && qpay_paid_amount($check) >= (float)$order['total']) {
       $pdo->prepare("UPDATE orders SET status='paid', paid_at=NOW() WHERE id=? AND status='pending'")->execute([$order['id']]);
       $order['status'] = 'paid';
     }

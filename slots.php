@@ -13,7 +13,7 @@ $pdo->exec("UPDATE orders SET status='expired' WHERE status='pending' AND expire
 $slotDefs = ['10:00-12:00', '14:00-16:00', '16:00-18:00'];
 $capacity = 5;
 $countStmt = $pdo->prepare(
-  "SELECT COUNT(*) FROM orders WHERE delivery_date = ? AND delivery_slot = ? AND status IN ('pending','paid')"
+  "SELECT COUNT(*) FROM orders WHERE delivery_date = ? AND delivery_slot = ? AND status IN ('pending','paid','fulfilled')"
 );
 
 $days = [];

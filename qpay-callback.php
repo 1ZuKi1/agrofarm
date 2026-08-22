@@ -19,7 +19,7 @@ if (!preg_match('/^[a-f0-9]{32}$/', $token)) {
 }
 
 $pdo = naf_db();
-$stmt = $pdo->prepare('SELECT id, status, qpay_invoice_id FROM orders WHERE public_token = ?');
+$stmt = $pdo->prepare('SELECT id, status, qpay_invoice_id, total FROM orders WHERE public_token = ?');
 $stmt->execute([$token]);
 $order = $stmt->fetch();
 
@@ -43,7 +43,15 @@ try {
   exit;
 }
 
-if (($check['count'] ?? 0) > 0) {
+// count:0 (no payment row on file) is definitely not-paid and is left as-is
+// below. A count > 0 alone does NOT prove a settled full payment — it only
+// proves QPay has some row for this invoice, which could be non-final,
+// reversed, or partial. See qpay.php's qpay_paid_amount() docblock: this
+// amount check was implemented from researched (not live-verified against a
+// real completed payment) QPay response field names, and MUST be
+// re-confirmed against a real completed sandbox payment before switching
+// config.php to production QPay credentials.
+if (($check['count'] ?? 0) > 0 && qpay_paid_amount($check) >= (float)$order['total']) {
   $pdo->prepare("UPDATE orders SET status='paid', paid_at=NOW() WHERE id=? AND status='pending'")->execute([$order['id']]);
 }
 
