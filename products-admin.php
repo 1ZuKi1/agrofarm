@@ -207,6 +207,7 @@ if ($action === 'save_ingredients') {
 
     echo json_encode(['ok' => true]);
   } catch (PDOException $e) {
+    $pdo->rollback();
     http_response_code(400);
     echo json_encode(['error' => str_contains($e->getMessage(), 'foreign key')
       ? 'Could not save ingredients — check that the variant still exists'
