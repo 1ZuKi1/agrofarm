@@ -51,6 +51,13 @@ body{ background:#f5f2ed; }
 .admin-publish-status.err{ display:block; background:#fde8e8; color:#c0392b; border:1px solid #f5c6cb; }
 .admin-product{ border:1px solid #ddd; border-radius:8px; padding:1rem; margin-bottom:1rem; }
 .admin-variant{ padding:.5rem 0; border-top:1px solid #eee; }
+.admin-row-actions{ display:flex; gap:.4rem; flex-shrink:0; }
+.admin-row-actions button{ background:none; border:1px solid rgba(0,0,0,.1); border-radius:6px; padding:.3rem .7rem; cursor:pointer; font-size:.78rem; transition:background .2s; }
+.admin-row-actions button:hover{ background:rgba(0,0,0,.05); }
+.admin-modal{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:2000; padding:2rem; align-items:center; justify-content:center; overflow-y:auto; }
+.admin-modal form{ width:100%; }
+.ingredient-row{ display:flex; gap:.5rem; margin-bottom:.5rem; align-items:center; }
+.ingredient-row input{ flex:1; }
 </style>
 </head>
 <body>
@@ -83,10 +90,14 @@ body{ background:#f5f2ed; }
   <div id="productsScreen" style="display:none">
     <h1>📦 Products</h1>
     <div class="admin-toolbar">
+      <button class="btn btn--gold" id="addProductBtn">+ Add product</button>
       <button class="btn btn--ghost" style="border-color:#999;color:#666" id="backToNewsBtn">← Back to News</button>
     </div>
     <div id="productsTab" class="admin-card"></div>
   </div>
+
+  <!-- PRODUCT/VARIANT EDITOR MODAL -->
+  <div id="productEditor" class="admin-modal" style="display:none"></div>
 
   <!-- EDITOR -->
   <div id="editorScreen" style="display:none">

@@ -33,9 +33,12 @@
   const productsBtn   = document.getElementById("productsBtn");
   const backToNewsBtn = document.getElementById("backToNewsBtn");
   const productsTab   = document.getElementById("productsTab");
+  const addProductBtn = document.getElementById("addProductBtn");
+  const productEditor = document.getElementById("productEditor");
 
   let posts = [];
   let editingId = null;
+  let productsCache = [];
 
   async function loadPosts() {
     try {
@@ -318,27 +321,365 @@
         return;
       }
 
-      if (!data.products || data.products.length === 0) {
-        productsTab.innerHTML = `<p style="color:#999;text-align:center;padding:1.5rem 0;font-size:.9rem">No products yet.</p>`;
+      productsCache = data.products || [];
+
+      if (productsCache.length === 0) {
+        productsTab.innerHTML = `<p style="color:#999;text-align:center;padding:1.5rem 0;font-size:.9rem">No products yet. Click "Add product" to create one.</p>`;
         return;
       }
 
-      productsTab.innerHTML = data.products.map((product) => `
+      productsTab.innerHTML = productsCache.map((product) => `
         <div class="admin-product" data-product-id="${product.id}">
-          <h3>${escHtml(product.name_mn)}</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem">
+            <h3 style="margin:0">${escHtml(product.name_mn)}</h3>
+            <div class="admin-row-actions">
+              <button class="edit-product-btn" data-id="${product.id}">Edit</button>
+              <button class="add-variant-btn" data-product-id="${product.id}">+ Add variant</button>
+            </div>
+          </div>
           <div class="admin-variants">
             ${product.variants.map((v) => `
               <div class="admin-variant" data-variant-id="${v.id}">
-                <strong>${escHtml(v.name_mn)}</strong>
-                — ${v.price.toLocaleString()}₮ — stock: ${v.stock}
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem">
+                  <span><strong>${escHtml(v.name_mn)}</strong> — ${v.price.toLocaleString()}₮ — stock: ${v.stock}</span>
+                  <div class="admin-row-actions">
+                    <button class="edit-variant-btn" data-id="${v.id}" data-product-id="${product.id}">Edit</button>
+                  </div>
+                </div>
               </div>
             `).join("")}
           </div>
         </div>
       `).join("");
+
+      productsTab.querySelectorAll(".edit-product-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const product = productsCache.find((p) => p.id === Number(btn.dataset.id));
+          openProductEditor(product);
+        });
+      });
+      productsTab.querySelectorAll(".edit-variant-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const productId = Number(btn.dataset.productId);
+          const product = productsCache.find((p) => p.id === productId);
+          const variant = product && product.variants.find((v) => v.id === Number(btn.dataset.id));
+          openVariantEditor(variant, productId);
+        });
+      });
+      productsTab.querySelectorAll(".add-variant-btn").forEach((btn) => {
+        btn.addEventListener("click", () => openVariantEditor(null, Number(btn.dataset.productId)));
+      });
     } catch (err) {
       productsTab.innerHTML = `<p class="admin-error" style="display:block">Could not reach the server — is PHP enabled?</p>`;
     }
+  }
+
+  /** Serialize a plain object into an application/x-www-form-urlencoded body string. */
+  function toFormBody(params) {
+    return Object.entries(params)
+      .map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v))
+      .join("&");
+  }
+
+  function closeEditor() {
+    productEditor.style.display = "none";
+    productEditor.innerHTML = "";
+  }
+
+  /** Open the modal editor for a product (pass null/undefined to create a new one). */
+  function openProductEditor(product) {
+    productEditor.style.display = "flex";
+    productEditor.innerHTML = `
+      <form id="productForm" class="admin-card admin-form" style="max-width:600px;max-height:85vh;overflow-y:auto">
+        <h2 style="margin-top:0">${product ? "Edit product" : "New product"}</h2>
+
+        <label for="pf_slug">Slug</label>
+        <input type="text" id="pf_slug" value="${product ? escHtml(product.slug) : ""}" placeholder="erdest-doloots" required>
+
+        <label for="pf_name_mn">Name (Монгол)</label>
+        <input type="text" id="pf_name_mn" value="${product ? escHtml(product.name_mn) : ""}" required>
+
+        <label for="pf_name_en">Name (English)</label>
+        <input type="text" id="pf_name_en" value="${product ? escHtml(product.name_en || "") : ""}">
+
+        <label for="pf_desc_mn">Description (Монгол)</label>
+        <textarea id="pf_desc_mn">${product ? escHtml(product.description_mn || "") : ""}</textarea>
+
+        <label for="pf_desc_en">Description (English)</label>
+        <textarea id="pf_desc_en">${product ? escHtml(product.description_en || "") : ""}</textarea>
+
+        <label style="display:flex;align-items:center;gap:.4rem;margin-top:.9rem">
+          <input type="checkbox" id="pf_active" style="width:auto" ${!product || Number(product.active) ? "checked" : ""}> Active
+        </label>
+
+        <div class="admin-form-actions">
+          <button type="submit" class="btn btn--gold">💾 Save</button>
+          <button type="button" class="btn btn--ghost" style="border-color:#999;color:#666" id="cancelProductEdit">Cancel</button>
+        </div>
+        <p class="admin-error" id="productFormError" style="display:none"></p>
+      </form>
+    `;
+
+    document.getElementById("cancelProductEdit").addEventListener("click", closeEditor);
+
+    document.getElementById("productForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById("productFormError");
+      errEl.style.display = "none";
+
+      const params = {
+        action: "save_product",
+        csrf: sessionStorage.getItem("naf_csrf_token") || "",
+        slug: document.getElementById("pf_slug").value.trim(),
+        name_mn: document.getElementById("pf_name_mn").value.trim(),
+        name_en: document.getElementById("pf_name_en").value.trim(),
+        description_mn: document.getElementById("pf_desc_mn").value.trim(),
+        description_en: document.getElementById("pf_desc_en").value.trim(),
+        active: document.getElementById("pf_active").checked ? "1" : "0",
+      };
+      if (product) params.id = product.id;
+
+      try {
+        const res = await fetch("products-admin.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: toFormBody(params),
+        });
+        const data = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+          sessionStorage.removeItem("naf_admin_auth");
+          sessionStorage.removeItem("naf_csrf_token");
+          closeEditor();
+          showScreen("login");
+          return;
+        }
+        if (!res.ok) {
+          errEl.textContent = data.error || "Failed to save product";
+          errEl.style.display = "block";
+          return;
+        }
+
+        closeEditor();
+        renderProductsTab();
+      } catch (err) {
+        errEl.textContent = "Could not reach the server — is PHP enabled?";
+        errEl.style.display = "block";
+      }
+    });
+  }
+
+  /** Open the modal editor for a variant (pass null variant to create a new one under productId). */
+  function openVariantEditor(variant, productId) {
+    productEditor.style.display = "flex";
+
+    const ingredientsHtml = (variant?.ingredients || []).map((ing) => `
+      <div class="ingredient-row">
+        <input class="ing-name" value="${escHtml(ing.name)}" placeholder="Нэр">
+        <input class="ing-pct" value="${escHtml(ing.percentage)}" placeholder="90%">
+        <button type="button" class="remove-ingredient">✕</button>
+      </div>
+    `).join("");
+
+    productEditor.innerHTML = `
+      <form id="variantForm" class="admin-card admin-form" style="max-width:600px;max-height:85vh;overflow-y:auto">
+        <h2 style="margin-top:0">${variant ? "Edit variant" : "New variant"}</h2>
+
+        <label for="vf_name_mn">Name (Монгол)</label>
+        <input type="text" id="vf_name_mn" value="${variant ? escHtml(variant.name_mn) : ""}" required>
+
+        <label for="vf_name_en">Name (English)</label>
+        <input type="text" id="vf_name_en" value="${variant ? escHtml(variant.name_en || "") : ""}">
+
+        <div class="admin-form-row">
+          <div>
+            <label for="vf_price">Price (₮)</label>
+            <input type="number" id="vf_price" min="0" step="1" value="${variant ? variant.price : ""}" required>
+          </div>
+          <div>
+            <label for="vf_stock">Stock</label>
+            <input type="number" id="vf_stock" min="0" step="1" value="${variant ? variant.stock : ""}" required>
+          </div>
+        </div>
+
+        <div class="admin-form-row">
+          <div>
+            <label for="vf_weight">Weight label</label>
+            <input type="text" id="vf_weight" value="${variant ? escHtml(variant.weight_label || "") : ""}" placeholder="5кг">
+          </div>
+          <div>
+            <label for="vf_std_code">Standard code</label>
+            <input type="text" id="vf_std_code" value="${variant ? escHtml(variant.standard_code || "") : ""}" placeholder="MNS 5511:2005">
+          </div>
+        </div>
+
+        <label for="vf_storage">Storage / shelf life (Монгол)</label>
+        <textarea id="vf_storage">${variant ? escHtml(variant.storage_text_mn || "") : ""}</textarea>
+
+        <label for="vf_benefits">Benefits (Монгол)</label>
+        <textarea id="vf_benefits">${variant ? escHtml(variant.benefits_text_mn || "") : ""}</textarea>
+
+        <label for="vf_usage">Usage instructions (Монгол)</label>
+        <textarea id="vf_usage">${variant ? escHtml(variant.usage_text_mn || "") : ""}</textarea>
+
+        <label for="vf_image">Image</label>
+        <input type="file" id="vf_image" accept="image/jpeg,image/png,image/webp,image/gif">
+        ${variant && variant.image_path ? `<img src="${escHtml(variant.image_path)}" alt="" style="display:block;max-width:160px;margin-top:.5rem;border-radius:8px;border:1px solid rgba(0,0,0,.1)">` : ""}
+
+        <label style="display:flex;align-items:center;gap:.4rem;margin-top:.9rem">
+          <input type="checkbox" id="vf_active" style="width:auto" ${!variant || Number(variant.active) ? "checked" : ""}> Active
+        </label>
+
+        <fieldset style="margin-top:1rem;border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:.8rem">
+          <legend style="font-size:.82rem;font-weight:600;color:#555">Ingredients</legend>
+          <div id="ingredientRows">${ingredientsHtml}</div>
+          <button type="button" class="btn btn--ghost" style="border-color:#999;color:#666;padding:.35rem .8rem;font-size:.8rem" id="addIngredientRow">+ Add ingredient</button>
+        </fieldset>
+
+        <div class="admin-form-actions">
+          <button type="submit" class="btn btn--gold">💾 Save</button>
+          <button type="button" class="btn btn--ghost" style="border-color:#999;color:#666" id="cancelVariantEdit">Cancel</button>
+        </div>
+        <p class="admin-error" id="variantFormError" style="display:none"></p>
+      </form>
+    `;
+
+    document.getElementById("cancelVariantEdit").addEventListener("click", closeEditor);
+
+    document.getElementById("addIngredientRow").addEventListener("click", () => {
+      const row = document.createElement("div");
+      row.className = "ingredient-row";
+      row.innerHTML = `<input class="ing-name" placeholder="Нэр"><input class="ing-pct" placeholder="90%"><button type="button" class="remove-ingredient">✕</button>`;
+      document.getElementById("ingredientRows").appendChild(row);
+    });
+
+    document.getElementById("ingredientRows").addEventListener("click", (e) => {
+      if (e.target.classList.contains("remove-ingredient")) {
+        e.target.closest(".ingredient-row").remove();
+      }
+    });
+
+    document.getElementById("variantForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById("variantFormError");
+      errEl.style.display = "none";
+
+      const priceVal = document.getElementById("vf_price").value;
+      const stockVal = document.getElementById("vf_stock").value;
+      if (priceVal === "" || stockVal === "") {
+        errEl.textContent = "Price and stock are required";
+        errEl.style.display = "block";
+        return;
+      }
+
+      let imagePath = variant ? (variant.image_path || "") : "";
+      const imageFile = document.getElementById("vf_image").files[0];
+
+      if (imageFile) {
+        const uploadBody = new FormData();
+        uploadBody.append("action", "upload_image");
+        uploadBody.append("csrf", sessionStorage.getItem("naf_csrf_token") || "");
+        uploadBody.append("image", imageFile);
+
+        try {
+          const uploadRes = await fetch("products-admin.php", { method: "POST", body: uploadBody });
+          const uploadData = await uploadRes.json();
+
+          if (uploadRes.status === 401 || uploadRes.status === 403) {
+            sessionStorage.removeItem("naf_admin_auth");
+            sessionStorage.removeItem("naf_csrf_token");
+            closeEditor();
+            showScreen("login");
+            return;
+          }
+          if (!uploadRes.ok) {
+            errEl.textContent = uploadData.error || "Image upload failed";
+            errEl.style.display = "block";
+            return;
+          }
+          imagePath = uploadData.path;
+        } catch (err) {
+          errEl.textContent = "Could not reach the server — is PHP enabled?";
+          errEl.style.display = "block";
+          return;
+        }
+      }
+
+      const params = {
+        action: "save_variant",
+        csrf: sessionStorage.getItem("naf_csrf_token") || "",
+        product_id: productId,
+        name_mn: document.getElementById("vf_name_mn").value.trim(),
+        name_en: document.getElementById("vf_name_en").value.trim(),
+        price: priceVal,
+        stock: stockVal,
+        weight_label: document.getElementById("vf_weight").value.trim(),
+        standard_code: document.getElementById("vf_std_code").value.trim(),
+        storage_text_mn: document.getElementById("vf_storage").value.trim(),
+        benefits_text_mn: document.getElementById("vf_benefits").value.trim(),
+        usage_text_mn: document.getElementById("vf_usage").value.trim(),
+        image_path: imagePath || "",
+        active: document.getElementById("vf_active").checked ? "1" : "0",
+        sort_order: variant ? variant.sort_order : 0,
+      };
+      if (variant) params.id = variant.id;
+
+      try {
+        const res = await fetch("products-admin.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: toFormBody(params),
+        });
+        const data = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+          sessionStorage.removeItem("naf_admin_auth");
+          sessionStorage.removeItem("naf_csrf_token");
+          closeEditor();
+          showScreen("login");
+          return;
+        }
+        if (!res.ok) {
+          errEl.textContent = data.error || "Failed to save variant";
+          errEl.style.display = "block";
+          return;
+        }
+
+        const ingredients = [...document.querySelectorAll("#ingredientRows .ingredient-row")].map((row) => ({
+          name: row.querySelector(".ing-name").value.trim(),
+          percentage: row.querySelector(".ing-pct").value.trim(),
+        })).filter((ing) => ing.name && ing.percentage);
+
+        const ingRes = await fetch("products-admin.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: toFormBody({
+            action: "save_ingredients",
+            csrf: sessionStorage.getItem("naf_csrf_token") || "",
+            variant_id: data.id,
+            ingredients: JSON.stringify(ingredients),
+          }),
+        });
+
+        if (ingRes.status === 401 || ingRes.status === 403) {
+          sessionStorage.removeItem("naf_admin_auth");
+          sessionStorage.removeItem("naf_csrf_token");
+          closeEditor();
+          showScreen("login");
+          return;
+        }
+        if (!ingRes.ok) {
+          const ingData = await ingRes.json().catch(() => ({}));
+          alert(ingData.error || "Variant saved, but ingredients failed to save");
+        }
+
+        closeEditor();
+        renderProductsTab();
+      } catch (err) {
+        errEl.textContent = "Could not reach the server — is PHP enabled?";
+        errEl.style.display = "block";
+      }
+    });
   }
 
   function escHtml(str) {
@@ -418,6 +759,7 @@
       renderProductsTab();
     });
     backToNewsBtn.addEventListener("click", () => showScreen("dashboard"));
+    addProductBtn.addEventListener("click", () => openProductEditor(null));
   }
 
   init();
