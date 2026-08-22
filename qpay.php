@@ -81,5 +81,9 @@ function qpay_check_payment(string $token, string $invoiceId): array {
   curl_close($ch);
   if ($res === false) throw new RuntimeException('QPay payment check request failed: ' . $err);
   if ($status !== 200) throw new RuntimeException('QPay payment check failed: HTTP ' . $status);
-  return json_decode($res, true);
+  $data = json_decode($res, true);
+  if (!is_array($data) || !isset($data['count'], $data['rows'])) {
+    throw new RuntimeException('QPay payment check response missing count/rows');
+  }
+  return $data;
 }
