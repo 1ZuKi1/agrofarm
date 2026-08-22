@@ -94,6 +94,17 @@
     setTimeout(() => line.classList.add("in"), 250 + i * 150);
   });
 
+  /* ---------- Homepage shop card: live starting price ---------- */
+  const shopCardPrice = document.getElementById("shopCardPrice");
+  if (shopCardPrice) {
+    fetch("shop-data.php").then((r) => r.json()).then((data) => {
+      const variants = data.products?.[0]?.variants || [];
+      if (!variants.length) return;
+      const minPrice = Math.min(...variants.map((v) => v.price));
+      shopCardPrice.textContent = `From ${minPrice.toLocaleString()}₮`;
+    }).catch(() => {}); // silent — the static fallback text already covers this
+  }
+
   /* ---------- Generic scroll reveal ----------
      One observer for every .reveal element. Siblings that enter together get
      an incremental transition-delay (--d) so grids cascade instead of popping
