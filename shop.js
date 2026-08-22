@@ -204,12 +204,179 @@
     });
   }
 
+  /** Restores the drawer head/footer to their static "Cart" state. Checkout
+   * mode repurposes #cartDrawerItems for the form and hides the footer (see
+   * renderCheckoutForm below) without ever removing #cartDrawerClose or
+   * #cartCheckoutBtn from the DOM, so their listeners (bound once, below)
+   * never need rebinding — only this cosmetic reset is needed on return. */
+  function resetCartPanelToCartView() {
+    const heading = document.querySelector(".cart-drawer__head h2");
+    heading.dataset.en = "Cart";
+    heading.dataset.mn = "Сагс";
+    heading.textContent = t("Cart", "Сагс");
+    document.querySelector(".cart-drawer__footer").style.display = "";
+  }
+
   function openCartDrawer() {
+    resetCartPanelToCartView();
     renderCartDrawer();
     document.getElementById("cartDrawer").classList.add("is-open");
   }
   function closeCartDrawer() {
     document.getElementById("cartDrawer").classList.remove("is-open");
+  }
+
+  /* ---------- Checkout form ----------
+     Repurposes #cartDrawerItems (normally the cart line list) to host the
+     buyer form + delivery slot picker, and hides .cart-drawer__footer (the
+     total/checkout button, not needed here). #cartDrawerClose keeps closing
+     the whole drawer throughout. "Back to cart" just calls openCartDrawer()
+     again, which resets the head/footer and re-renders the cart lines. */
+  async function loadSlots() {
+    const res = await fetch("slots.php");
+    const data = await res.json();
+    return data.days || [];
+  }
+
+  function formatSlotDate(dateStr) {
+    const d = new Date(dateStr + "T00:00:00");
+    return {
+      en: d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+      mn: d.toLocaleDateString("mn-MN", { weekday: "short", month: "short", day: "numeric" }),
+    };
+  }
+
+  function showCheckoutError(en, mn) {
+    const errorEl = document.getElementById("checkoutError");
+    errorEl.dataset.en = en;
+    errorEl.dataset.mn = mn;
+    errorEl.textContent = t(en, mn);
+    errorEl.style.display = "block";
+  }
+
+  function renderCheckoutForm() {
+    const heading = document.querySelector(".cart-drawer__head h2");
+    heading.dataset.en = "Checkout";
+    heading.dataset.mn = "Захиалга баталгаажуулах";
+    heading.textContent = t("Checkout", "Захиалга баталгаажуулах");
+    document.querySelector(".cart-drawer__footer").style.display = "none";
+
+    const items = document.getElementById("cartDrawerItems");
+    items.innerHTML = `
+      <form id="checkoutForm" class="checkout-form">
+        <div class="checkout-form__field">
+          <label for="checkoutName" data-en="Name" data-mn="Нэр">${escHtmlShop(t("Name", "Нэр"))}</label>
+          <input type="text" id="checkoutName" name="buyer_name" required>
+        </div>
+        <div class="checkout-form__field">
+          <label for="checkoutPhone" data-en="Phone" data-mn="Утас">${escHtmlShop(t("Phone", "Утас"))}</label>
+          <input type="tel" id="checkoutPhone" name="buyer_phone" required>
+        </div>
+        <div class="checkout-form__field">
+          <label for="checkoutAddress" data-en="Delivery address" data-mn="Хүргэлтийн хаяг">${escHtmlShop(t("Delivery address", "Хүргэлтийн хаяг"))}</label>
+          <textarea id="checkoutAddress" name="buyer_address" required></textarea>
+        </div>
+        <div class="checkout-form__field">
+          <label for="checkoutNote" data-en="Note (optional)" data-mn="Тэмдэглэл (заавал биш)">${escHtmlShop(t("Note (optional)", "Тэмдэглэл (заавал биш)"))}</label>
+          <textarea id="checkoutNote" name="buyer_note"></textarea>
+        </div>
+        <div id="slotPicker" class="slot-picker" data-en="Loading delivery times…" data-mn="Хүргэлтийн цагийг ачааллаж байна…">${escHtmlShop(t("Loading delivery times…", "Хүргэлтийн цагийг ачааллаж байна…"))}</div>
+        <p id="checkoutError" class="checkout-form__error" style="display:none"></p>
+        <button type="submit" class="btn btn--gold" id="checkoutSubmitBtn" data-en="Pay with QPay" data-mn="QPay-ээр төлөх">${escHtmlShop(t("Pay with QPay", "QPay-ээр төлөх"))}</button>
+        <button type="button" id="checkoutBackBtn" data-en="Back to cart" data-mn="Сагс руу буцах">${escHtmlShop(t("Back to cart", "Сагс руу буцах"))}</button>
+      </form>
+    `;
+
+    document.getElementById("checkoutBackBtn").addEventListener("click", openCartDrawer);
+
+    let selectedDate = null;
+    let selectedSlot = null;
+
+    const picker = document.getElementById("slotPicker");
+    loadSlots().then((days) => {
+      if (!days.length) {
+        picker.dataset.en = "No delivery slots available";
+        picker.dataset.mn = "Хүргэлтийн цаг алга байна";
+        picker.textContent = t("No delivery slots available", "Хүргэлтийн цаг алга байна");
+        return;
+      }
+      delete picker.dataset.en;
+      delete picker.dataset.mn;
+      picker.innerHTML = days.map((day) => {
+        const label = formatSlotDate(day.date);
+        return `
+          <div class="slot-picker__day" data-date="${escAttrShop(day.date)}">
+            <div class="slot-picker__date" data-en="${escAttrShop(label.en)}" data-mn="${escAttrShop(label.mn)}">${escHtmlShop(t(label.en, label.mn))}</div>
+            <div class="slot-picker__slots">
+              ${day.slots.map((s) => `<button type="button" class="variant-pill slot-btn" data-date="${escAttrShop(day.date)}" data-slot="${escAttrShop(s.slot)}" ${s.available ? '' : 'disabled style="opacity:.4"'}>${escHtmlShop(s.slot)}</button>`).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      picker.querySelectorAll(".slot-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          picker.querySelectorAll(".slot-btn").forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+          selectedDate = btn.dataset.date;
+          selectedSlot = btn.dataset.slot;
+        });
+      });
+    }).catch(() => {
+      picker.dataset.en = "Could not load delivery times — please try again";
+      picker.dataset.mn = "Хүргэлтийн цагийг ачаалж чадсангүй — дахин оролдоно уу";
+      picker.textContent = t("Could not load delivery times — please try again", "Хүргэлтийн цагийг ачаалж чадсангүй — дахин оролдоно уу");
+    });
+
+    document.getElementById("checkoutForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("checkoutError");
+      errorEl.style.display = "none";
+
+      if (!selectedSlot) {
+        showCheckoutError("Please pick a delivery date and time", "Хүргэлтийн огноо, цагийг сонгоно уу");
+        return;
+      }
+
+      const form = new FormData(e.target);
+      const submitBtn = document.getElementById("checkoutSubmitBtn");
+      submitBtn.disabled = true;
+
+      const cart = getCart();
+      const body = {
+        items: cart.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })),
+        buyer_name: form.get("buyer_name"),
+        buyer_phone: form.get("buyer_phone"),
+        buyer_address: form.get("buyer_address"),
+        buyer_note: form.get("buyer_note"),
+        delivery_date: selectedDate,
+        delivery_slot: selectedSlot,
+      };
+
+      try {
+        const res = await fetch("order-create.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (data.error) {
+            errorEl.textContent = data.error; // server message — Mongolian only, not translatable
+            errorEl.style.display = "block";
+          } else {
+            showCheckoutError("Something went wrong — please try again", "Алдаа гарлаа — дахин оролдоно уу");
+          }
+          submitBtn.disabled = false;
+          return;
+        }
+        setCart([]); // order created — clear the cart
+        if (window.renderQrScreen) window.renderQrScreen(data);
+      } catch {
+        showCheckoutError("Could not reach the server — please try again", "Сервертэй холбогдож чадсангүй — дахин оролдоно уу");
+        submitBtn.disabled = false;
+      }
+    });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -223,5 +390,12 @@
     // (above), after shopProducts is populated — opening it here too would
     // race the still-in-flight fetch and render the drawer against an empty
     // shopProducts array (see loadShop's comment).
+
+    const checkoutBtn = document.getElementById("cartCheckoutBtn");
+    if (checkoutBtn) {
+      checkoutBtn.disabled = false;
+      checkoutBtn.removeAttribute("title");
+      checkoutBtn.addEventListener("click", renderCheckoutForm);
+    }
   });
 })();

@@ -1037,3 +1037,16 @@ input, textarea, select{ font-size:16px !important; }
 .cart-drawer__remove{ margin-left:auto; background:none; border:none; color:var(--ink-soft); cursor:pointer; min-width:32px; min-height:32px; }
 .cart-drawer__footer{ padding-top:1rem; border-top:1px solid rgba(44,44,44,.1); }
 .cart-drawer__total{ font-weight:700; margin-bottom:1rem; }
+
+/* ============ Checkout form (inside cart drawer) ============ */
+.checkout-form{ display:flex; flex-direction:column; gap:1rem; padding-bottom:1rem; }
+.checkout-form__field{ display:flex; flex-direction:column; gap:.3rem; }
+.checkout-form__field label{ font-size:.85rem; font-weight:600; color:var(--charcoal); }
+.checkout-form input, .checkout-form textarea{ padding:.6rem; border-radius:8px; border:1px solid rgba(44,44,44,.2); font-family:var(--sans); font-size:.95rem; background:#fff; }
+.checkout-form textarea{ resize:vertical; min-height:60px; }
+.checkout-form__error{ color:#b3261e; font-size:.85rem; }
+.slot-picker__day{ margin-bottom:1rem; }
+.slot-picker__date{ font-weight:700; margin-bottom:.5rem; font-size:.85rem; color:var(--green); }
+.slot-picker__slots{ display:flex; gap:.5rem; flex-wrap:wrap; }
+.slot-btn{ font-size:.8rem; padding:.4rem 1rem; }
+#checkoutBackBtn{ background:none; border:none; color:var(--ink-soft); cursor:pointer; text-decoration:underline; padding:.5rem; align-self:center; }
