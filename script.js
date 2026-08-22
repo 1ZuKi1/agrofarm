@@ -220,7 +220,7 @@
     progressBar.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
 
     nav.classList.toggle("nav--solid", y > 60);
-    fab.classList.toggle("show", y > innerHeight * 0.8);
+    if (fab) fab.classList.toggle("show", y > innerHeight * 0.8);
 
     // Sticky action bar only appears once the Farms section is reached
     if (mobilebar && farmsSection) {
@@ -294,7 +294,7 @@
   }
 
   /* ---------- FAB: smooth scroll to top ---------- */
-  fab.addEventListener("click", () => scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" }));
+  if (fab) fab.addEventListener("click", () => scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" }));
 
   /* ---------- Mobile menu ---------- */
   const burger = document.getElementById("burger");
