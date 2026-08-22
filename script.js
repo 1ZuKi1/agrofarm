@@ -199,6 +199,11 @@
   const heroBg = document.querySelector("[data-parallax]");
   const parallaxFactor = heroBg ? +heroBg.dataset.parallax : 0;
   const heroInner = document.querySelector(".hero__inner");
+  // Pages without a #hero (news.html, shop.html) hardcode nav--solid in their
+  // markup since there's no dark hero for the nav to start transparent over —
+  // the scroll-based toggle below must never touch that class there, or the
+  // nav text flips to the hero-only cream color against a light page background.
+  const hasHero = !!document.getElementById("hero");
 
   // Timeline spine: measure the SVG path once, then reveal its stroke in
   // proportion to how far the timeline has scrolled through the viewport.
@@ -219,7 +224,7 @@
     // Progress bar — scaleX keeps it off the layout thread
     progressBar.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
 
-    nav.classList.toggle("nav--solid", y > 60);
+    if (hasHero) nav.classList.toggle("nav--solid", y > 60);
     if (fab) fab.classList.toggle("show", y > innerHeight * 0.8);
 
     // Sticky action bar only appears once the Farms section is reached
