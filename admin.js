@@ -29,6 +29,10 @@
   const saveBtn       = document.getElementById("saveBtn");
   const cancelBtn     = document.getElementById("cancelBtn");
   const saveSuccess   = document.getElementById("saveSuccess");
+  const productsScreen = document.getElementById("productsScreen");
+  const productsBtn   = document.getElementById("productsBtn");
+  const backToNewsBtn = document.getElementById("backToNewsBtn");
+  const productsTab   = document.getElementById("productsTab");
 
   let posts = [];
   let editingId = null;
@@ -286,6 +290,55 @@
     loginScreen.style.display = screen === "login" ? "block" : "none";
     dashboardScreen.style.display = screen === "dashboard" ? "block" : "none";
     editorScreen.style.display = screen === "editor" ? "block" : "none";
+    productsScreen.style.display = screen === "products" ? "block" : "none";
+  }
+
+  /** Load and render the Products tab (products + variants list). */
+  async function renderProductsTab() {
+    if (!productsTab) return;
+    productsTab.innerHTML = "<p>Loading…</p>";
+
+    try {
+      const res = await fetch("products-admin.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "action=list&csrf=" + encodeURIComponent(sessionStorage.getItem("naf_csrf_token") || ""),
+      });
+      const data = await res.json();
+
+      if (res.status === 401 || res.status === 403) {
+        sessionStorage.removeItem("naf_admin_auth");
+        sessionStorage.removeItem("naf_csrf_token");
+        showScreen("login");
+        return;
+      }
+
+      if (!res.ok) {
+        productsTab.innerHTML = `<p class="admin-error" style="display:block">${escHtml(data.error || "Failed to load products")}</p>`;
+        return;
+      }
+
+      if (!data.products || data.products.length === 0) {
+        productsTab.innerHTML = `<p style="color:#999;text-align:center;padding:1.5rem 0;font-size:.9rem">No products yet.</p>`;
+        return;
+      }
+
+      productsTab.innerHTML = data.products.map((product) => `
+        <div class="admin-product" data-product-id="${product.id}">
+          <h3>${escHtml(product.name_mn)}</h3>
+          <div class="admin-variants">
+            ${product.variants.map((v) => `
+              <div class="admin-variant" data-variant-id="${v.id}">
+                <strong>${escHtml(v.name_mn)}</strong>
+                — ${v.price.toLocaleString()}₮ — stock: ${v.stock}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+    } catch (err) {
+      productsTab.innerHTML = `<p class="admin-error" style="display:block">Could not reach the server — is PHP enabled?</p>`;
+    }
   }
 
   function escHtml(str) {
@@ -360,6 +413,11 @@
     exportBtn.addEventListener("click", downloadJSON);
     publishBtn.addEventListener("click", publishToLive);
     postImageFile.addEventListener("change", uploadImage);
+    productsBtn.addEventListener("click", () => {
+      showScreen("products");
+      renderProductsTab();
+    });
+    backToNewsBtn.addEventListener("click", () => showScreen("dashboard"));
   }
 
   init();
