@@ -14,3 +14,10 @@
  */
 
 define('NAF_ADMIN_PASSWORD_HASH', 'REPLACE_WITH_BCRYPT_HASH');
+
+// MySQL — shop feature (products, variants, orders). Create the database via
+// cPanel's MySQL Database Wizard, then fill in the values it gives you.
+define('NAF_DB_HOST', 'localhost');
+define('NAF_DB_NAME', 'REPLACE_WITH_DB_NAME');
+define('NAF_DB_USER', 'REPLACE_WITH_DB_USER');
+define('NAF_DB_PASS', 'REPLACE_WITH_DB_PASSWORD');
