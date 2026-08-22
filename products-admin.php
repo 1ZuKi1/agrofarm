@@ -149,23 +149,30 @@ if ($action === 'save_variant') {
     $usageTextMn, $usageTextEn, $imagePath, $active, $sortOrder,
   ];
 
-  if ($id !== '') {
-    $stmt = $pdo->prepare(
-      'UPDATE product_variants SET product_id=?, name_mn=?, name_en=?, price=?, stock=?, weight_label=?,
-       standard_code=?, storage_text_mn=?, storage_text_en=?, benefits_text_mn=?, benefits_text_en=?,
-       usage_text_mn=?, usage_text_en=?, image_path=?, active=?, sort_order=? WHERE id=?'
-    );
-    $stmt->execute([...$fields, (int)$id]);
-    echo json_encode(['id' => (int)$id]);
-  } else {
-    $stmt = $pdo->prepare(
-      'INSERT INTO product_variants (product_id, name_mn, name_en, price, stock, weight_label,
-       standard_code, storage_text_mn, storage_text_en, benefits_text_mn, benefits_text_en,
-       usage_text_mn, usage_text_en, image_path, active, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    );
-    $stmt->execute($fields);
-    echo json_encode(['id' => (int)$pdo->lastInsertId()]);
+  try {
+    if ($id !== '') {
+      $stmt = $pdo->prepare(
+        'UPDATE product_variants SET product_id=?, name_mn=?, name_en=?, price=?, stock=?, weight_label=?,
+         standard_code=?, storage_text_mn=?, storage_text_en=?, benefits_text_mn=?, benefits_text_en=?,
+         usage_text_mn=?, usage_text_en=?, image_path=?, active=?, sort_order=? WHERE id=?'
+      );
+      $stmt->execute([...$fields, (int)$id]);
+      echo json_encode(['id' => (int)$id]);
+    } else {
+      $stmt = $pdo->prepare(
+        'INSERT INTO product_variants (product_id, name_mn, name_en, price, stock, weight_label,
+         standard_code, storage_text_mn, storage_text_en, benefits_text_mn, benefits_text_en,
+         usage_text_mn, usage_text_en, image_path, active, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      );
+      $stmt->execute($fields);
+      echo json_encode(['id' => (int)$pdo->lastInsertId()]);
+    }
+  } catch (PDOException $e) {
+    http_response_code(400);
+    echo json_encode(['error' => str_contains($e->getMessage(), 'foreign key')
+      ? 'Could not save variant — check that the product still exists'
+      : 'Could not save variant']);
   }
   exit;
 }
