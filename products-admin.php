@@ -228,5 +228,52 @@ if ($action === 'delete_variant') {
   exit;
 }
 
+if ($action === 'upload_image') {
+  if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+    http_response_code(400);
+    echo json_encode(['error' => 'No file received']);
+    exit;
+  }
+
+  $file = $_FILES['image'];
+
+  if ($file['size'] > 5 * 1024 * 1024) {
+    http_response_code(400);
+    echo json_encode(['error' => 'File too large (max 5 MB)']);
+    exit;
+  }
+
+  $info = @getimagesize($file['tmp_name']);
+  $extByMime = [
+    'image/jpeg' => 'jpg',
+    'image/png'  => 'png',
+    'image/webp' => 'webp',
+    'image/gif'  => 'gif',
+  ];
+  if ($info === false || !isset($extByMime[$info['mime']])) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Unsupported file — use JPG, PNG, WEBP or GIF']);
+    exit;
+  }
+  $ext = $extByMime[$info['mime']];
+
+  $dir = __DIR__ . '/img/products';
+  if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Could not create img/products folder — check permissions']);
+    exit;
+  }
+
+  $name = 'product-' . date('Ymd-His') . '-' . bin2hex(random_bytes(3)) . '.' . $ext;
+  if (!move_uploaded_file($file['tmp_name'], $dir . '/' . $name)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Failed to save image — check img/products folder permissions']);
+    exit;
+  }
+
+  echo json_encode(['path' => 'img/products/' . $name]);
+  exit;
+}
+
 http_response_code(400);
 echo json_encode(['error' => 'Unknown action']);
