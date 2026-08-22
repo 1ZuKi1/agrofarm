@@ -983,3 +983,32 @@ input, textarea, select{ font-size:16px !important; }
   }
   .news__grid > *:last-child{ margin-right:var(--gutter); }
 }
+
+/* ============ SHOP: product display + variant switcher ============ */
+.shop-product{ max-width:900px; margin:0 auto; padding:0 var(--gutter) 6rem; }
+.shop-product__switcher{ display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:2.5rem; justify-content:center; }
+.variant-pill{
+  min-width:44px; min-height:44px; padding:.5rem 1.3rem;
+  border-radius:999px; border:1.5px solid var(--green); background:transparent; color:var(--green);
+  font-family:var(--sans); font-weight:700; font-size:.9rem; cursor:pointer;
+  transition:background .3s, color .3s, transform .3s var(--spring);
+}
+.variant-pill:hover{ transform:translateY(-2px); }
+.variant-pill.is-active{ background:var(--gold); border-color:var(--gold); color:var(--charcoal); }
+.shop-variant{ display:grid; grid-template-columns:1fr; gap:2rem; background:#fff; border-radius:var(--radius); padding:2rem; box-shadow:var(--shadow-1); }
+.shop-variant__img{ width:100%; border-radius:var(--radius); max-height:320px; object-fit:cover; }
+.shop-variant__name{ font-family:var(--serif); font-size:2rem; color:var(--green); margin-bottom:.4rem; }
+.shop-variant__price{ font-size:1.3rem; font-weight:700; color:var(--charcoal); margin-bottom:.3rem; }
+.shop-variant__weight{ font-size:.9rem; font-weight:400; color:var(--ink-soft); }
+.shop-variant__stock{ font-size:.85rem; color:var(--ink-soft); margin-bottom:1rem; }
+.shop-variant__benefits{ color:var(--ink-soft); margin-bottom:1.2rem; }
+.shop-variant__qty{ display:flex; align-items:center; gap:.8rem; margin-bottom:1.5rem; }
+.shop-variant__qty input{ width:70px; padding:.5rem; border-radius:8px; border:1px solid rgba(44,44,44,.2); font-size:1rem; }
+.shop-variant__section{ margin-top:1.4rem; padding-top:1.2rem; border-top:1px solid rgba(44,44,44,.08); }
+.shop-variant__section h3{ font-family:var(--serif); font-size:1.1rem; color:var(--green); margin-bottom:.5rem; }
+.shop-variant__section p{ color:var(--ink-soft); font-size:.95rem; line-height:1.65; }
+.ingredient-table__row{ display:flex; justify-content:space-between; padding:.5rem 0; font-size:.9rem; }
+.ingredient-table__row + .ingredient-table__row{ border-top:1px solid rgba(212,165,74,.25); }
+@media (min-width: 640px){
+  .shop-variant{ grid-template-columns:280px 1fr; }
+}
