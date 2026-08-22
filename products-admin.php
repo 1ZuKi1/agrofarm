@@ -60,5 +60,48 @@ if ($action === 'list') {
   exit;
 }
 
+if ($action === 'save_product') {
+  $id = $_POST['id'] ?? '';
+  $slug = trim($_POST['slug'] ?? '');
+  $nameMn = trim($_POST['name_mn'] ?? '');
+  $nameEn = trim($_POST['name_en'] ?? '') ?: null;
+  $descMn = trim($_POST['description_mn'] ?? '') ?: null;
+  $descEn = trim($_POST['description_en'] ?? '') ?: null;
+  $active = ($_POST['active'] ?? '1') === '1' ? 1 : 0;
+
+  if ($nameMn === '') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Product name (Mongolian) is required']);
+    exit;
+  }
+  if (!preg_match('/^[a-z0-9]+(-[a-z0-9]+)*$/', $slug)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Slug must be lowercase letters, numbers, and hyphens only (e.g. erdest-doloots)']);
+    exit;
+  }
+
+  try {
+    if ($id !== '') {
+      $stmt = $pdo->prepare(
+        'UPDATE products SET slug=?, name_mn=?, name_en=?, description_mn=?, description_en=?, active=? WHERE id=?'
+      );
+      $stmt->execute([$slug, $nameMn, $nameEn, $descMn, $descEn, $active, (int)$id]);
+      echo json_encode(['id' => (int)$id]);
+    } else {
+      $stmt = $pdo->prepare(
+        'INSERT INTO products (slug, name_mn, name_en, description_mn, description_en, active) VALUES (?, ?, ?, ?, ?, ?)'
+      );
+      $stmt->execute([$slug, $nameMn, $nameEn, $descMn, $descEn, $active]);
+      echo json_encode(['id' => (int)$pdo->lastInsertId()]);
+    }
+  } catch (PDOException $e) {
+    http_response_code(400);
+    echo json_encode(['error' => str_contains($e->getMessage(), 'Duplicate entry')
+      ? 'That slug is already in use by another product'
+      : 'Could not save product']);
+  }
+  exit;
+}
+
 http_response_code(400);
 echo json_encode(['error' => 'Unknown action']);
