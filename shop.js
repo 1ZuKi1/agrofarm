@@ -5,6 +5,11 @@
   let activeVariantId = null;
   let qrPollInterval = null; // active QPay status-poll interval, if any (see stopQrPolling)
 
+  // ?order=<token> — the bookmarkable confirmation link. Read once, at
+  // module load, so both loadShop() below and the ?order= handler further
+  // down agree on the same value without re-parsing location.search.
+  const orderToken = new URLSearchParams(location.search).get("order");
+
   function newsLangSafe() {
     // Mirrors script.js's newsLang() but shop.js is a separate file — this
     // page's language state is the same document.documentElement.lang
@@ -57,8 +62,18 @@
     // (either the #cart deep link on first load, or something opened it
     // while this fetch was still in flight), sync it now so it never renders
     // against the still-empty pre-fetch shopProducts array.
+    //
+    // Skipped entirely when ?order=<token> is present: that handler (below,
+    // in the final DOMContentLoaded listener) owns #cartDrawerItems for the
+    // whole page load in that case, and frequently resolves before this
+    // fetch does (order-status.php is a single indexed lookup; shop-data.php
+    // is N+1). Without this guard, this check would see is-open already
+    // true — set by that handler, not by a real cart-open action — and call
+    // openCartDrawer(), silently overwriting the order confirmation/status
+    // screen with the empty/generic cart view the moment shop-data.php
+    // caught up.
     const drawer = document.getElementById("cartDrawer");
-    if (location.hash === "#cart" || drawer?.classList.contains("is-open")) {
+    if (!orderToken && (location.hash === "#cart" || drawer?.classList.contains("is-open"))) {
       openCartDrawer();
     }
 
@@ -511,7 +526,9 @@
     // from the #cart hash handled inside loadShop()) opens the drawer
     // straight to that order's current status. Independent of shopProducts —
     // order-status.php doesn't need product data — so no race to guard here.
-    const orderToken = new URLSearchParams(location.search).get("order");
+    // (orderToken itself is module-scoped, read once at the top of the file —
+    // see the comment there and in loadShop() for why loadShop() must not
+    // clobber this handler's render once shop-data.php resolves.)
     if (orderToken) {
       document.getElementById("cartDrawer")?.classList.add("is-open");
       fetch(`order-status.php?token=${encodeURIComponent(orderToken)}`)
