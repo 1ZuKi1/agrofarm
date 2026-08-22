@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Nuudelchin Agro Farm LLC — Intensive Livestock Farming &amp; Dairy, Mongolia</title>
+<meta name="description" content="Nuudelchin Agro Farm LLC — Mongolia's pioneer of cluster dairy farming. 1,120 cows across three cluster farms in Töv province, 9 million liters of milk supplied to domestic industry.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Cormorant Garamond (serif headlines) + Inter (body) — full Latin + Mongolian
+     Cyrillic incl. ө/ү, which Playfair Display was missing (fell back to Georgia). -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+/* Homepage: Facebook feed nested inside the News section */
+.fb-sub{ text-align:center; margin-top:3rem; }
+.fb-home__embed{ position:relative; max-width:1100px; margin:1.5rem auto 0; max-height:950px; overflow:hidden; text-align:left; }
+.fb-home__embed .sk-ww-facebook-page-posts{ width:100%; text-align:left; }
+.fb-home__embed::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:340px; background:linear-gradient(to bottom, rgba(243,234,217,0) 0%, rgba(243,234,217,.92) 55%, rgba(243,234,217,1) 100%); pointer-events:none; }
+.fb-home__more{ text-align:center; margin-top:1.75rem; }
+</style>
+</head>
+<body>
+
+<!-- Scroll progress bar (top of viewport, width driven by JS) -->
+<div class="progress-bar" id="progressBar" aria-hidden="true"></div>
+
+<!-- Soft radial glow that follows the cursor (desktop only) -->
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+<!-- Grain overlay for tactile, print-like feel -->
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============ NAVIGATION ============ -->
+<header class="nav" id="nav">
+  <a href="#hero" class="nav__brand" aria-label="Nuudelchin Agro Farm — Home">
+    <span class="nav__mark">
+      <img src="img/naf_logo_full.svg" alt="" width="320" height="160">
+    </span>
+  </a>
+  <nav class="nav__links" id="navLinks" aria-label="Main">
+    <a href="#about" data-en="About" data-mn="Бидний тухай">About</a>
+    <a href="#journey" data-en="Journey" data-mn="Замнал">Journey</a>
+    <a href="#farms" data-en="Farms" data-mn="Фермүүд">Farms</a>
+    <a href="#services" data-en="Services" data-mn="Үйлчилгээ">Services</a>
+    <a href="#products" data-en="Products" data-mn="Бүтээгдэхүүн">Products</a>
+    <a href="#news" data-en="News" data-mn="Мэдээ">News</a>
+    <a href="#contact" data-en="Contact" data-mn="Холбоо барих">Contact</a>
+  </nav>
+  <a href="#contact" class="btn nav__cta" data-en="Get in touch" data-mn="Холбогдох">Get in touch</a>
+  <!-- Language toggle: shows the language you can switch TO -->
+  <button class="lang-toggle" id="langToggle" aria-label="Switch language">MN</button>
+  <button class="nav__burger" id="burger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- Scroll-spy dots (desktop) -->
+<nav class="dots" id="dots" aria-label="Section navigation">
+  <a href="#hero" data-spy="hero"><i></i><b data-en="Home" data-mn="Нүүр">Home</b></a>
+  <a href="#about" data-spy="about"><i></i><b data-en="About" data-mn="Тухай">About</b></a>
+  <a href="#journey" data-spy="journey"><i></i><b data-en="Journey" data-mn="Замнал">Journey</b></a>
+  <a href="#farms" data-spy="farms"><i></i><b data-en="Farms" data-mn="Фермүүд">Farms</b></a>
+  <a href="#services" data-spy="services"><i></i><b data-en="Services" data-mn="Үйлчилгээ">Services</b></a>
+  <a href="#products" data-spy="products"><i></i><b data-en="Products" data-mn="Бүтээгдэхүүн">Products</b></a>
+  <a href="#recognition" data-spy="recognition"><i></i><b data-en="Recognition" data-mn="Хүлээн зөвшөөрөлт">Recognition</b></a>
+  <a href="#news" data-spy="news"><i></i><b data-en="News" data-mn="Мэдээ">News</b></a>
+  <a href="#contact" data-spy="contact"><i></i><b data-en="Contact" data-mn="Холбоо">Contact</b></a>
+</nav>
+
+<main>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="hero">
+  <div class="hero__bg" data-parallax="0.35"></div>
+  <div class="hero__veil"></div>
+  <div class="hero__inner">
+    <p class="hero__kicker reveal" data-en="Нүүдэлчин Агро Ферм ХХК · Est. 2013" data-mn="Нүүдэлчин Агро Ферм ХХК · 2013 оноос">Нүүдэлчин Агро Ферм ХХК · Est. 2013</p>
+    <h1 class="hero__title">
+      <span class="line"><span data-en="From the" data-mn="Монголын уудам">From the</span></span>
+      <span class="line"><span data-en="Mongolian steppe," data-mn="тал нутгаас,">Mongolian steppe,</span></span>
+      <span class="line"><span class="gold-ink" data-en="to every table." data-mn="айл бүрийн ширээнд.">to every table.</span></span>
+    </h1>
+    <p class="hero__slogan reveal" lang="mn">«Сайн сайхны дээд, сааль сүүний дээж»</p>
+    <p class="hero__lede reveal" data-en="Mongolia's pioneer of cluster dairy farming — 1,120 cows across three cluster farms in Töv province, supplying healthy, safe, high-quality milk to the nation." data-mn="Монголын кластер сүүний фермийн анхдагч — Төв аймгийн гурван кластер фермд 1,120 үнээ маллаж, эрүүл, аюулгүй, өндөр чанартай сүүг үндэсний үйлдвэрлэлд нийлүүлж байна.">Mongolia's pioneer of cluster dairy farming — 1,120 cows across three cluster farms in Töv province, supplying healthy, safe, high-quality milk to the nation.</p>
+    <div class="hero__actions reveal">
+      <a href="#journey" class="btn btn--gold" data-en="Our journey" data-mn="Бидний замнал">Our journey</a>
+      <a href="#services" class="btn btn--ghost" data-en="What we do" data-mn="Үйл ажиллагаа">What we do</a>
+    </div>
+  </div>
+  <a href="#stats" class="hero__scroll" aria-label="Scroll down">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 4v14m0 0 6-6m-6 6-6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+</section>
+
+<!-- ============ STATS (animated counters) ============ -->
+<section class="stats" id="stats">
+  <div class="stats__grid">
+    <div class="stat reveal">
+      <span class="stat__num" data-count="1120">0</span>
+      <span class="stat__label" data-en="Cows across three cluster farms" data-mn="Гурван кластер фермийн үнээ">Cows across three cluster farms</span>
+    </div>
+    <div class="stat reveal">
+      <span class="stat__num" data-count="9" data-suffix-en=" M" data-suffix-mn=" сая">0</span>
+      <span class="stat__label" data-en="Liters of milk supplied to domestic industry" data-mn="Дотоодын үйлдвэрт нийлүүлсэн сүү, литр">Liters of milk supplied to domestic industry</span>
+    </div>
+    <div class="stat reveal">
+      <span class="stat__num" data-count="30">0</span>
+      <span class="stat__label" data-en="Herder households employed" data-mn="Хамтран ажилладаг малчин өрх">Herder households employed</span>
+    </div>
+    <div class="stat reveal">
+      <span class="stat__num" data-count="100" data-prefix="~">0</span>
+      <span class="stat__label" data-en="Permanent jobs created" data-mn="Байнгын ажлын байр">Permanent jobs created</span>
+    </div>
+    <div class="stat reveal">
+      <span class="stat__num" data-count="450" data-suffix="+">0</span>
+      <span class="stat__label" data-en="Montbéliarde heifers imported from France" data-mn="Франциас импортолсон Монбельярд үнээ">Montbéliarde heifers imported from France</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="about" id="about">
+  <div class="about__grid">
+    <div class="about__text">
+      <p class="kicker reveal" data-en="Who we are" data-mn="Бид хэн бэ">Who we are</p>
+      <h2 class="reveal" data-en="Nomadic heritage,<br><em>modern agriculture.</em>" data-mn="Нүүдэлчин өв уламжлал,<br><em>орчин үеийн хөдөө аж ахуй.</em>">Nomadic heritage,<br><em>modern agriculture.</em></h2>
+      <p class="reveal" data-en="Nuudelchin Agro Farm LLC is an independent Mongolian dairy and livestock company established in 2018 with a clear mission: to modernize the country&apos;s dairy sector. That year, we opened Mongolia&apos;s first 400-cow cluster dairy farm — a model that united 10 herder families under one sustainable system. Since then, we&apos;ve expanded to three successful clusters, imported over 450 Montb&eacute;liarde cattle from France, and are now building our largest farm yet in Ugtaaltsaidam. We haven&apos;t stopped since, and we&apos;re just getting started." data-mn="Нүүдэлчин Агро Ферм ХХК нь 2018 онд Монголын сүүний салбарыг шинэчлэх тодорхой зорилготойгоор байгуулагдсан, бие даасан монгол компани юм. Тухайн жилдээ бид Монголын анхны 400 үнээний кластер сүүний фермийг нээж, 10 малчин өрхийг нэг тогтвортой системд нэгтгэсэн. Түүнээс хойш бид гурван кластерыг амжилттай хэрэгжүүлж, Францаас 450 гаруй Монбелиард үхэр импортолж, одоо Угтаалцайдамд хамгийн том фермээ барьж байна. Бид зогсохгүй, энэ бол зөвхөн эхлэл.">Nuudelchin Agro Farm LLC is an independent Mongolian dairy and livestock company established in 2018 with a clear mission: to modernize the country's dairy sector. That year, we opened Mongolia's first 400-cow cluster dairy farm — a model that united 10 herder families under one sustainable system. Since then, we've expanded to three successful clusters, imported over 450 Montbéliarde cattle from France, and are now building our largest farm yet in Ugtaaltsaidam. We haven't stopped since, and we're just getting started.</p>
+      <div class="about__mv">
+        <div class="mv reveal reveal--scale">
+          <h3 data-en="Mission" data-mn="Эрхэм зорилго">Mission</h3>
+          <p data-en="To develop intensive livestock farming in Mongolia and build resilient, sustainable value chains rooted in agricultural resources — from farm planning and construction to processing and market integration." data-mn="Монголд эрчимжсэн мал аж ахуйг хөгжүүлж, фермийн төлөвлөлт, барилгаас боловсруулалт, зах зээлийн интеграц хүртэл хөдөө аж ахуйн нөөцөд суурилсан тогтвортой үнэ цэнийн сүлжээг бий болгох.">To develop intensive livestock farming in Mongolia and build resilient, sustainable value chains rooted in agricultural resources — from farm planning and construction to processing and market integration.</p>
+        </div>
+        <div class="mv reveal reveal--scale">
+          <h3 data-en="Vision" data-mn="Алсын хараа">Vision</h3>
+          <p data-en="To bring Mongolia's dairy sector to international standards by producing healthy, safe, and high-quality raw materials that protect public health." data-mn="Эрүүл, аюулгүй, өндөр чанартай түүхий эд үйлдвэрлэн нийтийн эрүүл мэндийг хамгаалж, Монголын сүүний салбарыг олон улсын түвшинд хүргэх.">To bring Mongolia's dairy sector to international standards by producing healthy, safe, and high-quality raw materials that protect public health.</p>
+        </div>
+      </div>
+      <ul class="values reveal" aria-label="Corporate values">
+        <li data-en="Healthy food production" data-mn="Эрүүл хүнсний үйлдвэрлэл">Healthy food production</li>
+        <li data-en="Reliability &amp; trust" data-mn="Найдвартай түншлэл">Reliability &amp; trust</li>
+        <li data-en="Learning organization" data-mn="Суралцагч байгууллага">Learning organization</li>
+        <li data-en="Safe operations" data-mn="Аюулгүй ажиллагаа">Safe operations</li>
+        <li data-en="Collaboration &amp; value chain" data-mn="Хамтын ажиллагаа, үнэ цэнийн сүлжээ">Collaboration &amp; value chain</li>
+      </ul>
+    </div>
+    <figure class="about__media reveal reveal--scale" data-tilt>
+      <div class="about__photo"></div>
+      <figcaption data-en="First cluster farm opening — Bayandelger, Töv province, 2018" data-mn="Анхны кластер фермийн нээлт — Баяндэлгэр, Төв аймаг, 2018">First cluster farm opening — Bayandelger, Töv province, 2018</figcaption>
+      <div class="about__badge">
+        <span class="about__badge-num">2018</span>
+        <span data-en="First cluster farm in Mongolia" data-mn="Монголын анхны кластер ферм">First cluster farm in Mongolia</span>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ JOURNEY / TIMELINE ============ -->
+<section class="journey" id="journey">
+  <div class="journey__head">
+    <p class="kicker reveal" data-en="Milestones" data-mn="Түүхэн замнал">Milestones</p>
+    <h2 class="reveal" data-en="A journey measured<br><em>in herds, not years.</em>" data-mn="Он жилээр бус,<br><em>сүргээр хэмжигдэх замнал.</em>">A journey measured<br><em>in herds, not years.</em></h2>
+  </div>
+
+  <div class="timeline" id="timeline">
+    <!-- Gold spine: SVG path whose stroke draws in as you scroll (stroke-dashoffset linked to scroll progress in JS) -->
+    <svg class="timeline__spine" viewBox="0 0 60 1600" preserveAspectRatio="none" aria-hidden="true">
+      <path id="spinePath" d="M30 0 C 10 100, 50 200, 30 300 C 10 400, 50 500, 30 600 C 10 700, 50 800, 30 900 C 10 1000, 50 1100, 30 1200 C 10 1300, 50 1400, 30 1600" fill="none" stroke="var(--gold)" stroke-width="2"/>
+    </svg>
+
+    <article class="tl reveal"><span class="tl__year">2013–14</span><div class="tl__card"><h3 data-en="French bloodlines" data-mn="Францын үүлдэр">French bloodlines</h3><p data-en="Montbéliarde heifers imported from France by air and land transport." data-mn="Франциас Монбельярд үүлдрийн өсвөр үнээг агаарын болон газрын тээврээр импортлов.">Montbéliarde heifers imported from France by air and land transport.</p></div></article>
+    <article class="tl reveal"><span class="tl__year">2016</span><div class="tl__card"><h3 data-en="On the national stage" data-mn="Үндэсний индэр дээр">On the national stage</h3><p data-en="Director J. Battugs speaks at the Mongolia Economic Forum on short- and long-term solutions to increase exports." data-mn="Захирал Ж.Баттөгс Монголын эдийн засгийн чуулган дээр экспортыг нэмэгдүүлэх богино болон урт хугацааны шийдлийн талаар илтгэл тавив.">Director J. Battugs speaks at the Mongolia Economic Forum on short- and long-term solutions to increase exports.</p></div></article>
+    <article class="tl reveal"><span class="tl__year">2018</span><div class="tl__card tl__card--major"><h3 data-en="First cluster farm" data-mn="Анхны кластер ферм">First cluster farm</h3><p data-en="Mongolia's first 400-cow cluster dairy farm opens in Bayandelger soum, Töv province — 10 herder families, 40 cows each." data-mn="Төв аймгийн Баяндэлгэр суманд Монголын анхны 400 үнээний кластер сүүний ферм нээгдэв — 10 малчин өрх, тус бүр 40 үнээ.">Mongolia's first 400-cow cluster dairy farm opens in Bayandelger soum, Töv province — 10 herder families, 40 cows each.</p></div></article>
+    <article class="tl reveal"><span class="tl__year">2019–20</span><div class="tl__card"><h3 data-en="Growing the herd" data-mn="Сүрэг өсөв">Growing the herd</h3><p data-en="France–Mongolia animal husbandry cooperation seminar; further Montbéliarde imports bring the total to 450+. Second cluster farm — 480 cows in Argalant soum." data-mn="Франц–Монголын мал аж ахуйн хамтын ажиллагааны семинар; нэмэлт импортоор Монбельярд үнээ 450+ болов. Хоёр дахь кластер ферм — Аргалант суманд 480 үнээ.">France–Mongolia animal husbandry cooperation seminar; further Montbéliarde imports bring the total to 450+. Second cluster farm — 480 cows in Argalant soum.</p></div></article>
+    <article class="tl reveal"><span class="tl__year">2023</span><div class="tl__card"><h3 data-en="Third cluster" data-mn="Гурав дахь кластер">Third cluster</h3><p data-en="240-cow cluster farm established in Bayankhangai soum, Töv province." data-mn="Төв аймгийн Баянхангай суманд 240 үнээний кластер ферм байгуулагдав.">240-cow cluster farm established in Bayankhangai soum, Töv province.</p></div></article>
+    <article class="tl reveal"><span class="tl__year">2024</span><div class="tl__card tl__card--major"><h3 data-en="Presidential visit" data-mn="Ерөнхийлөгчийн айлчлал">Presidential visit</h3><p data-en="H.E. Khurelsukh Ukhnaa, President of Mongolia, visits our operations on December 10 within the &quot;Food Supply and Security&quot; National Movement." data-mn="Монгол Улсын Ерөнхийлөгч У.Хүрэлсүх 12 дугаар сарын 10-нд «Хүнсний хангамж, аюулгүй байдал» үндэсний хөдөлгөөний хүрээнд манай үйл ажиллагаатай танилцав.">H.E. Khurelsukh Ukhnaa, President of Mongolia, visits our operations on December 10 within the "Food Supply and Security" National Movement.</p></div></article>
+    <article class="tl reveal"><span class="tl__year">2025</span><div class="tl__card"><h3 data-en="Holstein first" data-mn="Холштейн — анхдагч">Holstein first</h3><p data-en="400 Holstein cattle imported from China — a first for Mongolia." data-mn="Хятадаас 400 Холштейн үхэр импортлов — Монголд анх удаа.">400 Holstein cattle imported from China — a first for Mongolia.</p></div></article>
+    <article class="tl reveal"><span class="tl__year">2030</span><div class="tl__card tl__card--future"><h3 data-en="The select herd" data-mn="Шилмэл сүрэг">The select herd</h3><p data-en="Target: import 1,000 purebred cows and create a national select herd with government support." data-mn="Зорилт: 1,000 цэвэр үүлдрийн үнээ импортолж, төрийн дэмжлэгтэйгээр үндэсний шилмэл сүрэг бүрдүүлэх.">Target: import 1,000 purebred cows and create a national select herd with government support.</p></div></article>
+  </div>
+</section>
+
+<!-- ============ FARMS ============ -->
+<section class="farms" id="farms">
+  <div class="farms__layout">
+  <div class="farms__head">
+    <p class="kicker kicker--light reveal" data-en="Our farms — Töv province" data-mn="Манай фермүүд — Төв аймаг">Our farms — Töv province</p>
+    <h2 class="reveal" data-en="Four clusters,<br><em>one steppe.</em>" data-mn="Дөрвөн кластер,<br><em>нэг тал нутаг.</em>">Four clusters,<br><em>one steppe.</em></h2>
+    <p class="reveal" data-en="Each cluster farm unites 10 herder households around shared infrastructure, veterinary care, and a guaranteed milk market. Every family works 10 hectares of its own land — 2 for planting, 8 preserved as pasture — and together the clusters supply 900,000 liters of milk to domestic dairy factories every year." data-mn="Кластер ферм бүр 10 малчин өрхийг дундын дэд бүтэц, мал эмнэлгийн үйлчилгээ, баталгаат сүүний зах зээлээр нэгтгэдэг. Өрх бүр өөрийн 10 га газартай — 2 га-д тариалалт хийж, 8 га-г бэлчээр болгон хамгаалдаг. Кластерууд жил бүр 900,000 литр сүүг дотоодын сүүний үйлдвэрүүдэд нийлүүлдэг.">Each cluster farm unites 10 herder households around shared infrastructure, veterinary care, and a guaranteed milk market. Every family works 10 hectares of its own land — 2 for planting, 8 preserved as pasture — and together the clusters supply 900,000 liters of milk to domestic dairy factories every year.</p>
+  </div>
+  <div class="farms__grid">
+    <article class="farm reveal reveal--scale" data-tilt>
+      <span class="farm__count">400</span>
+      <h3 data-en="Bayandelger" data-mn="Баяндэлгэр">Bayandelger</h3>
+      <p class="farm__meta" data-en="Established 2018 · Mongolia's first cluster dairy farm" data-mn="2018 онд байгуулагдсан · Монголын анхны кластер ферм">Established 2018 · Mongolia's first cluster dairy farm</p>
+    </article>
+    <article class="farm reveal reveal--scale" data-tilt>
+      <span class="farm__count">480</span>
+      <h3 data-en="Argalant" data-mn="Аргалант">Argalant</h3>
+      <p class="farm__meta" data-en="Established 2020 · Second cluster farm" data-mn="2020 онд байгуулагдсан · Хоёр дахь кластер ферм">Established 2020 · Second cluster farm</p>
+    </article>
+    <article class="farm reveal reveal--scale" data-tilt>
+      <span class="farm__count">240</span>
+      <h3 data-en="Bayankhangai" data-mn="Баянхангай">Bayankhangai</h3>
+      <p class="farm__meta" data-en="Established 2023 · Third cluster farm" data-mn="2023 онд байгуулагдсан · Гурав дахь кластер ферм">Established 2023 · Third cluster farm</p>
+    </article>
+    <article class="farm farm--dev reveal reveal--scale" data-tilt>
+      <span class="farm__count">600</span>
+      <h3 data-en="Ugtaaltsaidam" data-mn="Угтаалцайдам">Ugtaaltsaidam</h3>
+      <p class="farm__meta" data-en="Under development · Next-generation farm" data-mn="Баригдаж байна · Шинэ үеийн ферм">Under development · Next-generation farm</p>
+    </article>
+  </div>
+  </div>
+</section>
+
+<!-- ============ SERVICES ============ -->
+<section class="services" id="services">
+  <div class="services__head">
+    <p class="kicker reveal" data-en="Services" data-mn="Үйлчилгээ">Services</p>
+    <h2 class="reveal" data-en="From blueprint<br><em>to bottling.</em>" data-mn="Зураг төслөөс<br><em>савлагаа хүртэл.</em>">From blueprint<br><em>to bottling.</em></h2>
+  </div>
+  <div class="services__grid">
+    <article class="svc reveal reveal--scale" data-tilt>
+      <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
+      <h3 data-en="Farm Construction" data-mn="Ферм барилга">Farm Construction</h3>
+      <p data-en="Planning, engineering, infrastructure, and equipment for modern dairy farms." data-mn="Орчин үеийн сүүний фермийн төлөвлөлт, инженерчлэл, дэд бүтэц, тоног төхөөрөмж.">Planning, engineering, infrastructure, and equipment for modern dairy farms.</p>
+    </article>
+    <article class="svc reveal reveal--scale" data-tilt>
+      <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3m0 12v3m9-9h-3M6 12H3m14.5-5.5-2 2m-7 7-2 2m11 0-2-2m-7-7-2-2"/><circle cx="12" cy="12" r="3.5"/></svg>
+      <h3 data-en="Consulting" data-mn="Зөвлөх үйлчилгээ">Consulting</h3>
+      <p data-en="Business plans, investment models, herd management, and production technology." data-mn="Бизнес төлөвлөгөө, хөрөнгө оруулалтын загвар, сүргийн менежмент, үйлдвэрлэлийн технологи.">Business plans, investment models, herd management, and production technology.</p>
+    </article>
+    <article class="svc svc--training reveal reveal--scale" data-tilt>
+      <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h14v13H6a2 2 0 0 0-2 2Zm0 0a2 2 0 0 0 2 2h14"/><path d="M9 8h7M9 12h5"/></svg>
+      <h3 data-en="Training" data-mn="Сургалт">Training</h3>
+      <p data-en="Professional courses and hands-on programs for farmers and herders." data-mn="Фермер, малчдад зориулсан мэргэжлийн болон дадлага сургалтын хөтөлбөрүүд.">Professional courses and hands-on programs for farmers and herders.</p>
+    </article>
+    <article class="svc reveal reveal--scale" data-tilt>
+      <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4.5-2.5-8-5.5-8-10a8 8 0 0 1 16 0c0 4.5-3.5 7.5-8 10Z"/><path d="M12 3c2 3 2 7 0 10-2-3-2-7 0-10Z"/></svg>
+      <h3 data-en="Feed &amp; Nutrition" data-mn="Тэжээл, шим тэжээл">Feed &amp; Nutrition</h3>
+      <p data-en="Formulation, pasture planning, and herd health support." data-mn="Тэжээлийн жор, бэлчээрийн төлөвлөлт, сүргийн эрүүл мэндийн дэмжлэг.">Formulation, pasture planning, and herd health support.</p>
+    </article>
+    <article class="svc reveal reveal--scale" data-tilt>
+      <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v4L6 15a4.5 4.5 0 0 0 4 6.5h4A4.5 4.5 0 0 0 18 15L14 7V3"/><path d="M7.5 13h9"/></svg>
+      <h3 data-en="Milk Processing" data-mn="Сүү боловсруулалт">Milk Processing</h3>
+      <p data-en="Collection, cooling, processing lines, quality control, and standards." data-mn="Сүү цуглуулалт, хөргөлт, боловсруулах шугам, чанарын хяналт, стандарт.">Collection, cooling, processing lines, quality control, and standards.</p>
+    </article>
+    <article class="svc reveal reveal--scale" data-tilt>
+      <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7 7.5 10.5 16M17 7.5 13.5 16M7.5 6h9"/></svg>
+      <h3 data-en="Value Chain Development" data-mn="Үнэ цэнийн сүлжээний хөгжил">Value Chain Development</h3>
+      <p data-en="Connecting production to market for sustainable income." data-mn="Үйлдвэрлэлийг зах зээлтэй холбож, тогтвортой орлого бий болгоно.">Connecting production to market for sustainable income.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ PRODUCTS ============ -->
+<section class="products" id="products">
+  <div class="products__head">
+    <p class="kicker reveal" data-en="Products" data-mn="Бүтээгдэхүүн">Products</p>
+    <h2 class="reveal" data-en="What the steppe<br><em>provides.</em>" data-mn="Тал нутгийн<br><em>өгөөж.</em>">What the steppe<br><em>provides.</em></h2>
+  </div>
+  <div class="products__grid">
+    <article class="prod reveal reveal--scale">
+      <div class="prod__media prod__media--equipment"></div>
+      <div class="prod__body">
+        <h3 data-en="Farm Equipment" data-mn="Фермийн тоног төхөөрөмж">Farm Equipment</h3>
+        <p data-en="Milking machines, cooling tanks, feeders, and complete farm equipment." data-mn="Саалтуур, хөргөлтийн танк, тэжээгч болон фермийн иж бүрэн тоног төхөөрөмж.">Milking machines, cooling tanks, feeders, and complete farm equipment.</p>
+      </div>
+    </article>
+    <article class="prod reveal reveal--scale">
+      <div class="prod__media prod__media--milk"></div>
+      <div class="prod__body">
+        <h3 data-en="Raw Milk &amp; Dairy" data-mn="Түүхий сүү, сүүн бүтээгдэхүүн">Raw Milk &amp; Dairy</h3>
+        <p data-en="Healthy, safe, high-quality raw milk and processed dairy products." data-mn="Эрүүл, аюулгүй, өндөр чанартай түүхий сүү, боловсруулсан сүүн бүтээгдэхүүн.">Healthy, safe, high-quality raw milk and processed dairy products.</p>
+      </div>
+    </article>
+    <article class="prod reveal reveal--scale">
+      <div class="prod__media prod__media--livestock"></div>
+      <div class="prod__body">
+        <h3 data-en="Breeding Livestock" data-mn="Үржлийн мал">Breeding Livestock</h3>
+        <p data-en="Montbéliarde breed from France — 8,520 kg annual milk yield, 3.50% protein, 3.95% fat. Holstein cattle from China, and high-yield pregnant heifers for farm expansion." data-mn="Францын Монбельярд үүлдэр — жилд 8,520 кг сүү, уураг 3.50%, тослог 3.95%. Хятадаас импортолсон Холштейн үхэр, өндөр ашиг шимт хээлтэй өсвөр үнээ.">Montbéliarde breed from France — 8,520 kg annual milk yield, 3.50% protein, 3.95% fat. Holstein cattle from China, and high-yield pregnant heifers for farm expansion.</p>
+      </div>
+    </article>
+  </div>
+</section>
+<!-- ============ RECOGNITION & VOICES ============ -->
+<section class="recognition" id="recognition">
+  <div class="recognition__inner">
+    <p class="kicker kicker--light reveal" data-en="Recognition" data-mn="Хүлээн зөвшөөрөлт">Recognition</p>
+    <h2 class="reveal" data-en="A national movement,<br><em>a presidential visit.</em>" data-mn="Үндэсний хөдөлгөөн,<br><em>Ерөнхийлөгчийн айлчлал.</em>">A national movement,<br><em>a presidential visit.</em></h2>
+    <p class="recognition__body reveal" data-en="On December 10, 2024, His Excellency <strong>Khurelsukh Ukhnaa</strong>, President of Mongolia, visited Nuudelchin Agro Farm's operations within the framework of the <em>&quot;Food Supply and Security&quot;</em> National Movement — briefed on our achievements, milk production, and plans for future expansion." data-mn="2024 оны 12 дугаар сарын 10-нд Монгол Улсын Ерөнхийлөгч <strong>У.Хүрэлсүх</strong> «Хүнсний хангамж, аюулгүй байдал» үндэсний хөдөлгөөний хүрээнд Нүүдэлчин Агро Фермийн үйл ажиллагаатай танилцаж, компанийн амжилт, сүүний үйлдвэрлэл, өргөтгөлийн төлөвлөгөөний талаар мэдээлэл авав.">On December 10, 2024, His Excellency <strong>Khurelsukh Ukhnaa</strong>, President of Mongolia, visited Nuudelchin Agro Farm's operations within the framework of the <em>"Food Supply and Security"</em> National Movement — briefed on our achievements, milk production, and plans for future expansion.</p>
+
+      <div class="quotes">
+      <blockquote class="quote reveal reveal--scale">
+        <p data-en="&quot;If this incentive is provided throughout the year, it will be a strong impetus for herder cooperatives to expand their operation.&quot;" data-mn="«Энэ урамшууллыг жилийн турш олгодог бол малчдын хоршоод үйл ажиллагаагаа өргөжүүлэхэд хүчтэй түлхэц болно.»">"If this incentive is provided throughout the year, it will be a strong impetus for herder cooperatives to expand their operation."</p>
+        <footer data-en="— <strong>J. Battugs</strong>, Director, Nuudelchin Agro Farm LLC" data-mn="— <strong>Ж.Баттөгс</strong>, Захирал, Нүүдэлчин Агро Ферм ХХК">— <strong>J. Battugs</strong>, Director, Nuudelchin Agro Farm LLC</footer>
+      </blockquote>
+      <blockquote class="quote reveal reveal--scale">
+        <p data-en="&quot;We aim to import 1,000 purebred cows for milk and meat, and request government support for creating a select herd by 2030.&quot;" data-mn="«Сүү, махны чиглэлийн 1,000 цэвэр үүлдрийн үнээ импортолж, 2030 он гэхэд шилмэл сүрэг бүрдүүлэхэд төрийн дэмжлэг хүсэж байна.»">"We aim to import 1,000 purebred cows for milk and meat, and request government support for creating a select herd by 2030."</p>
+        <footer data-en="— <strong>J. Battugs</strong>, Director, Nuudelchin Agro Farm LLC" data-mn="— <strong>Ж.Баттөгс</strong>, Захирал, Нүүдэлчин Агро Ферм ХХК">— <strong>J. Battugs</strong>, Director, Nuudelchin Agro Farm LLC</footer>
+      </blockquote>
+    </div>
+
+    <div class="story reveal">
+      <h3 data-en="A herder's story" data-mn="Малчны түүх">A herder's story</h3>
+      <p data-en="The family of <strong>B. Orgil</strong> has farmed with us since 2024 — 18 cows, an average of 18 liters of milk sold per day. Orgil notes that the Government's milk incentive of MNT 1,000 per liter greatly supports farmers." data-mn="<strong>Б.Оргилын</strong> гэр бүл 2024 оноос манайтай хамтран фермерийн үйл ажиллагаа эрхэлж байна — 18 үнээтэй, өдөрт дунджаар 18 литр сүү борлуулдаг. Засгийн газрын литр тутамд 1,000 төгрөгийн сүүний урамшуулал фермерүүдэд ихээхэн дэмжлэг болдгийг Оргил онцолжээ.">The family of <strong>B. Orgil</strong> has farmed with us since 2024 — 18 cows, an average of 18 liters of milk sold per day. Orgil notes that the Government's milk incentive of MNT 1,000 per liter greatly supports farmers.</p>
+      <p class="story__src" data-en="Source: MONTSAME News Agency" data-mn="Эх сурвалж: МОНЦАМЭ агентлаг">Source: MONTSAME News Agency</p>
+    </div>
+
+    <div class="partners reveal">
+      <h3 data-en="Partners" data-mn="Түншүүд">Partners</h3>
+      <ul>
+        <li><strong data-en="Khan Bank" data-mn="ХААН Банк">Khan Bank</strong><span data-en="Financing partner for cluster farm projects" data-mn="Кластер фермийн төслийн санхүүжилтийн түнш">Financing partner for cluster farm projects</span></li>
+        <li><strong data-en="APU Dairy LLC" data-mn="АПУ Дэйри ХХК">APU Dairy LLC</strong><span data-en="Collects milk from all cluster farms — 12 collection points nationwide" data-mn="Бүх кластер фермээс сүү татан авдаг — улсын хэмжээнд 12 цуглуулах цэгтэй">Collects milk from all cluster farms — 12 collection points nationwide</span></li>
+        <li><strong data-en="French Government" data-mn="Францын Засгийн газар">French Government</strong><span data-en="Animal husbandry cooperation" data-mn="Мал аж ахуйн хамтын ажиллагаа">Animal husbandry cooperation</span></li>
+        <li><strong data-en="Mongolian Government" data-mn="Монгол Улсын Засгийн газар">Mongolian Government</strong><span data-en="&quot;Food Supply and Security&quot; National Movement" data-mn="«Хүнсний хангамж, аюулгүй байдал» үндэсний хөдөлгөөн">"Food Supply and Security" National Movement</span></li>
+        <li><strong data-en="Harumafuji Dairy Farm" data-mn="Харүмафүжи ферм">Harumafuji Dairy Farm</strong><span data-en="Fellow dairy operator, Bayankhangai soum" data-mn="Баянхангай сумын сүүний ферм">Fellow dairy operator, Bayankhangai soum</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NEWS (Facebook feed; curated grid disabled until news-data.json has posts) ============ -->
+<section class="news" id="news">
+  <div class="news__head">
+    <p class="kicker reveal" data-en="Updates" data-mn="Мэдээлэл">Updates</p>
+    <h2 class="reveal" data-en="News &amp; <em>Updates</em>" data-mn="Мэдээ &amp; <em>Мэдээлэл</em>">News &amp; <em>Updates</em></h2>
+  </div>
+
+  <!-- Live Facebook feed -->
+  <div class="fb-sub reveal">
+    <p class="kicker" data-en="Latest from Facebook" data-mn="Фэйсбүүкээс">Latest from Facebook</p>
+  </div>
+  <div class="fb-home__embed reveal">
+    <div class="sk-ww-facebook-page-posts" data-embed-id="25699003"></div>
+  </div>
+
+  <div class="fb-home__more reveal">
+    <a href="news.html" class="btn btn--gold" data-en="See all news →" data-mn="Бүх мэдээг үзэх →">See all news →</a>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="contact" id="contact">
+  <div class="contact__grid">
+    <div class="contact__intro">
+      <p class="kicker reveal" data-en="Contact" data-mn="Холбоо барих">Contact</p>
+      <h2 class="reveal" data-en="Let's build the next<br><em>cluster together.</em>" data-mn="Дараагийн кластерыг<br><em>хамтдаа байгуулъя.</em>">Let's build the next<br><em>cluster together.</em></h2>
+      <p class="reveal" lang="mn" data-en="«Хөдөөгийн хөгжлийн шийдэл» — Rural development solution." data-mn="«Хөдөөгийн хөгжлийн шийдэл»">«Хөдөөгийн хөгжлийн шийдэл» — Rural development solution.</p>
+    </div>
+    <ul class="contact__list">
+      <li class="reveal reveal--scale">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+        <div><span data-en="Email" data-mn="И-мэйл">Email</span><a href="mailto:info@agrofarm.mn">info@agrofarm.mn</a></div>
+      </li>
+      <li class="reveal reveal--scale">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>
+        <div><span data-en="Phone" data-mn="Утас">Phone</span><a href="tel:+97670000789">+976 7000-0789</a></div>
+      </li>
+      <li class="reveal reveal--scale">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4.5-4.5-7-8-7-11a7 7 0 0 1 14 0c0 3-2.5 6.5-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        <div><span data-en="Location" data-mn="Байршил">Location</span><p data-en="Room 402, Tsoma Office building, Sukhbaatar District, Ulaanbaatar, Mongolia " data-mn="Цома Оффис байр, 402 тоот, Сүхбаатар дүүрэг, Улаанбаатар, Монгол">Room 402, Tsoma Office building, Sukhbaatar District, Ulaanbaatar, Mongolia </p></div>
+      </li>
+      <li class="reveal reveal--scale">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9h3V5.5A13 13 0 0 0 14.5 5C11.5 5 10 6.8 10 10v2H7v4h3v6h4v-6h3l1-4h-4v-1.5c0-1 .3-1.5 1.5-1.5Z" transform="scale(0.9) translate(1.3 1.3)"/></svg>
+        <div><span>Facebook</span><a href="https://www.facebook.com/61569851705695" target="_blank" rel="noopener">Нүүдэлчин Агро Ферм</a></div>
+      </li>
+    </ul>
+  </div>
+  <footer class="footer">
+    <!-- Line 1 is intentionally untranslated: it is bilingual by design and contains the live #year span -->
+    <p>© <span id="year"></span> Nuudelchin Agro Farm LLC · Нүүдэлчин Агро Ферм ХХК · agrofarm.mn</p>
+    <p data-en="Independent Mongolian dairy company — est. 2018." data-mn="Бие даасан Монгол сүүний компани — 2013 оноос.">Independent Mongolian dairy company — est. 2013.</p>
+  </footer>
+</section>
+
+</main>
+
+<!-- Scroll-to-top FAB -->
+<button class="fab" id="fab" aria-label="Scroll to top">
+  <svg viewBox="0 0 24 24" fill="none"><path d="M12 20V6m0 0-6 6m6-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<!-- Sticky mobile action bar -->
+<div class="mobilebar" id="mobilebar">
+  <a href="tel:+97670000789" class="mobilebar__call" data-en="Call" data-mn="Залгах">Call</a>
+  <a href="#contact" class="mobilebar__quote" data-en="Get a quote" data-mn="Үнийн санал авах">Get a quote</a>
+</div>
+
+<script src="script.js"></script>
+<!-- SociableKit — renders the Facebook teaser above -->
+<script src="https://widgets.sociablekit.com/facebook-page-posts/widget.js" defer></script>
+</body>
+</html>

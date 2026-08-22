@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/agrofhui/public_html/
+    - /bin/cp -f admin.html admin.js index.html login.php logout.php news.html publish.php script.js style.css $DEPLOYPATH
+    - /bin/cp -f img/*.* $DEPLOYPATH/img/

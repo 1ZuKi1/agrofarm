@@ -1,0 +1,19 @@
+# Secrets — real credentials live only on each server, never in git.
+# Copy config.example.php to config.php and fill in real values locally/on the server.
+config.php
+
+# Server-generated content — created by the admin panel at runtime, not source
+# code. A fresh git pull on the server must never overwrite or delete these.
+news-data.json
+img/news/
+img/products/
+
+# Claude Code / dev-process tooling — internal to this workspace, not part
+# of the site and not meant to be public or deployed.
+.claude/
+.superpowers/
+docs/
+
+# OS junk
+.DS_Store
+Thumbs.db

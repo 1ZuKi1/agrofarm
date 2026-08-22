@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — News Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+body{ background:#f5f2ed; }
+.admin-wrap{ max-width:720px; margin:0 auto; padding:3rem var(--gutter); }
+.admin-wrap h1{ font-family:var(--sans); font-size:1.4rem; font-weight:700; margin-bottom:0.5rem; }
+.admin-wrap h2{ font-family:var(--sans); font-size:1.15rem; font-weight:600; margin-bottom:1rem; color:#333; }
+.admin-card{ background:#fff; border-radius:12px; padding:1.6rem 1.8rem; margin-bottom:1.4rem; border:1px solid rgba(0,0,0,.08); box-shadow:0 4px 12px rgba(0,0,0,.04); }
+.admin-login{ max-width:340px; margin:6rem auto 0; text-align:center; }
+.admin-login h1{ text-align:center; margin-bottom:1.2rem; }
+.admin-login input{ width:100%; padding:.7rem .9rem; border:1.5px solid rgba(0,0,0,.12); border-radius:8px; font-size:.95rem; margin-bottom:.7rem; font-family:var(--sans); box-sizing:border-box; }
+.admin-login input:focus{ outline:none; border-color:var(--green); }
+.admin-login .btn{ width:100%; }
+.admin-error{ color:#c0392b; font-size:.85rem; margin-top:.5rem; display:none; }
+.admin-toolbar{ display:flex; gap:.6rem; flex-wrap:wrap; margin-bottom:1.4rem; }
+.admin-toolbar .btn{ padding:.5rem 1.2rem; font-size:.85rem; }
+.admin-post{ display:flex; align-items:center; gap:1rem; padding:.7rem 0; border-bottom:1px solid rgba(0,0,0,.06); }
+.admin-post:last-child{ border:none; }
+.admin-post-info{ flex:1; min-width:0; }
+.admin-post-info strong{ display:block; font-size:.92rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.admin-post-info time{ font-size:.78rem; color:var(--ink-soft); }
+.admin-post-actions{ display:flex; gap:.4rem; flex-shrink:0; }
+.admin-post-actions button{ background:none; border:1px solid rgba(0,0,0,.1); border-radius:6px; padding:.3rem .7rem; cursor:pointer; font-size:.78rem; transition:background .2s; }
+.admin-post-actions button:hover{ background:rgba(0,0,0,.05); }
+.admin-post-actions .del{ color:#c0392b; border-color:#e8b4b4; }
+.admin-post-actions .del:hover{ background:#fde8e8; }
+.admin-form label{ display:block; font-size:.82rem; font-weight:600; margin:.9rem 0 .3rem; color:#555; }
+.admin-form input,
+.admin-form textarea{ width:100%; padding:.6rem .8rem; border:1.5px solid rgba(0,0,0,.1); border-radius:8px; font-size:.9rem; font-family:var(--sans); box-sizing:border-box; }
+.admin-form input:focus,
+.admin-form textarea:focus{ outline:none; border-color:var(--green); }
+.admin-form textarea{ min-height:90px; resize:vertical; }
+.admin-form-row{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.admin-form-actions{ display:flex; gap:.6rem; margin-top:1.2rem; }
+.admin-form-actions .btn{ padding:.5rem 1.2rem; font-size:.85rem; }
+.admin-success{ color:var(--green); font-size:.85rem; margin-top:.5rem; display:none; }
+.admin-settings{ margin-top:1.4rem; padding-top:1.2rem; border-top:1px solid rgba(0,0,0,.06); }
+.admin-settings summary{ cursor:pointer; font-size:.85rem; color:var(--ink-soft); font-weight:600; }
+.admin-settings input{ width:auto; padding:.4rem .7rem; border:1.5px solid rgba(0,0,0,.1); border-radius:6px; font-size:.85rem; margin-top:.6rem; }
+.admin-settings .btn{ padding:.4rem .9rem; font-size:.8rem; }
+.admin-publish-status{ font-size:.82rem; margin-bottom:1rem; padding:.6rem .9rem; border-radius:8px; display:none; }
+.admin-publish-status.ok{ display:block; background:#e8f5e9; color:var(--green); border:1px solid #c8e6c9; }
+.admin-publish-status.err{ display:block; background:#fde8e8; color:#c0392b; border:1px solid #f5c6cb; }
+</style>
+</head>
+<body>
+
+<div class="admin-wrap" id="adminApp">
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="admin-login">
+    <h1>News — Admin</h1>
+    <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password">
+    <button class="btn btn--gold" id="loginBtn">Sign in</button>
+    <p class="admin-error" id="loginError">Incorrect password</p>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboardScreen" style="display:none">
+    <h1>📰 News Manager</h1>
+    <div class="admin-toolbar">
+      <button class="btn btn--gold" id="addBtn">+ New post</button>
+      <button class="btn btn--ghost" style="border-color:var(--green);color:var(--green)" id="exportBtn">⬇ Export</button>
+      <button class="btn" style="background:var(--green);color:var(--cream);padding:.5rem 1.2rem;font-size:.85rem" id="publishBtn">🚀 Publish to live site</button>
+      <button class="btn btn--ghost" style="border-color:#999;color:#666" id="logoutBtn">Logout</button>
+    </div>
+    <p class="admin-publish-status" id="publishStatus"></p>
+    <div id="postList" class="admin-card"></div>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="editorScreen" style="display:none">
+    <h2 id="editorTitle">New post</h2>
+    <div class="admin-card admin-form">
+      <label for="postDate">Date</label>
+      <input type="date" id="postDate">
+
+      <div class="admin-form-row">
+        <div>
+          <label for="postTitleEn">Title (English)</label>
+          <input type="text" id="postTitleEn" placeholder="Title">
+        </div>
+        <div>
+          <label for="postTitleMn">Title (Монгол)</label>
+          <input type="text" id="postTitleMn" placeholder="Гарчиг">
+        </div>
+      </div>
+
+      <div class="admin-form-row">
+        <div>
+          <label for="postBodyEn">Body (English)</label>
+          <textarea id="postBodyEn" placeholder="Write the news article in English…"></textarea>
+        </div>
+        <div>
+          <label for="postBodyMn">Body (Монгол)</label>
+          <textarea id="postBodyMn" placeholder="Мэдээг монголоор бичнэ үү…"></textarea>
+        </div>
+      </div>
+
+      <label for="postImage">Image (optional)</label>
+      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+        <input type="file" id="postImageFile" accept="image/*" style="flex:1;min-width:180px">
+        <span class="admin-success" id="uploadStatus" style="margin:0"></span>
+      </div>
+      <input type="text" id="postImage" placeholder="img/news/photo.jpg or https://example.com/photo.jpg" style="margin-top:.5rem">
+      <img id="imagePreview" alt="" style="display:none;max-width:220px;margin-top:.6rem;border-radius:8px;border:1px solid rgba(0,0,0,.1)">
+
+      <div class="admin-form-actions">
+        <button class="btn btn--gold" id="saveBtn">💾 Save</button>
+        <button class="btn btn--ghost" style="border-color:#999;color:#666" id="cancelBtn">Cancel</button>
+      </div>
+      <p class="admin-success" id="saveSuccess">Post saved</p>
+    </div>
+  </div>
+
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>
