@@ -80,8 +80,10 @@ $reservedStmt = $pdo->prepare(
    WHERE oi.variant_id = ? AND o.status IN ('pending','paid')"
 );
 
-$lineItems = [];
-$total = 0;
+// Merge quantities by variant_id first, so a request that lists the same
+// variant on more than one cart line is validated against its combined
+// quantity — never checked line-by-line against the same stock in isolation.
+$requestedByVariant = [];
 foreach ($items as $item) {
   $variantId = (int)($item['variant_id'] ?? 0);
   $qty = (int)($item['quantity'] ?? 0);
@@ -90,7 +92,12 @@ foreach ($items as $item) {
     echo json_encode(['error' => 'Invalid cart line']);
     exit;
   }
+  $requestedByVariant[$variantId] = ($requestedByVariant[$variantId] ?? 0) + $qty;
+}
 
+$lineItems = [];
+$total = 0;
+foreach ($requestedByVariant as $variantId => $qty) {
   $variantStmt->execute([$variantId]);
   $variant = $variantStmt->fetch();
   if (!$variant) {
