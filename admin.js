@@ -354,15 +354,15 @@
 
       productsTab.querySelectorAll(".edit-product-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          const product = productsCache.find((p) => p.id === Number(btn.dataset.id));
+          const product = productsCache.find((p) => Number(p.id) === Number(btn.dataset.id));
           openProductEditor(product);
         });
       });
       productsTab.querySelectorAll(".edit-variant-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const productId = Number(btn.dataset.productId);
-          const product = productsCache.find((p) => p.id === productId);
-          const variant = product && product.variants.find((v) => v.id === Number(btn.dataset.id));
+          const product = productsCache.find((p) => Number(p.id) === productId);
+          const variant = product && product.variants.find((v) => Number(v.id) === Number(btn.dataset.id));
           openVariantEditor(variant, productId);
         });
       });
@@ -394,13 +394,13 @@
         <h2 style="margin-top:0">${product ? "Edit product" : "New product"}</h2>
 
         <label for="pf_slug">Slug</label>
-        <input type="text" id="pf_slug" value="${product ? escHtml(product.slug) : ""}" placeholder="erdest-doloots" required>
+        <input type="text" id="pf_slug" value="${product ? escAttr(product.slug) : ""}" placeholder="erdest-doloots" required>
 
         <label for="pf_name_mn">Name (Монгол)</label>
-        <input type="text" id="pf_name_mn" value="${product ? escHtml(product.name_mn) : ""}" required>
+        <input type="text" id="pf_name_mn" value="${product ? escAttr(product.name_mn) : ""}" required>
 
         <label for="pf_name_en">Name (English)</label>
-        <input type="text" id="pf_name_en" value="${product ? escHtml(product.name_en || "") : ""}">
+        <input type="text" id="pf_name_en" value="${product ? escAttr(product.name_en || "") : ""}">
 
         <label for="pf_desc_mn">Description (Монгол)</label>
         <textarea id="pf_desc_mn">${product ? escHtml(product.description_mn || "") : ""}</textarea>
@@ -475,8 +475,8 @@
 
     const ingredientsHtml = (variant?.ingredients || []).map((ing) => `
       <div class="ingredient-row">
-        <input class="ing-name" value="${escHtml(ing.name)}" placeholder="Нэр">
-        <input class="ing-pct" value="${escHtml(ing.percentage)}" placeholder="90%">
+        <input class="ing-name" value="${escAttr(ing.name)}" placeholder="Нэр">
+        <input class="ing-pct" value="${escAttr(ing.percentage)}" placeholder="90%">
         <button type="button" class="remove-ingredient">✕</button>
       </div>
     `).join("");
@@ -486,10 +486,10 @@
         <h2 style="margin-top:0">${variant ? "Edit variant" : "New variant"}</h2>
 
         <label for="vf_name_mn">Name (Монгол)</label>
-        <input type="text" id="vf_name_mn" value="${variant ? escHtml(variant.name_mn) : ""}" required>
+        <input type="text" id="vf_name_mn" value="${variant ? escAttr(variant.name_mn) : ""}" required>
 
         <label for="vf_name_en">Name (English)</label>
-        <input type="text" id="vf_name_en" value="${variant ? escHtml(variant.name_en || "") : ""}">
+        <input type="text" id="vf_name_en" value="${variant ? escAttr(variant.name_en || "") : ""}">
 
         <div class="admin-form-row">
           <div>
@@ -505,11 +505,11 @@
         <div class="admin-form-row">
           <div>
             <label for="vf_weight">Weight label</label>
-            <input type="text" id="vf_weight" value="${variant ? escHtml(variant.weight_label || "") : ""}" placeholder="5кг">
+            <input type="text" id="vf_weight" value="${variant ? escAttr(variant.weight_label || "") : ""}" placeholder="5кг">
           </div>
           <div>
             <label for="vf_std_code">Standard code</label>
-            <input type="text" id="vf_std_code" value="${variant ? escHtml(variant.standard_code || "") : ""}" placeholder="MNS 5511:2005">
+            <input type="text" id="vf_std_code" value="${variant ? escAttr(variant.standard_code || "") : ""}" placeholder="MNS 5511:2005">
           </div>
         </div>
 
@@ -524,7 +524,7 @@
 
         <label for="vf_image">Image</label>
         <input type="file" id="vf_image" accept="image/jpeg,image/png,image/webp,image/gif">
-        ${variant && variant.image_path ? `<img src="${escHtml(variant.image_path)}" alt="" style="display:block;max-width:160px;margin-top:.5rem;border-radius:8px;border:1px solid rgba(0,0,0,.1)">` : ""}
+        ${variant && variant.image_path ? `<img src="${escAttr(variant.image_path)}" alt="" style="display:block;max-width:160px;margin-top:.5rem;border-radius:8px;border:1px solid rgba(0,0,0,.1)">` : ""}
 
         <label style="display:flex;align-items:center;gap:.4rem;margin-top:.9rem">
           <input type="checkbox" id="vf_active" style="width:auto" ${!variant || Number(variant.active) ? "checked" : ""}> Active
@@ -574,6 +574,12 @@
 
       let imagePath = variant ? (variant.image_path || "") : "";
       const imageFile = document.getElementById("vf_image").files[0];
+
+      if (imageFile && imageFile.size > 5 * 1024 * 1024) {
+        errEl.textContent = "Image is too large (max 5 MB) — choose a smaller file";
+        errEl.style.display = "block";
+        return;
+      }
 
       if (imageFile) {
         const uploadBody = new FormData();
@@ -686,6 +692,11 @@
     const div = document.createElement("div");
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  /** Escape a value for use inside a double-quoted HTML attribute (escHtml doesn't escape quotes). */
+  function escAttr(str) {
+    return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
   async function init() {
