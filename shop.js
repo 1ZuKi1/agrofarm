@@ -54,7 +54,7 @@
     } catch {
       const msgEn = "Could not load products — try again later.";
       const msgMn = "Бүтээгдэхүүн ачаалж чадсангүй — дараа дахин оролдоно уу.";
-      root.innerHTML = `<p class="news-archive__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
+      root.innerHTML = `<p class="shop__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
       return;
     }
 
@@ -77,22 +77,102 @@
       openCartDrawer();
     }
 
-    if (!shopProducts.length || !shopProducts[0].variants.length) {
+    if (!shopProducts.length) {
       const msgEn = "No products yet — check back soon.";
       const msgMn = "Одоогоор бүтээгдэхүүн алга — удахгүй дахин орно уу.";
-      root.innerHTML = `<p class="news-archive__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
+      root.innerHTML = `<p class="shop__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
       return;
     }
 
-    renderShop(shopProducts[0]);
+    renderForCurrentUrl();
   }
 
-  function renderShop(product) {
+  /** Reads ?product=<slug> from the current URL and shows that product's
+   * detail view if it matches a loaded product, otherwise the grid — the
+   * single source of truth for "which view is showing" so the initial page
+   * load, a card click, and the browser back/forward buttons all agree. */
+  function renderForCurrentUrl() {
+    const slug = new URLSearchParams(location.search).get("product");
+    const product = slug ? shopProducts.find((p) => p.slug === slug) : null;
+    if (product && product.variants.length) {
+      renderProductDetail(product);
+    } else {
+      renderProductGrid();
+    }
+  }
+
+  function goToProduct(product) {
+    history.pushState(null, "", `?product=${encodeURIComponent(product.slug)}`);
+    renderProductDetail(product);
+  }
+  function goToGrid() {
+    history.pushState(null, "", location.pathname);
+    renderProductGrid();
+  }
+  addEventListener("popstate", renderForCurrentUrl);
+
+  /** Product listing — one card per product, styled identically to the
+   * homepage's Products section cards (.prod) so the shop reads as a
+   * continuation of that section rather than a different template. */
+  function renderProductGrid() {
+    const root = document.getElementById("shopRoot");
+    const buyable = shopProducts.filter((p) => p.variants.length);
+    if (!buyable.length) {
+      const msgEn = "No products yet — check back soon.";
+      const msgMn = "Одоогоор бүтээгдэхүүн алга — удахгүй дахин орно уу.";
+      root.innerHTML = `<p class="shop__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
+      return;
+    }
+
+    root.innerHTML = `
+      <div class="products__grid shop-grid">
+        ${buyable.map((p) => {
+          const inStock = p.variants.some((v) => v.available > 0);
+          const minPrice = Math.min(...p.variants.map((v) => v.price));
+          const displayName = t(p.name_en || p.name_mn, p.name_mn);
+          const desc = p.description_mn ? escHtmlShop(t(p.description_en || p.description_mn, p.description_mn)) : "";
+          const img = p.variants[0].image_path;
+          const media = img
+            ? `background-image:linear-gradient(rgba(44,44,44,.15), rgba(44,44,44,.3)), url('${escAttrShop(img)}'); background-size:cover; background-position:center`
+            : `background:linear-gradient(135deg, var(--green), var(--green-deep))`;
+          return `
+            <article class="prod reveal reveal--scale">
+              <a href="?product=${escAttrShop(p.slug)}" class="shop-grid__card-link" data-slug="${escAttrShop(p.slug)}">
+                <div class="prod__media" style="${media}"></div>
+                <div class="prod__body">
+                  <h3 data-en="${escAttrShop(p.name_en || p.name_mn)}" data-mn="${escAttrShop(p.name_mn)}">${escHtmlShop(displayName)}</h3>
+                  ${desc ? `<p>${desc}</p>` : ''}
+                  <p class="shop-grid__price">${inStock
+                    ? `<span data-en="From" data-mn="Эхлэх үнэ">${escHtmlShop(t("From", "Эхлэх үнэ"))}</span> ${minPrice.toLocaleString()}₮`
+                    : `<span data-en="Out of stock" data-mn="Дууссан">${escHtmlShop(t("Out of stock", "Дууссан"))}</span>`
+                  }</p>
+                </div>
+              </a>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    root.querySelectorAll(".shop-grid__card-link").forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const product = shopProducts.find((p) => p.slug === link.dataset.slug);
+        if (product) goToProduct(product);
+      });
+    });
+  }
+
+  function renderProductDetail(product) {
     const root = document.getElementById("shopRoot");
     activeVariantId = product.variants[0].id;
+    const displayName = t(product.name_en || product.name_mn, product.name_mn);
 
     root.innerHTML = `
       <div class="shop-product">
+        <a href="shop.html" class="shop-product__back" id="shopBackLink" data-en="${escAttrShop("← Back to shop")}" data-mn="${escAttrShop("← Дэлгүүр рүү буцах")}">${escHtmlShop(t("← Back to shop", "← Дэлгүүр рүү буцах"))}</a>
+        <h2 class="shop-product__title" data-en="${escAttrShop(product.name_en || product.name_mn)}" data-mn="${escAttrShop(product.name_mn)}">${escHtmlShop(displayName)}</h2>
+        <p class="shop-product__switcher-label" data-en="Choose a variant" data-mn="Төрлөө сонгоно уу">${escHtmlShop(t("Choose a variant", "Төрлөө сонгоно уу"))}</p>
         <div class="shop-product__switcher" role="tablist">
           ${product.variants.map((v) => `
             <button type="button" class="variant-pill${v.id === activeVariantId ? ' is-active' : ''}" data-variant-id="${v.id}" data-en="${escAttrShop(v.name_en || v.name_mn)}" data-mn="${escAttrShop(v.name_mn)}">${escHtmlShop(variantDisplayName(v))}</button>
@@ -101,6 +181,8 @@
         <div id="shopVariantDetail"></div>
       </div>
     `;
+
+    document.getElementById("shopBackLink").addEventListener("click", (e) => { e.preventDefault(); goToGrid(); });
 
     root.querySelectorAll('.variant-pill').forEach((btn) => {
       btn.addEventListener('click', () => {
