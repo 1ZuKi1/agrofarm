@@ -60,120 +60,138 @@ if (!$dateObj || $dateObj < $today) {
 }
 $deliveryDate = $dateObj->format('Y-m-d');
 
-$pdo = naf_db();
-$pdo->exec("UPDATE orders SET status='expired' WHERE status='pending' AND expires_at < NOW()");
-
-$slotCountStmt = $pdo->prepare(
-  "SELECT COUNT(*) FROM orders WHERE delivery_date=? AND delivery_slot=? AND status IN ('pending','paid','fulfilled')"
-);
-$slotCountStmt->execute([$deliveryDate, $deliverySlot]);
-if ((int)$slotCountStmt->fetchColumn() >= 5) {
-  http_response_code(400);
-  echo json_encode(['error' => 'That delivery slot is now full — please pick another']);
-  exit;
-}
-
-$variantStmt = $pdo->prepare('SELECT id, name_mn, price, stock FROM product_variants WHERE id = ? AND active = 1');
-$reservedStmt = $pdo->prepare(
-  "SELECT COALESCE(SUM(oi.quantity),0) FROM order_items oi
-   JOIN orders o ON o.id = oi.order_id
-   WHERE oi.variant_id = ? AND o.status IN ('pending','paid','fulfilled')"
-);
-
-// Merge quantities by variant_id first, so a request that lists the same
-// variant on more than one cart line is validated against its combined
-// quantity — never checked line-by-line against the same stock in isolation.
-$requestedByVariant = [];
-foreach ($items as $item) {
-  $variantId = (int)($item['variant_id'] ?? 0);
-  $qty = (int)($item['quantity'] ?? 0);
-  if ($variantId <= 0 || $qty <= 0) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid cart line']);
-    exit;
-  }
-  $requestedByVariant[$variantId] = ($requestedByVariant[$variantId] ?? 0) + $qty;
-}
-
-$lineItems = [];
-$total = 0;
-foreach ($requestedByVariant as $variantId => $qty) {
-  $variantStmt->execute([$variantId]);
-  $variant = $variantStmt->fetch();
-  if (!$variant) {
-    http_response_code(400);
-    echo json_encode(['error' => 'A product in your cart is no longer available']);
-    exit;
-  }
-
-  $reservedStmt->execute([$variantId]);
-  $reserved = (int)$reservedStmt->fetchColumn();
-  $available = $variant['stock'] - $reserved;
-
-  if ($qty > $available) {
-    http_response_code(400);
-    echo json_encode(['error' => $variant['name_mn'] . ' — only ' . max(0, $available) . ' left in stock']);
-    exit;
-  }
-
-  $lineTotal = $variant['price'] * $qty;
-  $total += $lineTotal;
-  $lineItems[] = [
-    'variant_id' => $variantId,
-    'name' => $variant['name_mn'],
-    'price' => $variant['price'],
-    'qty' => $qty,
-    'line_total' => $lineTotal,
-  ];
-}
-
-if ($total <= 0) {
-  http_response_code(400);
-  echo json_encode(['error' => 'Invalid order total']);
-  exit;
-}
-
-$publicToken = bin2hex(random_bytes(16));
-
+// Everything below touches the DB — wrapped in an outer safety net so a
+// PDOException (e.g. a DB outage) never leaks a raw stack trace / DB
+// host-name to this endpoint's anonymous visitors. The two inner try/catch
+// blocks below (QPay call, and the order+items transaction) already have
+// their own specific error handling and don't rethrow, so this outer catch
+// only ever fires for DB-only failures that had no handler before.
 try {
-  $qpayToken = qpay_token();
-  $callbackUrl = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/qpay-callback.php?order=' . $publicToken;
-  $invoice = qpay_create_invoice($qpayToken, $publicToken, $total, $callbackUrl, 'Nuudelchin Agro Farm order');
-} catch (Throwable $e) {
-  http_response_code(502);
-  echo json_encode(['error' => "Could not start payment — please try again"]);
-  exit;
-}
+  $pdo = naf_db();
+  $pdo->exec("UPDATE orders SET status='expired' WHERE status='pending' AND expires_at < NOW()");
 
-$pdo->beginTransaction();
-try {
-  // expires_at is computed via MySQL's own NOW() rather than a PHP-computed
-  // value, so it's always consistent with the NOW() used by every lazy-
-  // expiry sweep, regardless of any PHP/MySQL timezone mismatch.
-  $orderStmt = $pdo->prepare(
-    "INSERT INTO orders (public_token, status, buyer_name, buyer_phone, buyer_address, buyer_note, delivery_date, delivery_slot, subtotal, total, qpay_invoice_id, expires_at)
-     VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 20 MINUTE))"
+  // Reservation-set literal ('pending','paid','fulfilled') — must stay in sync
+  // with the same literal in slots.php, shop-data.php, and products-admin.php.
+  $slotCountStmt = $pdo->prepare(
+    "SELECT COUNT(*) FROM orders WHERE delivery_date=? AND delivery_slot=? AND status IN ('pending','paid','fulfilled')"
   );
-  $orderStmt->execute([$publicToken, $buyerName, $buyerPhone, $buyerAddress, $buyerNote, $deliveryDate, $deliverySlot, $total, $total, $invoice['invoice_id']]);
-  $orderId = (int)$pdo->lastInsertId();
-
-  $itemStmt = $pdo->prepare(
-    'INSERT INTO order_items (order_id, variant_id, variant_name_snapshot, unit_price_snapshot, quantity, line_total) VALUES (?, ?, ?, ?, ?, ?)'
-  );
-  foreach ($lineItems as $li) {
-    $itemStmt->execute([$orderId, $li['variant_id'], $li['name'], $li['price'], $li['qty'], $li['line_total']]);
+  $slotCountStmt->execute([$deliveryDate, $deliverySlot]);
+  if ((int)$slotCountStmt->fetchColumn() >= 5) {
+    http_response_code(400);
+    echo json_encode(['error' => 'That delivery slot is now full — please pick another']);
+    exit;
   }
-  $pdo->commit();
-} catch (Throwable $e) {
-  $pdo->rollBack();
+
+  $variantStmt = $pdo->prepare('SELECT id, name_mn, price, stock FROM product_variants WHERE id = ? AND active = 1');
+  // Reservation-set literal ('pending','paid','fulfilled') — must stay in sync
+  // with the same literal in slots.php, shop-data.php, and products-admin.php.
+  $reservedStmt = $pdo->prepare(
+    "SELECT COALESCE(SUM(oi.quantity),0) FROM order_items oi
+     JOIN orders o ON o.id = oi.order_id
+     WHERE oi.variant_id = ? AND o.status IN ('pending','paid','fulfilled')"
+  );
+
+  // Merge quantities by variant_id first, so a request that lists the same
+  // variant on more than one cart line is validated against its combined
+  // quantity — never checked line-by-line against the same stock in isolation.
+  $requestedByVariant = [];
+  foreach ($items as $item) {
+    $variantId = (int)($item['variant_id'] ?? 0);
+    $qty = (int)($item['quantity'] ?? 0);
+    if ($variantId <= 0 || $qty <= 0) {
+      http_response_code(400);
+      echo json_encode(['error' => 'Invalid cart line']);
+      exit;
+    }
+    $requestedByVariant[$variantId] = ($requestedByVariant[$variantId] ?? 0) + $qty;
+  }
+
+  $lineItems = [];
+  $total = 0;
+  foreach ($requestedByVariant as $variantId => $qty) {
+    $variantStmt->execute([$variantId]);
+    $variant = $variantStmt->fetch();
+    if (!$variant) {
+      http_response_code(400);
+      echo json_encode(['error' => 'A product in your cart is no longer available']);
+      exit;
+    }
+
+    $reservedStmt->execute([$variantId]);
+    $reserved = (int)$reservedStmt->fetchColumn();
+    $available = $variant['stock'] - $reserved;
+
+    if ($qty > $available) {
+      http_response_code(400);
+      echo json_encode(['error' => $variant['name_mn'] . ' — only ' . max(0, $available) . ' left in stock']);
+      exit;
+    }
+
+    $lineTotal = $variant['price'] * $qty;
+    $total += $lineTotal;
+    $lineItems[] = [
+      'variant_id' => $variantId,
+      'name' => $variant['name_mn'],
+      'price' => $variant['price'],
+      'qty' => $qty,
+      'line_total' => $lineTotal,
+    ];
+  }
+
+  if ($total <= 0) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid order total']);
+    exit;
+  }
+
+  $publicToken = bin2hex(random_bytes(16));
+
+  try {
+    $qpayToken = qpay_token();
+    $callbackUrl = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/qpay-callback.php?order=' . $publicToken;
+    $invoice = qpay_create_invoice($qpayToken, $publicToken, $total, $callbackUrl, 'Nuudelchin Agro Farm order');
+  } catch (Throwable $e) {
+    http_response_code(502);
+    echo json_encode(['error' => "Could not start payment — please try again"]);
+    exit;
+  }
+
+  $pdo->beginTransaction();
+  try {
+    // expires_at is computed via MySQL's own NOW() rather than a PHP-computed
+    // value, so it's always consistent with the NOW() used by every lazy-
+    // expiry sweep, regardless of any PHP/MySQL timezone mismatch.
+    // qr_image/qr_text are persisted so a buyer who navigates away mid-payment
+    // (or revisits the ?order=<token> link) can be shown the same QR again
+    // without re-creating the order — see order-status.php and shop.js.
+    $orderStmt = $pdo->prepare(
+      "INSERT INTO orders (public_token, status, buyer_name, buyer_phone, buyer_address, buyer_note, delivery_date, delivery_slot, subtotal, total, qpay_invoice_id, qr_image, qr_text, expires_at)
+       VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 20 MINUTE))"
+    );
+    $orderStmt->execute([$publicToken, $buyerName, $buyerPhone, $buyerAddress, $buyerNote, $deliveryDate, $deliverySlot, $total, $total, $invoice['invoice_id'], $invoice['qr_image'] ?? null, $invoice['qr_text'] ?? null]);
+    $orderId = (int)$pdo->lastInsertId();
+
+    $itemStmt = $pdo->prepare(
+      'INSERT INTO order_items (order_id, variant_id, variant_name_snapshot, unit_price_snapshot, quantity, line_total) VALUES (?, ?, ?, ?, ?, ?)'
+    );
+    foreach ($lineItems as $li) {
+      $itemStmt->execute([$orderId, $li['variant_id'], $li['name'], $li['price'], $li['qty'], $li['line_total']]);
+    }
+    $pdo->commit();
+  } catch (Throwable $e) {
+    $pdo->rollBack();
+    http_response_code(500);
+    echo json_encode(['error' => 'Could not save your order — please try again']);
+    exit;
+  }
+
+  echo json_encode([
+    'token' => $publicToken,
+    'total' => $total,
+    'qr_image' => $invoice['qr_image'] ?? null,
+    'qr_text' => $invoice['qr_text'] ?? null,
+  ]);
+} catch (\Throwable $e) {
   http_response_code(500);
-  echo json_encode(['error' => 'Could not save your order — please try again']);
-  exit;
+  echo json_encode(['error' => 'Internal server error']);
 }
-
-echo json_encode([
-  'token' => $publicToken,
-  'total' => $total,
-  'qr_image' => $invoice['qr_image'] ?? null,
-  'qr_text' => $invoice['qr_text'] ?? null,
-]);

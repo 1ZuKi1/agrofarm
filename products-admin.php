@@ -43,6 +43,16 @@ if ($action === 'list') {
   $products = $pdo->query('SELECT * FROM products ORDER BY id')->fetchAll();
   $variantStmt = $pdo->prepare('SELECT * FROM product_variants WHERE product_id = ? ORDER BY sort_order, id');
   $ingredientStmt = $pdo->prepare('SELECT * FROM variant_ingredients WHERE variant_id = ? ORDER BY sort_order, id');
+  // True availability is stock minus everything already reserved by an order
+  // that hasn't been cancelled/expired — staff need to see both the raw
+  // stock count and true availability. Reservation-set literal
+  // ('pending','paid','fulfilled') must stay in sync with the same literal
+  // in order-create.php, slots.php, and shop-data.php.
+  $reservedStmt = $pdo->prepare(
+    "SELECT COALESCE(SUM(oi.quantity),0) FROM order_items oi
+     JOIN orders o ON o.id = oi.order_id
+     WHERE oi.variant_id = ? AND o.status IN ('pending','paid','fulfilled')"
+  );
 
   foreach ($products as &$product) {
     $variantStmt->execute([$product['id']]);
@@ -50,6 +60,9 @@ if ($action === 'list') {
     foreach ($variants as &$variant) {
       $ingredientStmt->execute([$variant['id']]);
       $variant['ingredients'] = $ingredientStmt->fetchAll();
+      $reservedStmt->execute([$variant['id']]);
+      $reserved = (int)$reservedStmt->fetchColumn();
+      $variant['available'] = max(0, (int)$variant['stock'] - $reserved);
     }
     unset($variant);
     $product['variants'] = $variants;

@@ -116,11 +116,14 @@
   function renderVariantDetail(product) {
     const variant = product.variants.find((v) => Number(v.id) === Number(activeVariantId));
     const detail = document.getElementById("shopVariantDetail");
-    const inStock = variant.stock > 0;
+    // available (stock minus everything reserved by pending/paid/fulfilled
+    // orders) reflects true availability — the raw stock column can be
+    // higher than what's actually left to buy. See shop-data.php.
+    const inStock = variant.available > 0;
     const displayName = variantDisplayName(variant);
 
-    const stockEn = inStock ? `In stock: ${variant.stock}` : "Out of stock";
-    const stockMn = inStock ? `Нөөцөд бий: ${variant.stock}` : "Дууссан";
+    const stockEn = inStock ? `In stock: ${variant.available}` : "Out of stock";
+    const stockMn = inStock ? `Нөөцөд бий: ${variant.available}` : "Дууссан";
 
     detail.innerHTML = `
       <div class="shop-variant">
@@ -132,7 +135,7 @@
           ${variant.benefits_text_mn ? `<p class="shop-variant__benefits">${escHtmlShop(variant.benefits_text_mn)}</p>` : ''}
           <div class="shop-variant__qty">
             <label for="shopQty" data-en="Qty" data-mn="Тоо ширхэг">${escHtmlShop(t("Qty", "Тоо ширхэг"))}</label>
-            <input type="number" id="shopQty" min="1" max="${variant.stock}" value="1" ${inStock ? '' : 'disabled'}>
+            <input type="number" id="shopQty" min="1" max="${variant.available}" value="1" ${inStock ? '' : 'disabled'}>
             <button type="button" class="btn btn--gold" id="shopAddToCart" data-en="Add to cart" data-mn="Сагслах" ${inStock ? '' : 'disabled'}>${escHtmlShop(t("Add to cart", "Сагслах"))}</button>
           </div>
           ${variant.usage_text_mn ? `<div class="shop-variant__section"><h3 data-en="Usage" data-mn="Хэрэглээ">${escHtmlShop(t("Usage", "Хэрэглээ"))}</h3><p>${escHtmlShop(variant.usage_text_mn)}</p></div>` : ''}
@@ -152,7 +155,7 @@
     const addBtn = document.getElementById("shopAddToCart");
     if (addBtn) {
       addBtn.addEventListener("click", () => {
-        const qty = Math.max(1, Math.min(variant.stock, Number(document.getElementById("shopQty").value) || 1));
+        const qty = Math.max(1, Math.min(variant.available, Number(document.getElementById("shopQty").value) || 1));
         if (window.addToCart) window.addToCart(variant.id, qty);
       });
     }
@@ -178,13 +181,36 @@
       return;
     }
 
+    // shopProducts can be empty because loadShop()'s fetch genuinely failed
+    // (not because there are no products) — showing an empty-looking cart
+    // with a live checkout button in that state would silently let a buyer
+    // "check out" a cart order-create.php can only reject. Show a retry
+    // message instead of guessing.
+    if (!shopProducts.length) {
+      items.innerHTML = `<p class="cart-drawer__empty" data-en="Couldn't load your cart — try again." data-mn="Сагсаа ачаалж чадсангүй — дахин оролдоно уу.">${escHtmlShop(t("Couldn't load your cart — try again.", "Сагсаа ачаалж чадсангүй — дахин оролдоно уу."))}</p>`;
+      totalEl.textContent = "";
+      return;
+    }
+
     // Resolve each line against the currently loaded product data.
     const allVariants = shopProducts.flatMap((p) => p.variants);
     let total = 0;
 
     items.innerHTML = cart.map((line) => {
       const variant = allVariants.find((v) => Number(v.id) === Number(line.variantId));
-      if (!variant) return "";
+      if (!variant) {
+        // Stays visible (and removable) rather than silently vanishing —
+        // an invisible-but-still-submitted line is what made checkout fail
+        // with no way for the buyer to see or fix which line was the problem.
+        return `
+          <div class="cart-drawer__item cart-drawer__item--unavailable" data-variant-id="${escAttrShop(line.variantId)}">
+            <div class="cart-drawer__item-name" data-en="No longer available" data-mn="Дууссан">${escHtmlShop(t("No longer available", "Дууссан"))}</div>
+            <div class="cart-drawer__item-row">
+              <button type="button" class="cart-drawer__remove" data-variant-id="${escAttrShop(line.variantId)}" aria-label="Remove">✕</button>
+            </div>
+          </div>
+        `;
+      }
       const lineTotal = variant.price * line.quantity;
       total += lineTotal;
       const displayName = variantDisplayName(variant);
@@ -192,7 +218,7 @@
         <div class="cart-drawer__item" data-variant-id="${variant.id}">
           <div class="cart-drawer__item-name" data-en="${escAttrShop(variant.name_en || variant.name_mn)}" data-mn="${escAttrShop(variant.name_mn)}">${escHtmlShop(displayName)}</div>
           <div class="cart-drawer__item-row">
-            <input type="number" class="cart-drawer__qty" min="1" max="${variant.stock}" step="1" value="${line.quantity}" data-variant-id="${escAttrShop(variant.id)}">
+            <input type="number" class="cart-drawer__qty" min="1" max="${variant.available}" step="1" value="${line.quantity}" data-variant-id="${escAttrShop(variant.id)}">
             <span>${lineTotal.toLocaleString()}₮</span>
             <button type="button" class="cart-drawer__remove" data-variant-id="${escAttrShop(variant.id)}" aria-label="Remove">✕</button>
           </div>
@@ -431,15 +457,22 @@
     const qrImg = orderData.qr_image
       ? `<img class="qr-screen__img" src="data:image/png;base64,${escAttrShop(orderData.qr_image)}" alt="QPay QR code">`
       : "";
+    const token = orderData.token;
+    // Shown so a buyer who navigates away mid-payment (closes the drawer,
+    // switches tabs, loses their connection) has a way back to this exact
+    // screen — order-status.php keeps returning qr_image/qr_text for as
+    // long as the order stays 'pending', and the ?order= handler below
+    // re-renders this same screen from that link.
+    const orderLink = `${location.origin}/shop.html?order=${token}`;
     items.innerHTML = `
       <div class="qr-screen">
         ${qrImg}
         <p class="qr-screen__total">${orderData.total.toLocaleString()}₮</p>
         <p class="qr-screen__waiting" data-en="Waiting for payment…" data-mn="Төлбөр хүлээгдэж байна…">${escHtmlShop(t("Waiting for payment…", "Төлбөр хүлээгдэж байна…"))}</p>
+        <p class="qr-screen__link"><span data-en="Come back to this later" data-mn="Дараа буцаж ирэх бол">${escHtmlShop(t("Come back to this later", "Дараа буцаж ирэх бол"))}</span>: ${escHtmlShop(orderLink)}</p>
       </div>
     `;
 
-    const token = orderData.token;
     qrPollInterval = setInterval(() => {
       fetch(`order-status.php?token=${encodeURIComponent(token)}`)
         .then((r) => r.json())
@@ -537,7 +570,12 @@
           if (status.status === "paid") {
             renderConfirmation(orderToken, status);
           } else if (status.status === "pending") {
-            renderOrderStatusMessage("Order pending", "Захиалга хүлээгдэж байна", "This order hasn't been paid yet.", "Энэ захиалга төлөгдөөгүй байна.");
+            // order-status.php returns qr_image/qr_text alongside the rest
+            // of a still-pending order's status — re-render the same QR
+            // screen (with polling) rather than a dead-end text message, so
+            // this link is an actual way to finish paying, not just a status
+            // check.
+            renderQrScreen({ ...status, token: orderToken });
           } else if (status.status === "expired" || status.status === "cancelled") {
             renderOrderStatusMessage("Order expired", "Захиалгын хугацаа дууссан", "This order is no longer active.", "Энэ захиалга идэвхгүй боллоо.");
           } else {

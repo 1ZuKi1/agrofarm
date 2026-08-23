@@ -94,14 +94,24 @@
     setTimeout(() => line.classList.add("in"), 250 + i * 150);
   });
 
-  /* ---------- Homepage shop card: live starting price ---------- */
+  /* ---------- Homepage shop card: live starting price ----------
+     #shopCardPrice itself carries no data-en/data-mn (so setLanguage()'s
+     innerHTML sweep never touches it directly) — only its static fallback
+     <span> does, until this fetch replaces it with a translatable "From"
+     label span + a plain value span holding the fetched number. The label
+     span still has data-en/data-mn, so it keeps translating correctly on
+     every later toggle; the value span never does, so a toggle can never
+     erase the fetched price back to the static fallback text. */
   const shopCardPrice = document.getElementById("shopCardPrice");
   if (shopCardPrice) {
     fetch("shop-data.php").then((r) => r.json()).then((data) => {
       const variants = data.products?.[0]?.variants || [];
       if (!variants.length) return;
       const minPrice = Math.min(...variants.map((v) => v.price));
-      shopCardPrice.textContent = `From ${minPrice.toLocaleString()}₮`;
+      const lang = document.documentElement.lang || "en";
+      const labelEn = "From";
+      const labelMn = "Эхлэх үнэ";
+      shopCardPrice.innerHTML = `<span data-en="${labelEn}" data-mn="${labelMn}">${lang === "mn" ? labelMn : labelEn}</span> <span id="shopCardPriceValue">${minPrice.toLocaleString()}₮</span>`;
     }).catch(() => {}); // silent — the static fallback text already covers this
   }
 

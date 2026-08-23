@@ -341,7 +341,7 @@
             ${product.variants.map((v) => `
               <div class="admin-variant" data-variant-id="${v.id}">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem">
-                  <span><strong>${escHtml(v.name_mn)}</strong> — ${v.price.toLocaleString()}₮ — stock: ${v.stock}</span>
+                  <span><strong>${escHtml(v.name_mn)}</strong> — ${v.price.toLocaleString()}₮ — stock: ${v.stock} (available: ${v.available})</span>
                   <div class="admin-row-actions">
                     <button class="edit-variant-btn" data-id="${v.id}" data-product-id="${product.id}">Edit</button>
                   </div>

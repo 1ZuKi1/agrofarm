@@ -25,6 +25,17 @@ try {
   $ingredientStmt = $pdo->prepare(
     'SELECT name, percentage FROM variant_ingredients WHERE variant_id = ? ORDER BY sort_order, id'
   );
+  // True availability is stock minus everything already reserved by an order
+  // that hasn't been cancelled/expired — not decremented anywhere else, so
+  // it must be computed the same way here as order-create.php does at
+  // checkout time. Reservation-set literal ('pending','paid','fulfilled')
+  // must stay in sync with the same literal in order-create.php, slots.php,
+  // and products-admin.php.
+  $reservedStmt = $pdo->prepare(
+    "SELECT COALESCE(SUM(oi.quantity),0) FROM order_items oi
+     JOIN orders o ON o.id = oi.order_id
+     WHERE oi.variant_id = ? AND o.status IN ('pending','paid','fulfilled')"
+  );
 
   foreach ($products as &$product) {
     $variantStmt->execute([$product['id']]);
@@ -32,6 +43,9 @@ try {
     foreach ($variants as &$variant) {
       $ingredientStmt->execute([$variant['id']]);
       $variant['ingredients'] = $ingredientStmt->fetchAll();
+      $reservedStmt->execute([$variant['id']]);
+      $reserved = (int)$reservedStmt->fetchColumn();
+      $variant['available'] = max(0, (int)$variant['stock'] - $reserved);
     }
     unset($variant);
     $product['variants'] = $variants;
