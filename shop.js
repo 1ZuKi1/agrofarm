@@ -189,8 +189,15 @@
     if (!shopProducts.length) {
       items.innerHTML = `<p class="cart-drawer__empty" data-en="Couldn't load your cart — try again." data-mn="Сагсаа ачаалж чадсангүй — дахин оролдоно уу.">${escHtmlShop(t("Couldn't load your cart — try again.", "Сагсаа ачаалж чадсангүй — дахин оролдоно уу."))}</p>`;
       totalEl.textContent = "";
+      // Hide the footer entirely rather than leaving a live checkout button
+      // the buyer could still click through — order-create.php can only
+      // reject it once product data hasn't actually loaded.
+      const footer = document.querySelector(".cart-drawer__footer");
+      if (footer) footer.style.display = "none";
       return;
     }
+    const footer = document.querySelector(".cart-drawer__footer");
+    if (footer) footer.style.display = "";
 
     // Resolve each line against the currently loaded product data.
     const allVariants = shopProducts.flatMap((p) => p.variants);
