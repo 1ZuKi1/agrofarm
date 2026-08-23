@@ -183,6 +183,13 @@ section{ position:relative; }
 .btn{
   display:inline-block; padding:.85rem 1.9rem; border-radius:999px;
   font-weight:600; font-size:.95rem; letter-spacing:.02em;
+  /* font-family/border/cursor are reset explicitly because .btn is used on
+     both <a> and <button>. Form controls don't inherit the body font and
+     carry a UA "outset" border, so on a <button> the same class rendered in
+     Arial inside a 3D box — visibly a different component from the identical
+     <a class="btn"> on the homepage. (.btn--ghost and .nav__cta re-declare
+     their own border below and still win, being later in the file.) */
+  font-family:inherit; border:0; cursor:pointer;
   transition:transform .35s var(--spring), box-shadow .35s, background .3s, color .3s;
   will-change:transform;
 }
@@ -1001,7 +1008,25 @@ input, textarea, select{ font-size:16px !important; }
    .products__grid so the shop reads as a continuation of that section,
    not a different template. .shop-grid only supplies the max-width. */
 .shop-grid{ max-width:1240px; }
+/* Cap the track width so a catalogue of one or two products shows normally
+   proportioned cards centred in the row — auto-fit collapses the empty
+   tracks, so an uncapped 1fr would stretch a lone card across all 1240px.
+   Scoped above the 520px breakpoint to leave the mobile swipe-rail
+   (.products__grid, which switches to flex) completely untouched. */
+@media (min-width: 521px){
+  .shop-grid{
+    grid-template-columns:repeat(auto-fit, minmax(270px, 360px));
+    justify-content:center;
+  }
+}
 .shop-grid__card-link{ display:block; text-decoration:none; color:inherit; }
+/* The full product description is several paragraphs long — clamped to a
+   3-line teaser so grid cards stay the compact shape the homepage ones are.
+   The whole description is shown on the product detail page. */
+.shop-grid__desc{
+  display:-webkit-box; -webkit-line-clamp:3; line-clamp:3;
+  -webkit-box-orient:vertical; overflow:hidden;
+}
 .shop-grid__price{ font-weight:700; color:var(--green); margin-top:.6rem; }
 
 /* Product detail */
@@ -1036,10 +1061,10 @@ input, textarea, select{ font-size:16px !important; }
 .shop-variant__price{ font-size:1.5rem; font-weight:700; color:var(--charcoal); margin-bottom:.4rem; }
 .shop-variant__weight{ font-size:.9rem; font-weight:400; color:var(--ink-soft); }
 .shop-variant__stock{ font-size:.85rem; color:var(--ink-soft); margin-bottom:1.4rem; }
-.shop-variant__benefits{ color:var(--ink-soft); font-size:1rem; line-height:1.75; margin-bottom:1.6rem; }
+.shop-variant__benefits{ color:var(--ink-soft); font-size:1rem; line-height:1.75; margin-bottom:1.6rem; max-width:52rem; }
 .shop-variant__qty{ display:flex; align-items:center; gap:1rem; margin-bottom:.5rem; }
 .shop-variant__qty label{ font-weight:600; font-size:.9rem; }
-.shop-variant__qty input{ width:70px; padding:.6rem; border-radius:8px; border:1px solid rgba(44,44,44,.2); font-size:1rem; }
+.shop-variant__qty input{ width:70px; padding:.6rem; border-radius:8px; border:1px solid rgba(44,44,44,.2); font-size:1rem; font-family:inherit; }
 .shop-variant__section{ margin-top:1.8rem; padding-top:1.6rem; border-top:1px solid rgba(44,44,44,.08); }
 .shop-variant__section h3{
   font-size:.72rem; letter-spacing:.28em; text-transform:uppercase;
@@ -1050,7 +1075,10 @@ input, textarea, select{ font-size:16px !important; }
 .ingredient-table__row + .ingredient-table__row{ border-top:1px solid rgba(212,165,74,.25); }
 
 @media (min-width: 720px){
-  .shop-variant{ grid-template-columns:340px 1fr; }
+  /* Only split into image + text columns when there IS an image. Applied
+     unconditionally, a variant with no photo put its lone text column in the
+     340px image track and left the rest of the card empty. */
+  .shop-variant--with-img{ grid-template-columns:340px 1fr; }
 }
 
 /* ============ Cart drawer ============ */
@@ -1074,7 +1102,7 @@ input, textarea, select{ font-size:16px !important; }
 .cart-drawer__item-name{ font-weight:600; margin-bottom:.4rem; }
 .cart-drawer__item-row{ display:flex; align-items:center; gap:.8rem; }
 .cart-drawer__item--unavailable .cart-drawer__item-name{ color:var(--ink-soft); font-style:italic; font-weight:500; }
-.cart-drawer__qty{ width:56px; padding:.3rem; border-radius:6px; border:1px solid rgba(44,44,44,.2); }
+.cart-drawer__qty{ width:56px; padding:.3rem; border-radius:6px; border:1px solid rgba(44,44,44,.2); font-family:inherit; }
 .cart-drawer__remove{ margin-left:auto; background:none; border:none; color:var(--ink-soft); cursor:pointer; min-width:32px; min-height:32px; }
 .cart-drawer__footer{ padding-top:1rem; border-top:1px solid rgba(44,44,44,.1); }
 .cart-drawer__total{ font-weight:700; margin-bottom:1rem; }

@@ -141,7 +141,7 @@
                 <div class="prod__media" style="${media}"></div>
                 <div class="prod__body">
                   <h3 data-en="${escAttrShop(p.name_en || p.name_mn)}" data-mn="${escAttrShop(p.name_mn)}">${escHtmlShop(displayName)}</h3>
-                  ${desc ? `<p>${desc}</p>` : ''}
+                  ${desc ? `<p class="shop-grid__desc">${desc}</p>` : ''}
                   <p class="shop-grid__price">${inStock
                     ? `<span data-en="From" data-mn="Эхлэх үнэ">${escHtmlShop(t("From", "Эхлэх үнэ"))}</span> ${minPrice.toLocaleString()}₮`
                     : `<span data-en="Out of stock" data-mn="Дууссан">${escHtmlShop(t("Out of stock", "Дууссан"))}</span>`
@@ -153,6 +153,13 @@
         }).join('')}
       </div>
     `;
+
+    // .reveal starts at opacity:0 and only becomes visible once script.js's
+    // IntersectionObserver adds .in — but that observer sweeps the DOM once at
+    // load, long before these fetched cards exist. Without handing them over
+    // they stay permanently invisible while still being clickable. Same
+    // handoff news.html does for its fetched posts.
+    root.querySelectorAll(".reveal").forEach((el) => window.observeReveal?.(el));
 
     root.querySelectorAll(".shop-grid__card-link").forEach((link) => {
       link.addEventListener("click", (e) => {
@@ -208,7 +215,7 @@
     const stockMn = inStock ? `Нөөцөд бий: ${variant.available}` : "Дууссан";
 
     detail.innerHTML = `
-      <div class="shop-variant">
+      <div class="shop-variant${variant.image_path ? ' shop-variant--with-img' : ''}">
         ${variant.image_path ? `<img class="shop-variant__img" src="${escAttrShop(variant.image_path)}" alt="${escAttrShop(displayName)}">` : ''}
         <div class="shop-variant__body">
           <h2 class="shop-variant__name" data-en="${escAttrShop(variant.name_en || variant.name_mn)}" data-mn="${escAttrShop(variant.name_mn)}">${escHtmlShop(displayName)}</h2>
