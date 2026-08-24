@@ -10,9 +10,16 @@
  *
  * All three functions throw RuntimeException on any failure — callers must
  * catch and translate to a user-facing error, never let this surface raw.
+ *
+ * config.php should live ONE DIRECTORY ABOVE public_html (outside the web
+ * root) so it can never be served over HTTP, no matter how the server is
+ * configured. This checks that location first and falls back to the old
+ * in-webroot spot only if it hasn't been moved yet — safe during migration.
  */
 
-require_once __DIR__ . '/config.php';
+require_once (file_exists(__DIR__ . '/../config.php'))
+  ? __DIR__ . '/../config.php'
+  : __DIR__ . '/config.php';
 
 function qpay_token(): string {
   $ch = curl_init(NAF_QPAY_BASE_URL . '/v2/auth/token');

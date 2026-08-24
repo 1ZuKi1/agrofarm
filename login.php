@@ -10,9 +10,16 @@
  *
  * Brute-force protection: failed attempts are counted per session. After
  * MAX_FAILS the session is locked out for LOCKOUT_SECONDS and returns 429.
+ *
+ * config.php should live ONE DIRECTORY ABOVE public_html (outside the web
+ * root) so it can never be served over HTTP, no matter how the server is
+ * configured. This checks that location first and falls back to the old
+ * in-webroot spot only if it hasn't been moved yet — safe during migration.
  */
 
-require __DIR__ . '/config.php';
+require (file_exists(__DIR__ . '/../config.php'))
+  ? __DIR__ . '/../config.php'
+  : __DIR__ . '/config.php';
 
 session_set_cookie_params([
   'httponly' => true,

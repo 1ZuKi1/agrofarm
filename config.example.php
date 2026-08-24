@@ -2,11 +2,17 @@
 /**
  * config.example.php — template for config.php.
  *
- * config.php holds real secrets (admin password hash, and soon QPay + MySQL
+ * config.php holds real secrets (admin password hash, QPay, and MySQL
  * credentials) and is gitignored — it never enters version control. Copy this
  * file to config.php on each environment and fill in real values there.
  *
  *     cp config.example.php config.php
+ *
+ * On the live server, place the filled-in config.php ONE DIRECTORY ABOVE
+ * public_html (e.g. /home/agrofhui/config.php, not
+ * /home/agrofhui/public_html/config.php) so it sits outside the web root and
+ * can never be served over HTTP. db.php and login.php look there first and
+ * fall back to the in-webroot copy only if it hasn't been moved yet.
  *
  * To generate a password hash:
  *
