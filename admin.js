@@ -5,7 +5,10 @@
   "use strict";
 
   const loginScreen   = document.getElementById("loginScreen");
-  const dashboardScreen = document.getElementById("dashboardScreen");
+  const appShell      = document.getElementById("appShell");
+  const sectionNews   = document.getElementById("sectionNews");
+  const sectionProducts = document.getElementById("sectionProducts");
+  const sectionOrders = document.getElementById("sectionOrders");
   const editorScreen  = document.getElementById("editorScreen");
   const passwordInput = document.getElementById("passwordInput");
   const loginBtn      = document.getElementById("loginBtn");
@@ -29,16 +32,21 @@
   const saveBtn       = document.getElementById("saveBtn");
   const cancelBtn     = document.getElementById("cancelBtn");
   const saveSuccess   = document.getElementById("saveSuccess");
-  const productsScreen = document.getElementById("productsScreen");
-  const productsBtn   = document.getElementById("productsBtn");
-  const backToNewsBtn = document.getElementById("backToNewsBtn");
   const productsTab   = document.getElementById("productsTab");
+  const ordersTab     = document.getElementById("ordersTab");
+  const adminSearch   = document.getElementById("adminSearch");
+  const refreshOrdersBtn = document.getElementById("refreshOrdersBtn");
   const addProductBtn = document.getElementById("addProductBtn");
   const productEditor = document.getElementById("productEditor");
 
   let posts = [];
   let editingId = null;
   let productsCache = [];
+  let ordersCache = [];
+  let currentSection = "news";   // news | products | orders (editor overlays news)
+  let productFilter = "all";
+  let orderFilter = "all";
+  let searchTerm = "";
 
   async function loadPosts() {
     try {
@@ -174,42 +182,61 @@
   function renderDashboard() {
     if (!postList) return;
 
+    document.getElementById("newsCount").textContent = posts.length;
+    document.getElementById("navCountNews").textContent = posts.length;
+
     if (posts.length === 0) {
-      postList.innerHTML = `<p style="color:#999;text-align:center;padding:1.5rem 0;font-size:.9rem">No posts yet. Click "New post" to create one.</p>`;
+      postList.innerHTML = `<p class="adm-empty">No posts yet — click "New post" to write the first one.</p>`;
       return;
     }
 
-    const sorted = [...posts].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sorted = [...posts]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .filter((p) => matchesSearch(p.title?.en, p.title?.mn, p.body?.en, p.body?.mn));
 
-    postList.innerHTML = sorted.map((post) => {
-      const title = post.title?.en || post.title?.mn || "(untitled)";
-      const d = post.date ? new Date(post.date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "";
-      return `
-        <div class="admin-post" data-id="${post.id}">
-          <div class="admin-post-info">
-            <strong>${escHtml(title)}</strong>
-            <time>${d}</time>
-          </div>
-          <div class="admin-post-actions">
-            <button class="edit-btn">Edit</button>
-            <button class="del delete-btn">Delete</button>
-          </div>
-        </div>
-      `;
-    }).join("");
+    if (sorted.length === 0) {
+      postList.innerHTML = `<p class="adm-empty">No posts match “${escHtml(searchTerm)}”.</p>`;
+      return;
+    }
+
+    postList.innerHTML = `
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead><tr>
+            <th>Date</th><th>Title</th><th>Монгол</th><th>Image</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${sorted.map((post) => {
+              const title = post.title?.en || post.title?.mn || "(untitled)";
+              return `
+                <tr data-id="${escAttr(post.id)}">
+                  <td class="adm-table__id">${escHtml(fmtDate(post.date))}</td>
+                  <td class="adm-table__strong">${escHtml(title)}</td>
+                  <td>${post.title?.mn
+                    ? `<span class="adm-status adm-status--ok">Translated</span>`
+                    : `<span class="adm-status adm-status--warn">Missing</span>`}</td>
+                  <td>${post.image
+                    ? `<span class="adm-status adm-status--info">Yes</span>`
+                    : `<span class="adm-status adm-status--mute">None</span>`}</td>
+                  <td>
+                    <div class="adm-actions">
+                      <button class="adm-rowbtn edit-btn">Edit</button>
+                      <button class="adm-rowbtn adm-rowbtn--danger delete-btn">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
 
     postList.querySelectorAll(".edit-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const row = e.target.closest(".admin-post");
-        editPost(row.dataset.id);
-      });
+      btn.addEventListener("click", (e) => editPost(e.target.closest("tr").dataset.id));
     });
-
     postList.querySelectorAll(".delete-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const row = e.target.closest(".admin-post");
-        deletePost(row.dataset.id);
-      });
+      btn.addEventListener("click", (e) => deletePost(e.target.closest("tr").dataset.id));
     });
   }
 
@@ -289,17 +316,66 @@
     showScreen("dashboard");
   }
 
+  /**
+   * Single router for the whole console.
+   *
+   * "dashboard" is the News list and "editor" is the news post form — the
+   * editor replaces the list inside the News section rather than being a
+   * fourth sidebar destination, so News stays the active nav item while
+   * you're writing a post.
+   */
   function showScreen(screen) {
-    loginScreen.style.display = screen === "login" ? "block" : "none";
-    dashboardScreen.style.display = screen === "dashboard" ? "block" : "none";
-    editorScreen.style.display = screen === "editor" ? "block" : "none";
-    productsScreen.style.display = screen === "products" ? "block" : "none";
+    const loggedOut = screen === "login";
+    loginScreen.style.display = loggedOut ? "grid" : "none";
+    appShell.style.display = loggedOut ? "none" : "flex";
+    if (loggedOut) return;
+
+    const editing = screen === "editor";
+    if (!editing) currentSection = screen === "dashboard" ? "news" : screen;
+
+    sectionNews.style.display = currentSection === "news" && !editing ? "block" : "none";
+    editorScreen.style.display = editing ? "block" : "none";
+    sectionProducts.style.display = currentSection === "products" ? "block" : "none";
+    sectionOrders.style.display = currentSection === "orders" ? "block" : "none";
+
+    document.querySelectorAll(".adm-nav__item").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.section === currentSection);
+    });
+
+    // Top-bar buttons are declared once in the markup and tagged with the
+    // section they belong to, so each section's actions appear without
+    // re-creating the buttons (which would drop their event listeners).
+    document.querySelectorAll(".adm-topbar__actions .btn").forEach((btn) => {
+      btn.style.display = btn.dataset.for === currentSection && !editing ? "" : "none";
+    });
+
+    // The search box filters the visible table, so it's meaningless while the
+    // post editor is open — and its term must not leak between sections.
+    adminSearch.parentElement.style.visibility = editing ? "hidden" : "";
+    adminSearch.placeholder =
+      currentSection === "products" ? "Search products…" :
+      currentSection === "orders" ? "Search orders…" : "Search posts…";
+  }
+
+  /** Case-insensitive "does any of these fields contain the search term". */
+  function matchesSearch(...fields) {
+    if (!searchTerm) return true;
+    return fields.some((f) => String(f ?? "").toLowerCase().includes(searchTerm));
+  }
+
+  function money(n) { return Number(n).toLocaleString() + "₮"; }
+
+  function fmtDate(value) {
+    if (!value) return "—";
+    const d = new Date(String(value).replace(" ", "T"));
+    if (isNaN(d)) return "—";
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   }
 
   /** Load and render the Products tab (products + variants list). */
   async function renderProductsTab() {
     if (!productsTab) return;
-    productsTab.innerHTML = "<p>Loading…</p>";
+    if (!productsCache.length) productsTab.innerHTML = `<p class="adm-empty">Loading…</p>`;
 
     try {
       const res = await fetch("products-admin.php", {
@@ -322,56 +398,289 @@
       }
 
       productsCache = data.products || [];
-
-      if (productsCache.length === 0) {
-        productsTab.innerHTML = `<p style="color:#999;text-align:center;padding:1.5rem 0;font-size:.9rem">No products yet. Click "Add product" to create one.</p>`;
-        return;
-      }
-
-      productsTab.innerHTML = productsCache.map((product) => `
-        <div class="admin-product" data-product-id="${product.id}">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem">
-            <h3 style="margin:0">${escHtml(product.name_mn)}</h3>
-            <div class="admin-row-actions">
-              <button class="edit-product-btn" data-id="${product.id}">Edit</button>
-              <button class="add-variant-btn" data-product-id="${product.id}">+ Add variant</button>
-            </div>
-          </div>
-          <div class="admin-variants">
-            ${product.variants.map((v) => `
-              <div class="admin-variant" data-variant-id="${v.id}">
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem">
-                  <span><strong>${escHtml(v.name_mn)}</strong> — ${v.price.toLocaleString()}₮ — stock: ${v.stock} (available: ${v.available})</span>
-                  <div class="admin-row-actions">
-                    <button class="edit-variant-btn" data-id="${v.id}" data-product-id="${product.id}">Edit</button>
-                  </div>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        </div>
-      `).join("");
-
-      productsTab.querySelectorAll(".edit-product-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const product = productsCache.find((p) => Number(p.id) === Number(btn.dataset.id));
-          openProductEditor(product);
-        });
-      });
-      productsTab.querySelectorAll(".edit-variant-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const productId = Number(btn.dataset.productId);
-          const product = productsCache.find((p) => Number(p.id) === productId);
-          const variant = product && product.variants.find((v) => Number(v.id) === Number(btn.dataset.id));
-          openVariantEditor(variant, productId);
-        });
-      });
-      productsTab.querySelectorAll(".add-variant-btn").forEach((btn) => {
-        btn.addEventListener("click", () => openVariantEditor(null, Number(btn.dataset.productId)));
-      });
+      paintProducts();
     } catch (err) {
       productsTab.innerHTML = `<p class="admin-error" style="display:block">Could not reach the server — is PHP enabled?</p>`;
     }
+  }
+
+  /** A variant is "low" once availability drops to this or below. */
+  const LOW_STOCK = 5;
+
+  function variantState(v) {
+    if (Number(v.active) === 0) return "hidden";
+    if (v.available <= 0) return "out";
+    if (v.available <= LOW_STOCK) return "low";
+    return "in";
+  }
+
+  /**
+   * Renders stats + filter tabs + the variant table from productsCache.
+   * Split out from renderProductsTab so switching a filter tab or typing in
+   * search repaints from cache instead of re-hitting products-admin.php.
+   */
+  function paintProducts() {
+    const allVariants = productsCache.flatMap((p) => p.variants);
+    const counts = {
+      all: allVariants.length,
+      in: allVariants.filter((v) => variantState(v) === "in").length,
+      low: allVariants.filter((v) => variantState(v) === "low").length,
+      out: allVariants.filter((v) => variantState(v) === "out").length,
+    };
+    const unitsAvailable = allVariants.reduce((sum, v) => sum + Number(v.available || 0), 0);
+
+    document.getElementById("productCount").textContent = productsCache.length;
+    document.getElementById("navCountProducts").textContent = productsCache.length;
+
+    document.getElementById("productStats").innerHTML = `
+      <div class="adm-stat"><div class="adm-stat__label">Products</div><div class="adm-stat__value">${productsCache.length}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Variants</div><div class="adm-stat__value">${counts.all}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Units available</div><div class="adm-stat__value">${unitsAvailable.toLocaleString()}</div></div>
+      <div class="adm-stat${counts.low + counts.out > 0 ? " adm-stat--warn" : ""}">
+        <div class="adm-stat__label">Needs restock</div>
+        <div class="adm-stat__value">${counts.low + counts.out}<small> of ${counts.all}</small></div>
+      </div>
+    `;
+
+    const tabs = [
+      ["all", "All", counts.all],
+      ["in", "In stock", counts.in],
+      ["low", "Low stock", counts.low],
+      ["out", "Out of stock", counts.out],
+    ];
+    const tabsEl = document.getElementById("productTabs");
+    tabsEl.innerHTML = tabs.map(([key, label, n]) =>
+      `<button class="adm-tab${productFilter === key ? " is-active" : ""}" data-filter="${key}">${label}<span>${n}</span></button>`
+    ).join("");
+    tabsEl.querySelectorAll(".adm-tab").forEach((btn) => {
+      btn.addEventListener("click", () => { productFilter = btn.dataset.filter; paintProducts(); });
+    });
+
+    if (productsCache.length === 0) {
+      productsTab.innerHTML = `<p class="adm-empty">No products yet — click "Add product" to create one.</p>`;
+      return;
+    }
+
+    const STATUS = {
+      in:     ['adm-status--ok', 'In stock'],
+      low:    ['adm-status--warn', 'Low stock'],
+      out:    ['adm-status--bad', 'Out of stock'],
+      hidden: ['adm-status--mute', 'Hidden'],
+    };
+
+    // Each product contributes a header row plus its matching variants; a
+    // product whose variants are all filtered out drops away entirely rather
+    // than leaving a dangling header.
+    const groups = productsCache.map((product) => {
+      const visible = product.variants.filter((v) => {
+        const state = variantState(v);
+        const passesFilter = productFilter === "all" || state === productFilter;
+        return passesFilter && matchesSearch(v.name_mn, v.name_en, product.name_mn, product.name_en);
+      });
+      return { product, visible };
+    }).filter((g) => g.visible.length > 0 || (productFilter === "all" && matchesSearch(g.product.name_mn, g.product.name_en)));
+
+    if (groups.length === 0) {
+      productsTab.innerHTML = `<p class="adm-empty">Nothing matches this filter.</p>`;
+      return;
+    }
+
+    productsTab.innerHTML = `
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead><tr>
+            <th>Variant</th><th>Weight</th><th>Price</th><th>Stock</th><th>Available</th><th>Status</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${groups.map(({ product, visible }) => `
+              <tr class="adm-group">
+                <td colspan="7">
+                  ${escHtml(product.name_mn)}
+                  <span class="adm-group__actions">
+                    <button class="adm-rowbtn edit-product-btn" data-id="${product.id}">Edit product</button>
+                    <button class="adm-rowbtn add-variant-btn" data-product-id="${product.id}">+ Add variant</button>
+                  </span>
+                </td>
+              </tr>
+              ${visible.length === 0
+                ? `<tr><td colspan="7" class="adm-table__sub" style="background:transparent">No variants yet.</td></tr>`
+                : visible.map((v) => {
+                    const [cls, label] = STATUS[variantState(v)];
+                    return `
+                      <tr>
+                        <td class="adm-table__strong">${escHtml(v.name_mn)}${v.name_en ? `<span class="adm-table__sub">${escHtml(v.name_en)}</span>` : ""}</td>
+                        <td>${escHtml(v.weight_label || "—")}</td>
+                        <td class="adm-num">${money(v.price)}</td>
+                        <td class="adm-num">${v.stock}</td>
+                        <td class="adm-num">${v.available}</td>
+                        <td><span class="adm-status ${cls}">${label}</span></td>
+                        <td>
+                          <div class="adm-actions">
+                            <button class="adm-rowbtn edit-variant-btn" data-id="${v.id}" data-product-id="${product.id}">Edit</button>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  }).join("")}
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    productsTab.querySelectorAll(".edit-product-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        openProductEditor(productsCache.find((p) => Number(p.id) === Number(btn.dataset.id)));
+      });
+    });
+    productsTab.querySelectorAll(".edit-variant-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const productId = Number(btn.dataset.productId);
+        const product = productsCache.find((p) => Number(p.id) === productId);
+        const variant = product && product.variants.find((v) => Number(v.id) === Number(btn.dataset.id));
+        openVariantEditor(variant, productId);
+      });
+    });
+    productsTab.querySelectorAll(".add-variant-btn").forEach((btn) => {
+      btn.addEventListener("click", () => openVariantEditor(null, Number(btn.dataset.productId)));
+    });
+  }
+
+  /* ---------- Orders (read-only; see orders-admin.php) ---------- */
+
+  async function renderOrders() {
+    if (!ordersTab) return;
+    if (!ordersCache.length) ordersTab.innerHTML = `<p class="adm-empty">Loading…</p>`;
+
+    try {
+      const res = await fetch("orders-admin.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "action=list&csrf=" + encodeURIComponent(sessionStorage.getItem("naf_csrf_token") || ""),
+      });
+      const data = await res.json();
+
+      if (res.status === 401 || res.status === 403) {
+        sessionStorage.removeItem("naf_admin_auth");
+        sessionStorage.removeItem("naf_csrf_token");
+        showScreen("login");
+        return;
+      }
+      if (!res.ok) {
+        ordersTab.innerHTML = `<p class="admin-error" style="display:block">${escHtml(data.error || "Failed to load orders")}</p>`;
+        return;
+      }
+
+      ordersCache = data.orders || [];
+      paintOrders();
+    } catch {
+      ordersTab.innerHTML = `<p class="admin-error" style="display:block">Could not reach the server — is PHP enabled?</p>`;
+    }
+  }
+
+  function paintOrders() {
+    const counts = {
+      all: ordersCache.length,
+      pending: ordersCache.filter((o) => o.status === "pending").length,
+      paid: ordersCache.filter((o) => o.status === "paid").length,
+      fulfilled: ordersCache.filter((o) => o.status === "fulfilled").length,
+    };
+    // Only settled money counts as revenue — pending orders may never be paid
+    // and expired/cancelled ones never were.
+    const revenue = ordersCache
+      .filter((o) => o.status === "paid" || o.status === "fulfilled")
+      .reduce((sum, o) => sum + Number(o.total || 0), 0);
+
+    document.getElementById("orderCount").textContent = counts.all;
+    document.getElementById("navCountOrders").textContent = counts.all;
+
+    document.getElementById("orderStats").innerHTML = `
+      <div class="adm-stat"><div class="adm-stat__label">Revenue</div><div class="adm-stat__value">${revenue.toLocaleString()}<small>₮</small></div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Paid</div><div class="adm-stat__value">${counts.paid}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Awaiting payment</div><div class="adm-stat__value">${counts.pending}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Total orders</div><div class="adm-stat__value">${counts.all}</div></div>
+    `;
+
+    const tabs = [
+      ["all", "All", counts.all],
+      ["pending", "Pending", counts.pending],
+      ["paid", "Paid", counts.paid],
+      ["fulfilled", "Fulfilled", counts.fulfilled],
+    ];
+    const tabsEl = document.getElementById("orderTabs");
+    tabsEl.innerHTML = tabs.map(([key, label, n]) =>
+      `<button class="adm-tab${orderFilter === key ? " is-active" : ""}" data-filter="${key}">${label}<span>${n}</span></button>`
+    ).join("");
+    tabsEl.querySelectorAll(".adm-tab").forEach((btn) => {
+      btn.addEventListener("click", () => { orderFilter = btn.dataset.filter; paintOrders(); });
+    });
+
+    const STATUS = {
+      pending:   ['adm-status--warn', 'Awaiting payment'],
+      paid:      ['adm-status--ok', 'Paid'],
+      fulfilled: ['adm-status--info', 'Delivered'],
+      expired:   ['adm-status--mute', 'Expired'],
+      cancelled: ['adm-status--mute', 'Cancelled'],
+    };
+
+    const rows = ordersCache.filter((o) =>
+      (orderFilter === "all" || o.status === orderFilter) &&
+      matchesSearch(o.buyer_name, o.buyer_phone, o.buyer_address, "#" + o.id)
+    );
+
+    if (rows.length === 0) {
+      ordersTab.innerHTML = `<p class="adm-empty">${counts.all === 0 ? "No orders yet." : "Nothing matches this filter."}</p>`;
+      return;
+    }
+
+    ordersTab.innerHTML = `
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead><tr>
+            <th>Order</th><th>Customer</th><th>Delivery</th><th>Slot</th><th>Total</th><th>Status</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${rows.map((o) => {
+              const [cls, label] = STATUS[o.status] || ['adm-status--mute', o.status];
+              return `
+                <tr data-order-id="${o.id}">
+                  <td class="adm-table__id">#${String(o.id).padStart(6, "0")}<span class="adm-table__sub">${escHtml(fmtDate(o.created_at))}</span></td>
+                  <td class="adm-table__strong">${escHtml(o.buyer_name)}<span class="adm-table__sub">${escHtml(o.buyer_phone)}</span></td>
+                  <td>${escHtml(fmtDate(o.delivery_date))}</td>
+                  <td>${escHtml(o.delivery_slot)}</td>
+                  <td class="adm-num adm-table__strong">${money(o.total)}</td>
+                  <td><span class="adm-status ${cls}">${escHtml(label)}</span></td>
+                  <td><div class="adm-actions"><button class="adm-rowbtn see-more-btn">See more</button></div></td>
+                </tr>
+                <tr class="adm-detail-row" data-detail-for="${o.id}" style="display:none">
+                  <td colspan="7" class="adm-detail">
+                    <dl>
+                      <dt>Address</dt><dd>${escHtml(o.buyer_address)}</dd>
+                      ${o.buyer_note ? `<dt>Note</dt><dd>${escHtml(o.buyer_note)}</dd>` : ""}
+                      <dt>Items</dt>
+                      <dd><ul>${(o.items || []).map((it) =>
+                        `<li>${escHtml(it.variant_name_snapshot)} × ${it.quantity} — ${money(it.line_total)}</li>`
+                      ).join("")}</ul></dd>
+                      ${o.paid_at ? `<dt>Paid</dt><dd>${escHtml(fmtDate(o.paid_at))}</dd>` : ""}
+                    </dl>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    ordersTab.querySelectorAll(".see-more-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.closest("tr").dataset.orderId;
+        const detail = ordersTab.querySelector(`[data-detail-for="${id}"]`);
+        const open = detail.style.display !== "none";
+        detail.style.display = open ? "none" : "table-row";
+        btn.textContent = open ? "See more" : "Hide";
+      });
+    });
   }
 
   /** Serialize a plain object into an application/x-www-form-urlencoded body string. */
@@ -699,12 +1008,24 @@
     return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
+  /**
+   * Fill the Products/Orders sidebar badges before those sections are opened
+   * — otherwise they'd sit at "0" and actively misreport, e.g. showing no
+   * orders on a day that had some. Each section still re-fetches and surfaces
+   * its own errors when actually opened, so failures here can stay silent.
+   */
+  function prefetchCounts() {
+    renderProductsTab();
+    renderOrders();
+  }
+
   async function init() {
     const authed = sessionStorage.getItem("naf_admin_auth");
     if (authed === "1") {
       await loadPosts();
       renderDashboard();
       showScreen("dashboard");
+      prefetchCounts();
     } else {
       showScreen("login");
     }
@@ -728,6 +1049,7 @@
           await loadPosts();
           renderDashboard();
           showScreen("dashboard");
+          prefetchCounts();
         } else {
           loginError.textContent =
             res.status === 403 ? "Incorrect password" :
@@ -765,12 +1087,30 @@
     exportBtn.addEventListener("click", downloadJSON);
     publishBtn.addEventListener("click", publishToLive);
     postImageFile.addEventListener("change", uploadImage);
-    productsBtn.addEventListener("click", () => {
-      showScreen("products");
-      renderProductsTab();
-    });
-    backToNewsBtn.addEventListener("click", () => showScreen("dashboard"));
     addProductBtn.addEventListener("click", () => openProductEditor(null));
+    refreshOrdersBtn.addEventListener("click", renderOrders);
+
+    // Sidebar navigation. Products and Orders fetch on first visit and then
+    // repaint from cache; News is already in memory from loadPosts().
+    document.querySelectorAll(".adm-nav__item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const section = btn.dataset.section;
+        searchTerm = "";
+        adminSearch.value = "";
+        showScreen(section === "news" ? "dashboard" : section);
+        if (section === "products") renderProductsTab();
+        else if (section === "orders") renderOrders();
+        else renderDashboard();
+      });
+    });
+
+    adminSearch.addEventListener("input", () => {
+      searchTerm = adminSearch.value.trim().toLowerCase();
+      // Repaint from cache — never re-fetch on a keystroke.
+      if (currentSection === "news") renderDashboard();
+      else if (currentSection === "products") paintProducts();
+      else if (currentSection === "orders") paintOrders();
+    });
   }
 
   init();

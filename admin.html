@@ -3,148 +3,389 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — News Manager</title>
+<title>Admin — Nuudelchin Agro Farm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-body{ background:#f5f2ed; }
-.admin-wrap{ max-width:720px; margin:0 auto; padding:3rem var(--gutter); }
-.admin-wrap h1{ font-family:var(--sans); font-size:1.4rem; font-weight:700; margin-bottom:0.5rem; }
-.admin-wrap h2{ font-family:var(--sans); font-size:1.15rem; font-weight:600; margin-bottom:1rem; color:#333; }
-.admin-card{ background:#fff; border-radius:12px; padding:1.6rem 1.8rem; margin-bottom:1.4rem; border:1px solid rgba(0,0,0,.08); box-shadow:0 4px 12px rgba(0,0,0,.04); }
-.admin-login{ max-width:340px; margin:6rem auto 0; text-align:center; }
-.admin-login h1{ text-align:center; margin-bottom:1.2rem; }
-.admin-login input{ width:100%; padding:.7rem .9rem; border:1.5px solid rgba(0,0,0,.12); border-radius:8px; font-size:.95rem; margin-bottom:.7rem; font-family:var(--sans); box-sizing:border-box; }
-.admin-login input:focus{ outline:none; border-color:var(--green); }
-.admin-login .btn{ width:100%; }
-.admin-error{ color:#c0392b; font-size:.85rem; margin-top:.5rem; display:none; }
-.admin-toolbar{ display:flex; gap:.6rem; flex-wrap:wrap; margin-bottom:1.4rem; }
-.admin-toolbar .btn{ padding:.5rem 1.2rem; font-size:.85rem; }
-.admin-post{ display:flex; align-items:center; gap:1rem; padding:.7rem 0; border-bottom:1px solid rgba(0,0,0,.06); }
-.admin-post:last-child{ border:none; }
-.admin-post-info{ flex:1; min-width:0; }
-.admin-post-info strong{ display:block; font-size:.92rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.admin-post-info time{ font-size:.78rem; color:var(--ink-soft); }
-.admin-post-actions{ display:flex; gap:.4rem; flex-shrink:0; }
-.admin-post-actions button{ background:none; border:1px solid rgba(0,0,0,.1); border-radius:6px; padding:.3rem .7rem; cursor:pointer; font-size:.78rem; transition:background .2s; }
-.admin-post-actions button:hover{ background:rgba(0,0,0,.05); }
-.admin-post-actions .del{ color:#c0392b; border-color:#e8b4b4; }
-.admin-post-actions .del:hover{ background:#fde8e8; }
-.admin-form label{ display:block; font-size:.82rem; font-weight:600; margin:.9rem 0 .3rem; color:#555; }
+/* ==========================================================================
+   ADMIN CONSOLE — sidebar shell + data tables
+   Self-contained: only --green/--green-deep/--gold and .btn come from
+   style.css. Everything else is scoped to adm- so it can never leak onto a
+   public page.
+   ========================================================================== */
+:root{
+  --adm-bg:#e8eaec;
+  --adm-surface:#fff;
+  --adm-sunken:#f7f8f9;
+  --adm-ink:#1a1d1f;
+  --adm-muted:#6b7280;
+  --adm-line:rgba(0,0,0,.07);
+  --adm-radius:18px;
+  --adm-radius-sm:11px;
+}
+body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
+
+/* ---------- Login ---------- */
+.adm-login-wrap{ min-height:100vh; display:grid; place-items:center; padding:2rem; }
+.adm-login{
+  background:var(--adm-surface); border-radius:var(--adm-radius);
+  padding:2.4rem 2.2rem; width:min(360px,100%); text-align:center;
+  box-shadow:0 12px 40px rgba(0,0,0,.09);
+}
+.adm-login__mark{ width:44px; height:44px; border-radius:12px; background:var(--green-deep); color:#fff;
+  display:grid; place-items:center; font-weight:700; margin:0 auto 1rem; font-size:1rem; letter-spacing:.02em; }
+.adm-login h1{ font-size:1.15rem; font-weight:700; margin-bottom:.3rem; }
+.adm-login p.adm-login__sub{ font-size:.85rem; color:var(--adm-muted); margin-bottom:1.5rem; }
+.adm-login input{
+  width:100%; padding:.75rem .9rem; border:1.5px solid var(--adm-line); border-radius:10px;
+  font-size:.95rem; margin-bottom:.7rem; font-family:inherit; box-sizing:border-box; background:var(--adm-sunken);
+}
+.adm-login input:focus{ outline:none; border-color:var(--green); background:#fff; }
+.adm-login .btn{ width:100%; background:var(--green-deep); color:#fff; }
+.admin-error{ color:#c0392b; font-size:.85rem; margin-top:.6rem; display:none; }
+
+/* ---------- Shell ---------- */
+.adm-shell{ display:flex; gap:1rem; padding:1rem; min-height:100vh; align-items:flex-start; }
+
+/* ---------- Sidebar ---------- */
+.adm-sidebar{
+  width:230px; flex-shrink:0; background:var(--adm-surface); border-radius:var(--adm-radius);
+  padding:1.3rem 1rem; position:sticky; top:1rem;
+  display:flex; flex-direction:column; gap:1rem; min-height:calc(100vh - 2rem); box-sizing:border-box;
+}
+.adm-brand{ display:flex; align-items:center; gap:.6rem; padding:0 .4rem .2rem; }
+.adm-brand img{ width:104px; height:auto; display:block; }
+.adm-user{
+  display:flex; align-items:center; gap:.7rem; padding:.7rem;
+  border:1px solid var(--adm-line); border-radius:var(--adm-radius-sm);
+}
+.adm-user__avatar{
+  width:34px; height:34px; border-radius:50%; flex-shrink:0;
+  background:var(--green-deep); color:#fff; display:grid; place-items:center;
+  font-size:.8rem; font-weight:700;
+}
+.adm-user__name{ font-size:.85rem; font-weight:600; line-height:1.2; }
+.adm-user__role{ font-size:.73rem; color:var(--adm-muted); }
+.adm-nav{ display:flex; flex-direction:column; gap:.35rem; }
+.adm-nav__item{
+  display:flex; align-items:center; gap:.7rem; width:100%;
+  padding:.7rem .85rem; border-radius:var(--adm-radius-sm);
+  background:transparent; border:0; cursor:pointer;
+  font-family:inherit; font-size:.88rem; font-weight:600; color:var(--adm-ink);
+  text-align:left; transition:background .18s, color .18s;
+}
+.adm-nav__item svg{ width:17px; height:17px; flex-shrink:0; }
+.adm-nav__item:hover{ background:var(--adm-sunken); }
+.adm-nav__item.is-active{ background:var(--green-deep); color:#fff; }
+.adm-nav__count{
+  margin-left:auto; font-size:.72rem; font-weight:700; padding:.1rem .45rem;
+  border-radius:999px; background:rgba(0,0,0,.07); color:var(--adm-muted);
+}
+.adm-nav__item.is-active .adm-nav__count{ background:rgba(255,255,255,.22); color:#fff; }
+.adm-side-foot{ margin-top:auto; display:flex; flex-direction:column; gap:.6rem; }
+.adm-livecard{
+  background:linear-gradient(150deg,#eef3ea,#e2ebdd); border-radius:var(--adm-radius-sm);
+  padding:1rem; text-decoration:none; display:block; color:var(--adm-ink);
+  transition:transform .25s;
+}
+.adm-livecard:hover{ transform:translateY(-2px); }
+.adm-livecard strong{ display:block; font-size:.88rem; margin-bottom:.15rem; }
+.adm-livecard span{ font-size:.75rem; color:var(--adm-muted); }
+.adm-logout{
+  background:none; border:1px solid var(--adm-line); border-radius:var(--adm-radius-sm);
+  padding:.6rem; cursor:pointer; font-family:inherit; font-size:.83rem; color:var(--adm-muted);
+  transition:background .2s;
+}
+.adm-logout:hover{ background:var(--adm-sunken); }
+
+/* ---------- Main ---------- */
+.adm-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1rem; }
+.adm-topbar{
+  background:var(--adm-surface); border-radius:var(--adm-radius);
+  padding:.8rem 1rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;
+}
+.adm-search{ flex:1; min-width:180px; display:flex; align-items:center; gap:.55rem; }
+.adm-search svg{ width:16px; height:16px; color:var(--adm-muted); flex-shrink:0; }
+.adm-search input{
+  flex:1; border:0; background:none; font-family:inherit; font-size:.9rem;
+  color:var(--adm-ink); padding:.45rem 0; min-width:0;
+}
+.adm-search input:focus{ outline:none; }
+.adm-topbar__actions{ display:flex; gap:.5rem; flex-wrap:wrap; }
+.adm-topbar__actions .btn{ padding:.55rem 1.1rem; font-size:.83rem; }
+.adm-btn-dark{ background:var(--green-deep); color:#fff; }
+.adm-btn-plain{ background:var(--adm-sunken); color:var(--adm-ink); }
+
+.adm-panel{ background:var(--adm-surface); border-radius:var(--adm-radius); padding:1.4rem 1.5rem; }
+.adm-panel__head{
+  display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; margin-bottom:1.2rem;
+}
+.adm-panel__title{ display:flex; align-items:center; gap:.6rem; font-size:1.25rem; font-weight:700; }
+.adm-count{
+  font-size:.8rem; font-weight:600; color:var(--adm-muted);
+  background:var(--adm-sunken); border-radius:999px; padding:.2rem .6rem;
+}
+
+/* ---------- Stat cards ---------- */
+.adm-stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(165px,1fr)); gap:1rem; }
+.adm-stat{ background:var(--adm-surface); border-radius:var(--adm-radius); padding:1.2rem 1.4rem; }
+.adm-stat__label{
+  font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--adm-muted); font-weight:600; margin-bottom:.5rem;
+}
+.adm-stat__value{ font-size:1.9rem; font-weight:700; line-height:1; }
+.adm-stat__value small{ font-size:.95rem; font-weight:600; color:var(--adm-muted); }
+.adm-stat--warn .adm-stat__value{ color:#b45309; }
+
+/* ---------- Filter tabs ---------- */
+.adm-tabs{ display:flex; gap:.4rem; margin-left:auto; flex-wrap:wrap; }
+.adm-tab{
+  padding:.5rem 1rem; border-radius:999px; border:1px solid var(--adm-line);
+  background:var(--adm-surface); font-family:inherit; font-size:.82rem; font-weight:600;
+  color:var(--adm-ink); cursor:pointer; transition:background .2s, color .2s;
+}
+.adm-tab:hover{ background:var(--adm-sunken); }
+.adm-tab.is-active{ background:var(--green-deep); color:#fff; border-color:transparent; }
+.adm-tab span{ opacity:.65; margin-left:.3rem; font-weight:500; }
+
+/* ---------- Table ---------- */
+.adm-table-wrap{ overflow-x:auto; }
+.adm-table{ width:100%; border-collapse:separate; border-spacing:0 .45rem; min-width:640px; }
+.adm-table th{
+  text-align:left; font-size:.73rem; font-weight:600; color:var(--adm-muted);
+  padding:0 .9rem .3rem; white-space:nowrap;
+}
+.adm-table td{ padding:.85rem .9rem; font-size:.86rem; background:var(--adm-sunken); vertical-align:middle; }
+.adm-table tbody tr td:first-child{ border-radius:var(--adm-radius-sm) 0 0 var(--adm-radius-sm); }
+.adm-table tbody tr td:last-child{ border-radius:0 var(--adm-radius-sm) var(--adm-radius-sm) 0; }
+.adm-table tbody tr:hover td{ background:#f1f3f4; }
+.adm-table__id{ font-variant-numeric:tabular-nums; color:var(--adm-muted); }
+.adm-table__strong{ font-weight:600; }
+.adm-table__sub{ display:block; font-size:.76rem; color:var(--adm-muted); margin-top:.15rem; }
+.adm-num{ font-variant-numeric:tabular-nums; }
+
+/* Product rows are grouped under a product header row */
+.adm-table tr.adm-group td{
+  background:transparent; padding:1rem .9rem .25rem; font-weight:700; font-size:.95rem;
+}
+.adm-group__actions{ float:right; display:flex; gap:.4rem; }
+
+.adm-status{ display:inline-flex; align-items:center; gap:.42rem; font-size:.82rem; font-weight:600; white-space:nowrap; }
+.adm-status::before{ content:""; width:7px; height:7px; border-radius:50%; background:currentColor; flex-shrink:0; }
+.adm-status--ok{ color:#15803d; }
+.adm-status--warn{ color:#b45309; }
+.adm-status--bad{ color:#b91c1c; }
+.adm-status--info{ color:#1d4ed8; }
+.adm-status--mute{ color:var(--adm-muted); }
+
+.adm-rowbtn{
+  background:var(--adm-surface); border:1px solid var(--adm-line); border-radius:8px;
+  padding:.38rem .8rem; cursor:pointer; font-family:inherit; font-size:.79rem; font-weight:600;
+  color:var(--adm-ink); transition:background .2s;
+}
+.adm-rowbtn:hover{ background:#eceef0; }
+.adm-rowbtn--danger{ color:#b91c1c; border-color:#f0cccc; }
+.adm-rowbtn--danger:hover{ background:#fdeaea; }
+.adm-actions{ display:flex; gap:.4rem; justify-content:flex-end; }
+
+.adm-empty{ text-align:center; color:var(--adm-muted); padding:2.5rem 0; font-size:.9rem; }
+.adm-detail{ background:#eef1f2; font-size:.83rem; }
+.adm-detail dl{ display:grid; grid-template-columns:auto 1fr; gap:.3rem 1rem; margin:0; }
+.adm-detail dt{ color:var(--adm-muted); }
+.adm-detail ul{ margin:.4rem 0 0; padding-left:1.1rem; }
+
+/* ---------- News editor + status banners ---------- */
+.admin-form label{ display:block; font-size:.8rem; font-weight:600; margin:.9rem 0 .3rem; color:#555; }
 .admin-form input,
-.admin-form textarea{ width:100%; padding:.6rem .8rem; border:1.5px solid rgba(0,0,0,.1); border-radius:8px; font-size:.9rem; font-family:var(--sans); box-sizing:border-box; }
+.admin-form textarea{
+  width:100%; padding:.65rem .85rem; border:1.5px solid var(--adm-line); border-radius:10px;
+  font-size:.9rem; font-family:inherit; box-sizing:border-box; background:var(--adm-sunken);
+}
 .admin-form input:focus,
-.admin-form textarea:focus{ outline:none; border-color:var(--green); }
-.admin-form textarea{ min-height:90px; resize:vertical; }
+.admin-form textarea:focus{ outline:none; border-color:var(--green); background:#fff; }
+.admin-form textarea{ min-height:110px; resize:vertical; }
 .admin-form-row{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
-.admin-form-actions{ display:flex; gap:.6rem; margin-top:1.2rem; }
-.admin-form-actions .btn{ padding:.5rem 1.2rem; font-size:.85rem; }
+.admin-form-actions{ display:flex; gap:.6rem; margin-top:1.4rem; }
+.admin-form-actions .btn{ padding:.55rem 1.2rem; font-size:.85rem; }
 .admin-success{ color:var(--green); font-size:.85rem; margin-top:.5rem; display:none; }
-.admin-settings{ margin-top:1.4rem; padding-top:1.2rem; border-top:1px solid rgba(0,0,0,.06); }
-.admin-settings summary{ cursor:pointer; font-size:.85rem; color:var(--ink-soft); font-weight:600; }
-.admin-settings input{ width:auto; padding:.4rem .7rem; border:1.5px solid rgba(0,0,0,.1); border-radius:6px; font-size:.85rem; margin-top:.6rem; }
-.admin-settings .btn{ padding:.4rem .9rem; font-size:.8rem; }
-.admin-publish-status{ font-size:.82rem; margin-bottom:1rem; padding:.6rem .9rem; border-radius:8px; display:none; }
+.admin-publish-status{ font-size:.84rem; margin-bottom:1rem; padding:.7rem 1rem; border-radius:10px; display:none; }
 .admin-publish-status.ok{ display:block; background:#e8f5e9; color:var(--green); border:1px solid #c8e6c9; }
 .admin-publish-status.err{ display:block; background:#fde8e8; color:#c0392b; border:1px solid #f5c6cb; }
-.admin-product{ border:1px solid #ddd; border-radius:8px; padding:1rem; margin-bottom:1rem; }
-.admin-variant{ padding:.5rem 0; border-top:1px solid #eee; }
-.admin-row-actions{ display:flex; gap:.4rem; flex-shrink:0; }
-.admin-row-actions button{ background:none; border:1px solid rgba(0,0,0,.1); border-radius:6px; padding:.3rem .7rem; cursor:pointer; font-size:.78rem; transition:background .2s; }
-.admin-row-actions button:hover{ background:rgba(0,0,0,.05); }
-.admin-modal{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:2000; padding:2rem; align-items:center; justify-content:center; overflow-y:auto; }
+
+/* ---------- Product/variant modal (logic unchanged, restyled) ---------- */
+.admin-modal{ position:fixed; inset:0; background:rgba(15,20,17,.55); z-index:2000; padding:2rem; align-items:center; justify-content:center; overflow-y:auto; }
 .admin-modal form{ width:100%; }
+.admin-card{ background:var(--adm-surface); border-radius:var(--adm-radius); padding:1.6rem 1.8rem; }
 .ingredient-row{ display:flex; gap:.5rem; margin-bottom:.5rem; align-items:center; }
 .ingredient-row input{ flex:1; }
+
+@media (max-width: 860px){
+  .adm-shell{ flex-direction:column; }
+  .adm-sidebar{ width:100%; position:static; min-height:0; }
+  .adm-nav{ flex-direction:row; flex-wrap:wrap; }
+  .adm-nav__item{ width:auto; }
+  .adm-side-foot{ margin-top:0; }
+  .adm-livecard{ display:none; }
+  .admin-form-row{ grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
 
-<div class="admin-wrap" id="adminApp">
-
-  <!-- LOGIN SCREEN -->
-  <div id="loginScreen" class="admin-login">
-    <h1>News — Admin</h1>
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen" class="adm-login-wrap">
+  <div class="adm-login">
+    <div class="adm-login__mark">NAF</div>
+    <h1>Admin console</h1>
+    <p class="adm-login__sub">Nuudelchin Agro Farm</p>
     <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password">
-    <button class="btn btn--gold" id="loginBtn">Sign in</button>
+    <button class="btn" id="loginBtn">Sign in</button>
     <p class="admin-error" id="loginError">Incorrect password</p>
   </div>
-
-  <!-- DASHBOARD -->
-  <div id="dashboardScreen" style="display:none">
-    <h1>📰 News Manager</h1>
-    <div class="admin-toolbar">
-      <button class="btn btn--gold" id="addBtn">+ New post</button>
-      <button class="btn btn--ghost" style="border-color:var(--green);color:var(--green)" id="exportBtn">⬇ Export</button>
-      <button class="btn" style="background:var(--green);color:var(--cream);padding:.5rem 1.2rem;font-size:.85rem" id="publishBtn">🚀 Publish to live site</button>
-      <button class="btn btn--ghost" style="border-color:#999;color:#666" id="productsBtn">📦 Products</button>
-      <button class="btn btn--ghost" style="border-color:#999;color:#666" id="logoutBtn">Logout</button>
-    </div>
-    <p class="admin-publish-status" id="publishStatus"></p>
-    <div id="postList" class="admin-card"></div>
-  </div>
-
-  <!-- PRODUCTS -->
-  <div id="productsScreen" style="display:none">
-    <h1>📦 Products</h1>
-    <div class="admin-toolbar">
-      <button class="btn btn--gold" id="addProductBtn">+ Add product</button>
-      <button class="btn btn--ghost" style="border-color:#999;color:#666" id="backToNewsBtn">← Back to News</button>
-    </div>
-    <div id="productsTab" class="admin-card"></div>
-  </div>
-
-  <!-- PRODUCT/VARIANT EDITOR MODAL -->
-  <div id="productEditor" class="admin-modal" style="display:none"></div>
-
-  <!-- EDITOR -->
-  <div id="editorScreen" style="display:none">
-    <h2 id="editorTitle">New post</h2>
-    <div class="admin-card admin-form">
-      <label for="postDate">Date</label>
-      <input type="date" id="postDate">
-
-      <div class="admin-form-row">
-        <div>
-          <label for="postTitleEn">Title (English)</label>
-          <input type="text" id="postTitleEn" placeholder="Title">
-        </div>
-        <div>
-          <label for="postTitleMn">Title (Монгол)</label>
-          <input type="text" id="postTitleMn" placeholder="Гарчиг">
-        </div>
-      </div>
-
-      <div class="admin-form-row">
-        <div>
-          <label for="postBodyEn">Body (English)</label>
-          <textarea id="postBodyEn" placeholder="Write the news article in English…"></textarea>
-        </div>
-        <div>
-          <label for="postBodyMn">Body (Монгол)</label>
-          <textarea id="postBodyMn" placeholder="Мэдээг монголоор бичнэ үү…"></textarea>
-        </div>
-      </div>
-
-      <label for="postImage">Image (optional)</label>
-      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
-        <input type="file" id="postImageFile" accept="image/*" style="flex:1;min-width:180px">
-        <span class="admin-success" id="uploadStatus" style="margin:0"></span>
-      </div>
-      <input type="text" id="postImage" placeholder="img/news/photo.jpg or https://example.com/photo.jpg" style="margin-top:.5rem">
-      <img id="imagePreview" alt="" style="display:none;max-width:220px;margin-top:.6rem;border-radius:8px;border:1px solid rgba(0,0,0,.1)">
-
-      <div class="admin-form-actions">
-        <button class="btn btn--gold" id="saveBtn">💾 Save</button>
-        <button class="btn btn--ghost" style="border-color:#999;color:#666" id="cancelBtn">Cancel</button>
-      </div>
-      <p class="admin-success" id="saveSuccess">Post saved</p>
-    </div>
-  </div>
-
 </div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="appShell" class="adm-shell" style="display:none">
+
+  <aside class="adm-sidebar">
+    <div class="adm-brand"><img src="img/naf_logo_full.svg" alt="Nuudelchin Agro Farm"></div>
+
+    <div class="adm-user">
+      <div class="adm-user__avatar">NAF</div>
+      <div>
+        <div class="adm-user__name">Administrator</div>
+        <div class="adm-user__role">agrofarm.mn</div>
+      </div>
+    </div>
+
+    <nav class="adm-nav">
+      <button class="adm-nav__item is-active" data-section="news">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9h4"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8Z"/></svg>
+        News <span class="adm-nav__count" id="navCountNews">0</span>
+      </button>
+      <button class="adm-nav__item" data-section="products">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+        Products <span class="adm-nav__count" id="navCountProducts">0</span>
+      </button>
+      <button class="adm-nav__item" data-section="orders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        Orders <span class="adm-nav__count" id="navCountOrders">0</span>
+      </button>
+    </nav>
+
+    <div class="adm-side-foot">
+      <a class="adm-livecard" href="index.html" target="_blank" rel="noopener">
+        <strong>View live site ↗</strong>
+        <span>agrofarm.mn</span>
+      </a>
+      <button class="adm-logout" id="logoutBtn">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="adm-main">
+
+    <header class="adm-topbar">
+      <div class="adm-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="adminSearch" placeholder="Search…" autocomplete="off">
+      </div>
+      <div class="adm-topbar__actions">
+        <button class="btn adm-btn-plain" id="exportBtn" data-for="news">Export</button>
+        <button class="btn adm-btn-plain" id="publishBtn" data-for="news">Publish to live site</button>
+        <button class="btn adm-btn-dark" id="addBtn" data-for="news">+ New post</button>
+        <button class="btn adm-btn-dark" id="addProductBtn" data-for="products">+ Add product</button>
+        <button class="btn adm-btn-plain" id="refreshOrdersBtn" data-for="orders">Refresh</button>
+      </div>
+    </header>
+
+    <!-- ---------- NEWS ---------- -->
+    <div id="sectionNews">
+      <p class="admin-publish-status" id="publishStatus"></p>
+      <div class="adm-panel">
+        <div class="adm-panel__head">
+          <div class="adm-panel__title">News <span class="adm-count" id="newsCount">0</span></div>
+        </div>
+        <div id="postList"></div>
+      </div>
+    </div>
+
+    <!-- ---------- PRODUCTS ---------- -->
+    <div id="sectionProducts" style="display:none">
+      <div class="adm-stats" id="productStats"></div>
+      <div class="adm-panel" style="margin-top:1rem">
+        <div class="adm-panel__head">
+          <div class="adm-panel__title">Products <span class="adm-count" id="productCount">0</span></div>
+          <div class="adm-tabs" id="productTabs"></div>
+        </div>
+        <div id="productsTab"></div>
+      </div>
+    </div>
+
+    <!-- ---------- ORDERS ---------- -->
+    <div id="sectionOrders" style="display:none">
+      <div class="adm-stats" id="orderStats"></div>
+      <div class="adm-panel" style="margin-top:1rem">
+        <div class="adm-panel__head">
+          <div class="adm-panel__title">Orders <span class="adm-count" id="orderCount">0</span></div>
+          <div class="adm-tabs" id="orderTabs"></div>
+        </div>
+        <div id="ordersTab"></div>
+      </div>
+    </div>
+
+    <!-- ---------- NEWS EDITOR ---------- -->
+    <div id="editorScreen" style="display:none">
+      <div class="adm-panel admin-form">
+        <div class="adm-panel__title" id="editorTitle" style="margin-bottom:.4rem">New post</div>
+
+        <label for="postDate">Date</label>
+        <input type="date" id="postDate">
+
+        <div class="admin-form-row">
+          <div>
+            <label for="postTitleEn">Title (English)</label>
+            <input type="text" id="postTitleEn" placeholder="Title">
+          </div>
+          <div>
+            <label for="postTitleMn">Title (Монгол)</label>
+            <input type="text" id="postTitleMn" placeholder="Гарчиг">
+          </div>
+        </div>
+
+        <div class="admin-form-row">
+          <div>
+            <label for="postBodyEn">Body (English)</label>
+            <textarea id="postBodyEn" placeholder="Write the news article in English…"></textarea>
+          </div>
+          <div>
+            <label for="postBodyMn">Body (Монгол)</label>
+            <textarea id="postBodyMn" placeholder="Мэдээг монголоор бичнэ үү…"></textarea>
+          </div>
+        </div>
+
+        <label for="postImage">Image (optional)</label>
+        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+          <input type="file" id="postImageFile" accept="image/*" style="flex:1;min-width:180px">
+          <span class="admin-success" id="uploadStatus" style="margin:0"></span>
+        </div>
+        <input type="text" id="postImage" placeholder="img/news/photo.jpg or https://example.com/photo.jpg" style="margin-top:.5rem">
+        <img id="imagePreview" alt="" style="display:none;max-width:220px;margin-top:.6rem;border-radius:10px;border:1px solid var(--adm-line)">
+
+        <div class="admin-form-actions">
+          <button class="btn adm-btn-dark" id="saveBtn">Save</button>
+          <button class="btn adm-btn-plain" id="cancelBtn">Cancel</button>
+        </div>
+        <p class="admin-success" id="saveSuccess">Post saved</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- PRODUCT/VARIANT EDITOR MODAL -->
+<div id="productEditor" class="admin-modal" style="display:none"></div>
 
 <script src="admin.js"></script>
 </body>

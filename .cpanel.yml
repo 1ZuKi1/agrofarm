@@ -2,5 +2,5 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/agrofhui/public_html/
-    - /bin/cp -f admin.html admin.js index.html login.php logout.php news.html shop.html shop.js publish.php script.js style.css db.php products-admin.php shop-data.php qpay.php slots.php order-create.php order-status.php qpay-callback.php $DEPLOYPATH
+    - /bin/cp -f admin.html admin.js index.html login.php logout.php news.html shop.html shop.js publish.php script.js style.css db.php products-admin.php shop-data.php qpay.php slots.php order-create.php order-status.php qpay-callback.php orders-admin.php $DEPLOYPATH
     - /bin/cp -f img/*.* $DEPLOYPATH/img/
