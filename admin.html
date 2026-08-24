@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — Nuudelchin Agro Farm</title>
+<title>Админ — Нүүдэлчин Агро Ферм</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -238,11 +238,11 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
 <div id="loginScreen" class="adm-login-wrap">
   <div class="adm-login">
     <div class="adm-login__mark">NAF</div>
-    <h1>Admin console</h1>
-    <p class="adm-login__sub">Nuudelchin Agro Farm</p>
-    <input type="password" id="passwordInput" placeholder="Password" autocomplete="current-password">
-    <button class="btn" id="loginBtn">Sign in</button>
-    <p class="admin-error" id="loginError">Incorrect password</p>
+    <h1>Админ хэсэг</h1>
+    <p class="adm-login__sub">Нүүдэлчин Агро Ферм</p>
+    <input type="password" id="passwordInput" placeholder="Нууц үг" autocomplete="current-password">
+    <button class="btn" id="loginBtn">Нэвтрэх</button>
+    <p class="admin-error" id="loginError">Нууц үг буруу байна</p>
   </div>
 </div>
 
@@ -250,12 +250,12 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
 <div id="appShell" class="adm-shell" style="display:none">
 
   <aside class="adm-sidebar">
-    <div class="adm-brand"><img src="img/naf_logo_full.svg" alt="Nuudelchin Agro Farm"></div>
+    <div class="adm-brand"><img src="img/naf_logo_full.svg" alt="Нүүдэлчин Агро Ферм"></div>
 
     <div class="adm-user">
       <div class="adm-user__avatar">NAF</div>
       <div>
-        <div class="adm-user__name">Administrator</div>
+        <div class="adm-user__name">Админ</div>
         <div class="adm-user__role">agrofarm.mn</div>
       </div>
     </div>
@@ -263,24 +263,24 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
     <nav class="adm-nav">
       <button class="adm-nav__item is-active" data-section="news">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9h4"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8Z"/></svg>
-        News <span class="adm-nav__count" id="navCountNews">0</span>
+        Мэдээ <span class="adm-nav__count" id="navCountNews">0</span>
       </button>
       <button class="adm-nav__item" data-section="products">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
-        Products <span class="adm-nav__count" id="navCountProducts">0</span>
+        Бүтээгдэхүүн <span class="adm-nav__count" id="navCountProducts">0</span>
       </button>
       <button class="adm-nav__item" data-section="orders">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-        Orders <span class="adm-nav__count" id="navCountOrders">0</span>
+        Захиалга <span class="adm-nav__count" id="navCountOrders">0</span>
       </button>
     </nav>
 
     <div class="adm-side-foot">
       <a class="adm-livecard" href="/" target="_blank" rel="noopener">
-        <strong>View live site ↗</strong>
+        <strong>Сайтыг үзэх ↗</strong>
         <span>agrofarm.mn</span>
       </a>
-      <button class="adm-logout" id="logoutBtn">Sign out</button>
+      <button class="adm-logout" id="logoutBtn">Гарах</button>
     </div>
   </aside>
 
@@ -289,14 +289,14 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
     <header class="adm-topbar">
       <div class="adm-search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="search" id="adminSearch" placeholder="Search…" autocomplete="off">
+        <input type="search" id="adminSearch" placeholder="Хайх…" autocomplete="off">
       </div>
       <div class="adm-topbar__actions">
-        <button class="btn adm-btn-plain" id="exportBtn" data-for="news">Export</button>
-        <button class="btn adm-btn-plain" id="publishBtn" data-for="news">Publish to live site</button>
-        <button class="btn adm-btn-dark" id="addBtn" data-for="news">+ New post</button>
-        <button class="btn adm-btn-dark" id="addProductBtn" data-for="products">+ Add product</button>
-        <button class="btn adm-btn-plain" id="refreshOrdersBtn" data-for="orders">Refresh</button>
+        <button class="btn adm-btn-plain" id="exportBtn" data-for="news">Татаж авах</button>
+        <button class="btn adm-btn-plain" id="publishBtn" data-for="news">Сайт дээр нийтлэх</button>
+        <button class="btn adm-btn-dark" id="addBtn" data-for="news">+ Шинэ мэдээ</button>
+        <button class="btn adm-btn-dark" id="addProductBtn" data-for="products">+ Бүтээгдэхүүн нэмэх</button>
+        <button class="btn adm-btn-plain" id="refreshOrdersBtn" data-for="orders">Шинэчлэх</button>
       </div>
     </header>
 
@@ -305,7 +305,7 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
       <p class="admin-publish-status" id="publishStatus"></p>
       <div class="adm-panel">
         <div class="adm-panel__head">
-          <div class="adm-panel__title">News <span class="adm-count" id="newsCount">0</span></div>
+          <div class="adm-panel__title">Мэдээ <span class="adm-count" id="newsCount">0</span></div>
         </div>
         <div id="postList"></div>
       </div>
@@ -316,7 +316,7 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
       <div class="adm-stats" id="productStats"></div>
       <div class="adm-panel" style="margin-top:1rem">
         <div class="adm-panel__head">
-          <div class="adm-panel__title">Products <span class="adm-count" id="productCount">0</span></div>
+          <div class="adm-panel__title">Бүтээгдэхүүн <span class="adm-count" id="productCount">0</span></div>
           <div class="adm-tabs" id="productTabs"></div>
         </div>
         <div id="productsTab"></div>
@@ -328,7 +328,7 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
       <div class="adm-stats" id="orderStats"></div>
       <div class="adm-panel" style="margin-top:1rem">
         <div class="adm-panel__head">
-          <div class="adm-panel__title">Orders <span class="adm-count" id="orderCount">0</span></div>
+          <div class="adm-panel__title">Захиалга <span class="adm-count" id="orderCount">0</span></div>
           <div class="adm-tabs" id="orderTabs"></div>
         </div>
         <div id="ordersTab"></div>
@@ -338,46 +338,46 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
     <!-- ---------- NEWS EDITOR ---------- -->
     <div id="editorScreen" style="display:none">
       <div class="adm-panel admin-form">
-        <div class="adm-panel__title" id="editorTitle" style="margin-bottom:.4rem">New post</div>
+        <div class="adm-panel__title" id="editorTitle" style="margin-bottom:.4rem">Шинэ мэдээ</div>
 
-        <label for="postDate">Date</label>
+        <label for="postDate">Огноо</label>
         <input type="date" id="postDate">
 
         <div class="admin-form-row">
           <div>
-            <label for="postTitleEn">Title (English)</label>
+            <label for="postTitleEn">Гарчиг (Англи)</label>
             <input type="text" id="postTitleEn" placeholder="Title">
           </div>
           <div>
-            <label for="postTitleMn">Title (Монгол)</label>
+            <label for="postTitleMn">Гарчиг (Монгол)</label>
             <input type="text" id="postTitleMn" placeholder="Гарчиг">
           </div>
         </div>
 
         <div class="admin-form-row">
           <div>
-            <label for="postBodyEn">Body (English)</label>
+            <label for="postBodyEn">Агуулга (Англи)</label>
             <textarea id="postBodyEn" placeholder="Write the news article in English…"></textarea>
           </div>
           <div>
-            <label for="postBodyMn">Body (Монгол)</label>
+            <label for="postBodyMn">Агуулга (Монгол)</label>
             <textarea id="postBodyMn" placeholder="Мэдээг монголоор бичнэ үү…"></textarea>
           </div>
         </div>
 
-        <label for="postImage">Image (optional)</label>
+        <label for="postImage">Зураг (заавал биш)</label>
         <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
           <input type="file" id="postImageFile" accept="image/*" style="flex:1;min-width:180px">
           <span class="admin-success" id="uploadStatus" style="margin:0"></span>
         </div>
-        <input type="text" id="postImage" placeholder="img/news/photo.jpg or https://example.com/photo.jpg" style="margin-top:.5rem">
+        <input type="text" id="postImage" placeholder="img/news/photo.jpg эсвэл https://example.com/photo.jpg" style="margin-top:.5rem">
         <img id="imagePreview" alt="" style="display:none;max-width:220px;margin-top:.6rem;border-radius:10px;border:1px solid var(--adm-line)">
 
         <div class="admin-form-actions">
-          <button class="btn adm-btn-dark" id="saveBtn">Save</button>
-          <button class="btn adm-btn-plain" id="cancelBtn">Cancel</button>
+          <button class="btn adm-btn-dark" id="saveBtn">Хадгалах</button>
+          <button class="btn adm-btn-plain" id="cancelBtn">Цуцлах</button>
         </div>
-        <p class="admin-success" id="saveSuccess">Post saved</p>
+        <p class="admin-success" id="saveSuccess">Мэдээ хадгалагдлаа</p>
       </div>
     </div>
 

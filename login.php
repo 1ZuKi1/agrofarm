@@ -27,7 +27,7 @@ const LOCKOUT_SECONDS = 15 * 60;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   http_response_code(405);
-  echo 'Method not allowed';
+  echo 'Метод зөвшөөрөгдөөгүй';
   exit;
 }
 
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 if (isset($_SESSION['naf_lockout_until']) && $_SESSION['naf_lockout_until'] > time()) {
   $minutes = (int)ceil(($_SESSION['naf_lockout_until'] - time()) / 60);
   http_response_code(429);
-  echo "Too many failed attempts — try again in {$minutes} minute(s).";
+  echo "Оролдлого хэт олон удаа буруу байна — {$minutes} минутын дараа дахин оролдоно уу.";
   exit;
 }
 
@@ -57,9 +57,9 @@ if ($_SESSION['naf_fails'] >= MAX_FAILS) {
   $_SESSION['naf_lockout_until'] = time() + LOCKOUT_SECONDS;
   $_SESSION['naf_fails'] = 0;
   http_response_code(429);
-  echo 'Too many failed attempts — locked for 15 minutes.';
+  echo 'Оролдлого хэт олон удаа буруу байна — 15 минутын турш түгжигдлээ.';
   exit;
 }
 
 http_response_code(403);
-echo 'Invalid password';
+echo 'Нууц үг буруу байна';

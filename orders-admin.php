@@ -25,20 +25,20 @@ header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   http_response_code(405);
-  echo json_encode(['error' => 'Method not allowed']);
+  echo json_encode(['error' => 'Метод зөвшөөрөгдөөгүй']);
   exit;
 }
 
 if (empty($_SESSION['naf_admin'])) {
   http_response_code(401);
-  echo json_encode(['error' => 'Session expired — please log in again.']);
+  echo json_encode(['error' => 'Нэвтрэх хугацаа дууссан — дахин нэвтэрнэ үү.']);
   exit;
 }
 
 $csrf = $_POST['csrf'] ?? '';
 if (empty($_SESSION['naf_csrf_token']) || !hash_equals($_SESSION['naf_csrf_token'], $csrf)) {
   http_response_code(403);
-  echo json_encode(['error' => 'Invalid or missing security token — please log in again.']);
+  echo json_encode(['error' => 'Аюулгүй байдлын токен буруу эсвэл дутуу байна — дахин нэвтэрнэ үү.']);
   exit;
 }
 
@@ -78,9 +78,9 @@ try {
   }
 
   http_response_code(400);
-  echo json_encode(['error' => 'Unknown action']);
+  echo json_encode(['error' => 'Тодорхойгүй үйлдэл']);
 } catch (\Throwable $e) {
   // Never leak DB host/name or a stack trace, even to an authenticated admin.
   http_response_code(500);
-  echo json_encode(['error' => 'Internal server error']);
+  echo json_encode(['error' => 'Серверийн дотоод алдаа']);
 }

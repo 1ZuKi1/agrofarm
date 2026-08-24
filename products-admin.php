@@ -19,20 +19,20 @@ header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   http_response_code(405);
-  echo json_encode(['error' => 'Method not allowed']);
+  echo json_encode(['error' => 'Метод зөвшөөрөгдөөгүй']);
   exit;
 }
 
 if (empty($_SESSION['naf_admin'])) {
   http_response_code(401);
-  echo json_encode(['error' => 'Session expired — please log in again.']);
+  echo json_encode(['error' => 'Нэвтрэх хугацаа дууссан — дахин нэвтэрнэ үү.']);
   exit;
 }
 
 $csrf = $_POST['csrf'] ?? '';
 if (empty($_SESSION['naf_csrf_token']) || !hash_equals($_SESSION['naf_csrf_token'], $csrf)) {
   http_response_code(403);
-  echo json_encode(['error' => 'Invalid or missing security token — please log in again.']);
+  echo json_encode(['error' => 'Аюулгүй байдлын токен буруу эсвэл дутуу байна — дахин нэвтэрнэ үү.']);
   exit;
 }
 
@@ -84,12 +84,12 @@ if ($action === 'save_product') {
 
   if ($nameMn === '') {
     http_response_code(400);
-    echo json_encode(['error' => 'Product name (Mongolian) is required']);
+    echo json_encode(['error' => 'Бүтээгдэхүүний нэр (Монгол) заавал шаардлагатай']);
     exit;
   }
   if (!preg_match('/^[a-z0-9]+(-[a-z0-9]+)*$/', $slug)) {
     http_response_code(400);
-    echo json_encode(['error' => 'Slug must be lowercase letters, numbers, and hyphens only (e.g. erdest-doloots)']);
+    echo json_encode(['error' => 'Slug зөвхөн жижиг үсэг, тоо, зураас агуулна (жишээ нь: erdest-doloots)']);
     exit;
   }
 
@@ -110,8 +110,8 @@ if ($action === 'save_product') {
   } catch (PDOException $e) {
     http_response_code(400);
     echo json_encode(['error' => str_contains($e->getMessage(), 'Duplicate entry')
-      ? 'That slug is already in use by another product'
-      : 'Could not save product']);
+      ? 'Энэ slug-ийг өөр бүтээгдэхүүн ашиглаж байна'
+      : 'Бүтээгдэхүүн хадгалж чадсангүй']);
   }
   exit;
 }
@@ -134,22 +134,22 @@ if ($action === 'save_variant') {
 
   if ($productId <= 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'product_id is required']);
+    echo json_encode(['error' => 'product_id заавал шаардлагатай']);
     exit;
   }
   if ($nameMn === '') {
     http_response_code(400);
-    echo json_encode(['error' => 'Variant name (Mongolian) is required']);
+    echo json_encode(['error' => 'Төрлийн нэр (Монгол) заавал шаардлагатай']);
     exit;
   }
   if ($price < 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'Price must be zero or a positive whole number']);
+    echo json_encode(['error' => 'Үнэ 0 буюу түүнээс их бүхэл тоо байх ёстой']);
     exit;
   }
   if ($stock < 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'Stock must be zero or a positive whole number']);
+    echo json_encode(['error' => 'Нөөц 0 буюу түүнээс их бүхэл тоо байх ёстой']);
     exit;
   }
 
@@ -180,8 +180,8 @@ if ($action === 'save_variant') {
   } catch (PDOException $e) {
     http_response_code(400);
     echo json_encode(['error' => str_contains($e->getMessage(), 'foreign key')
-      ? 'Could not save variant — check that the product still exists'
-      : 'Could not save variant']);
+      ? 'Төрөл хадгалж чадсангүй — бүтээгдэхүүн байгаа эсэхийг шалгана уу'
+      : 'Төрөл хадгалж чадсангүй']);
   }
   exit;
 }
@@ -193,12 +193,12 @@ if ($action === 'save_ingredients') {
 
   if ($variantId <= 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'variant_id is required']);
+    echo json_encode(['error' => 'variant_id заавал шаардлагатай']);
     exit;
   }
   if (!is_array($ingredients)) {
     http_response_code(400);
-    echo json_encode(['error' => 'Invalid ingredients format']);
+    echo json_encode(['error' => 'Найрлагын формат буруу байна']);
     exit;
   }
 
@@ -219,8 +219,8 @@ if ($action === 'save_ingredients') {
     $pdo->rollback();
     http_response_code(400);
     echo json_encode(['error' => str_contains($e->getMessage(), 'foreign key')
-      ? 'Could not save ingredients — check that the variant still exists'
-      : 'Could not save ingredients']);
+      ? 'Найрлага хадгалж чадсангүй — төрөл байгаа эсэхийг шалгана уу'
+      : 'Найрлага хадгалж чадсангүй']);
   }
   exit;
 }
@@ -229,7 +229,7 @@ if ($action === 'delete_variant') {
   $id = (int)($_POST['id'] ?? 0);
   if ($id <= 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'id is required']);
+    echo json_encode(['error' => 'id заавал шаардлагатай']);
     exit;
   }
   try {
@@ -237,7 +237,7 @@ if ($action === 'delete_variant') {
     echo json_encode(['ok' => true]);
   } catch (PDOException $e) {
     http_response_code(400);
-    echo json_encode(['error' => 'Could not delete — this variant has existing orders. Deactivate it instead.']);
+    echo json_encode(['error' => 'Устгаж чадсангүй — энэ төрөлд захиалга байна. Оронд нь идэвхгүй болгоно уу.']);
   }
   exit;
 }
@@ -245,7 +245,7 @@ if ($action === 'delete_variant') {
 if ($action === 'upload_image') {
   if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
     http_response_code(400);
-    echo json_encode(['error' => 'No file received']);
+    echo json_encode(['error' => 'Файл ирсэнгүй']);
     exit;
   }
 
@@ -253,7 +253,7 @@ if ($action === 'upload_image') {
 
   if ($file['size'] > 5 * 1024 * 1024) {
     http_response_code(400);
-    echo json_encode(['error' => 'File too large (max 5 MB)']);
+    echo json_encode(['error' => 'Файл хэт том байна (дээд тал нь 5 MB)']);
     exit;
   }
 
@@ -266,7 +266,7 @@ if ($action === 'upload_image') {
   ];
   if ($info === false || !isset($extByMime[$info['mime']])) {
     http_response_code(400);
-    echo json_encode(['error' => 'Unsupported file — use JPG, PNG, WEBP or GIF']);
+    echo json_encode(['error' => 'Дэмжигдэхгүй файл — JPG, PNG, WEBP эсвэл GIF ашиглана уу']);
     exit;
   }
   $ext = $extByMime[$info['mime']];
@@ -274,14 +274,14 @@ if ($action === 'upload_image') {
   $dir = __DIR__ . '/img/products';
   if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
     http_response_code(500);
-    echo json_encode(['error' => 'Could not create img/products folder — check permissions']);
+    echo json_encode(['error' => 'img/products фолдер үүсгэж чадсангүй — зөвшөөрлийг шалгана уу']);
     exit;
   }
 
   $name = 'product-' . date('Ymd-His') . '-' . bin2hex(random_bytes(3)) . '.' . $ext;
   if (!move_uploaded_file($file['tmp_name'], $dir . '/' . $name)) {
     http_response_code(500);
-    echo json_encode(['error' => 'Failed to save image — check img/products folder permissions']);
+    echo json_encode(['error' => 'Зураг хадгалж чадсангүй — img/products фолдерийн зөвшөөрлийг шалгана уу']);
     exit;
   }
 
@@ -290,4 +290,4 @@ if ($action === 'upload_image') {
 }
 
 http_response_code(400);
-echo json_encode(['error' => 'Unknown action']);
+echo json_encode(['error' => 'Тодорхойгүй үйлдэл']);

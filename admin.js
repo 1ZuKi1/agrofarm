@@ -94,7 +94,7 @@
     const data = JSON.stringify({ posts }, null, 2);
 
     publishStatus.className = "admin-publish-status";
-    publishStatus.textContent = "Publishing…";
+    publishStatus.textContent = "Нийтэлж байна…";
     publishStatus.style.display = "block";
 
     try {
@@ -107,21 +107,21 @@
 
       if (res.ok && text === "ok") {
         publishStatus.className = "admin-publish-status ok";
-        publishStatus.textContent = "✅ Published! The live site is now updated.";
+        publishStatus.textContent = "✅ Нийтлэгдлээ! Сайт шинэчлэгдлээ.";
       } else if (res.status === 401 || res.status === 403) {
         // Session or CSRF token expired — send the admin back to the login screen
         sessionStorage.removeItem("naf_admin_auth");
         sessionStorage.removeItem("naf_csrf_token");
         publishStatus.className = "admin-publish-status err";
-        publishStatus.textContent = "Session expired — please log in again.";
+        publishStatus.textContent = "Нэвтрэх хугацаа дууссан — дахин нэвтэрнэ үү.";
         showScreen("login");
       } else {
         publishStatus.className = "admin-publish-status err";
-        publishStatus.textContent = text || "Publish failed (HTTP " + res.status + ")";
+        publishStatus.textContent = text || "Нийтлэхэд алдаа гарлаа (HTTP " + res.status + ")";
       }
     } catch (err) {
       publishStatus.className = "admin-publish-status err";
-      publishStatus.textContent = "Could not reach publish.php — is PHP enabled on your server?";
+      publishStatus.textContent = "Серверт холбогдож чадсангүй — PHP идэвхжсэн эсэхийг шалгана уу.";
     }
 
     setTimeout(() => {
@@ -136,7 +136,7 @@
 
     uploadStatus.style.color = "var(--ink-soft)";
     uploadStatus.style.display = "inline";
-    uploadStatus.textContent = "Uploading…";
+    uploadStatus.textContent = "Байршуулж байна…";
 
     const form = new FormData();
     form.append("action", "upload");
@@ -151,20 +151,20 @@
         postImage.value = text;
         showPreview(text);
         uploadStatus.style.color = "var(--green)";
-        uploadStatus.textContent = "✅ Uploaded";
+        uploadStatus.textContent = "✅ Байршуулсан";
       } else if (res.status === 401 || res.status === 403) {
         sessionStorage.removeItem("naf_admin_auth");
         sessionStorage.removeItem("naf_csrf_token");
         uploadStatus.style.color = "#c0392b";
-        uploadStatus.textContent = "Session expired — log in again.";
+        uploadStatus.textContent = "Нэвтрэх хугацаа дууссан — дахин нэвтэрнэ үү.";
         showScreen("login");
       } else {
         uploadStatus.style.color = "#c0392b";
-        uploadStatus.textContent = text || "Upload failed";
+        uploadStatus.textContent = text || "Байршуулахад алдаа гарлаа";
       }
     } catch (err) {
       uploadStatus.style.color = "#c0392b";
-      uploadStatus.textContent = "Could not reach the server — is PHP enabled?";
+      uploadStatus.textContent = "Серверт холбогдож чадсангүй — PHP идэвхжсэн эсэхийг шалгана уу.";
     }
   }
 
@@ -186,7 +186,7 @@
     document.getElementById("navCountNews").textContent = posts.length;
 
     if (posts.length === 0) {
-      postList.innerHTML = `<p class="adm-empty">No posts yet — click "New post" to write the first one.</p>`;
+      postList.innerHTML = `<p class="adm-empty">Одоогоор мэдээ алга — эхний мэдээгээ бичихийн тулд "Шинэ мэдээ" дээр дарна уу.</p>`;
       return;
     }
 
@@ -195,7 +195,7 @@
       .filter((p) => matchesSearch(p.title?.en, p.title?.mn, p.body?.en, p.body?.mn));
 
     if (sorted.length === 0) {
-      postList.innerHTML = `<p class="adm-empty">No posts match “${escHtml(searchTerm)}”.</p>`;
+      postList.innerHTML = `<p class="adm-empty">“${escHtml(searchTerm)}” тохирох мэдээ олдсонгүй.</p>`;
       return;
     }
 
@@ -203,25 +203,25 @@
       <div class="adm-table-wrap">
         <table class="adm-table">
           <thead><tr>
-            <th>Date</th><th>Title</th><th>Монгол</th><th>Image</th><th></th>
+            <th>Огноо</th><th>Гарчиг</th><th>Монгол</th><th>Зураг</th><th></th>
           </tr></thead>
           <tbody>
             ${sorted.map((post) => {
-              const title = post.title?.en || post.title?.mn || "(untitled)";
+              const title = post.title?.en || post.title?.mn || "(гарчиггүй)";
               return `
                 <tr data-id="${escAttr(post.id)}">
                   <td class="adm-table__id">${escHtml(fmtDate(post.date))}</td>
                   <td class="adm-table__strong">${escHtml(title)}</td>
                   <td>${post.title?.mn
-                    ? `<span class="adm-status adm-status--ok">Translated</span>`
-                    : `<span class="adm-status adm-status--warn">Missing</span>`}</td>
+                    ? `<span class="adm-status adm-status--ok">Орчуулсан</span>`
+                    : `<span class="adm-status adm-status--warn">Дутуу</span>`}</td>
                   <td>${post.image
-                    ? `<span class="adm-status adm-status--info">Yes</span>`
-                    : `<span class="adm-status adm-status--mute">None</span>`}</td>
+                    ? `<span class="adm-status adm-status--info">Тийм</span>`
+                    : `<span class="adm-status adm-status--mute">Байхгүй</span>`}</td>
                   <td>
                     <div class="adm-actions">
-                      <button class="adm-rowbtn edit-btn">Edit</button>
-                      <button class="adm-rowbtn adm-rowbtn--danger delete-btn">Delete</button>
+                      <button class="adm-rowbtn edit-btn">Засах</button>
+                      <button class="adm-rowbtn adm-rowbtn--danger delete-btn">Устгах</button>
                     </div>
                   </td>
                 </tr>
@@ -244,7 +244,7 @@
     const post = posts.find((p) => p.id === id);
     if (!post) return;
     editingId = id;
-    editorTitle.textContent = "Edit post";
+    editorTitle.textContent = "Мэдээ засах";
     postDate.value = toDateInput(post.date);
     postTitleEn.value = post.title?.en || "";
     postTitleMn.value = post.title?.mn || "";
@@ -259,7 +259,7 @@
   }
 
   function deletePost(id) {
-    if (!confirm("Delete this post?")) return;
+    if (!confirm("Энэ мэдээг устгах уу?")) return;
     posts = posts.filter((p) => p.id !== id);
     saveToCache();
     renderDashboard();
@@ -267,7 +267,7 @@
 
   function newPost() {
     editingId = null;
-    editorTitle.textContent = "New post";
+    editorTitle.textContent = "Шинэ мэдээ";
     postDate.value = toDateInput(new Date());
     postTitleEn.value = "";
     postTitleMn.value = "";
@@ -290,7 +290,7 @@
     const image = postImage.value.trim() || undefined;
 
     if ((!titleEn || !bodyEn) && (!titleMn || !bodyMn)) {
-      alert("Please fill in title and body in at least one language.");
+      alert("Гарчиг, агуулгыг Монгол эсвэл Англи хэлний аль нэгээр нь бөглөнө үү.");
       return;
     }
 
@@ -353,8 +353,8 @@
     // post editor is open — and its term must not leak between sections.
     adminSearch.parentElement.style.visibility = editing ? "hidden" : "";
     adminSearch.placeholder =
-      currentSection === "products" ? "Search products…" :
-      currentSection === "orders" ? "Search orders…" : "Search posts…";
+      currentSection === "products" ? "Бүтээгдэхүүн хайх…" :
+      currentSection === "orders" ? "Захиалга хайх…" : "Мэдээ хайх…";
   }
 
   /** Case-insensitive "does any of these fields contain the search term". */
@@ -375,7 +375,7 @@
   /** Load and render the Products tab (products + variants list). */
   async function renderProductsTab() {
     if (!productsTab) return;
-    if (!productsCache.length) productsTab.innerHTML = `<p class="adm-empty">Loading…</p>`;
+    if (!productsCache.length) productsTab.innerHTML = `<p class="adm-empty">Ачааллаж байна…</p>`;
 
     try {
       const res = await fetch("products-admin.php", {
@@ -393,14 +393,14 @@
       }
 
       if (!res.ok) {
-        productsTab.innerHTML = `<p class="admin-error" style="display:block">${escHtml(data.error || "Failed to load products")}</p>`;
+        productsTab.innerHTML = `<p class="admin-error" style="display:block">${escHtml(data.error || "Бүтээгдэхүүн ачаалахад алдаа гарлаа")}</p>`;
         return;
       }
 
       productsCache = data.products || [];
       paintProducts();
     } catch (err) {
-      productsTab.innerHTML = `<p class="admin-error" style="display:block">Could not reach the server — is PHP enabled?</p>`;
+      productsTab.innerHTML = `<p class="admin-error" style="display:block">Серверт холбогдож чадсангүй — PHP идэвхжсэн эсэхийг шалгана уу.</p>`;
     }
   }
 
@@ -433,20 +433,20 @@
     document.getElementById("navCountProducts").textContent = productsCache.length;
 
     document.getElementById("productStats").innerHTML = `
-      <div class="adm-stat"><div class="adm-stat__label">Products</div><div class="adm-stat__value">${productsCache.length}</div></div>
-      <div class="adm-stat"><div class="adm-stat__label">Variants</div><div class="adm-stat__value">${counts.all}</div></div>
-      <div class="adm-stat"><div class="adm-stat__label">Units available</div><div class="adm-stat__value">${unitsAvailable.toLocaleString()}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Бүтээгдэхүүн</div><div class="adm-stat__value">${productsCache.length}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Төрөл</div><div class="adm-stat__value">${counts.all}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Бэлэн тоо</div><div class="adm-stat__value">${unitsAvailable.toLocaleString()}</div></div>
       <div class="adm-stat${counts.low + counts.out > 0 ? " adm-stat--warn" : ""}">
-        <div class="adm-stat__label">Needs restock</div>
-        <div class="adm-stat__value">${counts.low + counts.out}<small> of ${counts.all}</small></div>
+        <div class="adm-stat__label">Нөөц дүүргэх шаардлагатай</div>
+        <div class="adm-stat__value">${counts.low + counts.out}<small> / ${counts.all}</small></div>
       </div>
     `;
 
     const tabs = [
-      ["all", "All", counts.all],
-      ["in", "In stock", counts.in],
-      ["low", "Low stock", counts.low],
-      ["out", "Out of stock", counts.out],
+      ["all", "Бүгд", counts.all],
+      ["in", "Нөөцөд бий", counts.in],
+      ["low", "Бага нөөцтэй", counts.low],
+      ["out", "Дууссан", counts.out],
     ];
     const tabsEl = document.getElementById("productTabs");
     tabsEl.innerHTML = tabs.map(([key, label, n]) =>
@@ -457,15 +457,15 @@
     });
 
     if (productsCache.length === 0) {
-      productsTab.innerHTML = `<p class="adm-empty">No products yet — click "Add product" to create one.</p>`;
+      productsTab.innerHTML = `<p class="adm-empty">Одоогоор бүтээгдэхүүн алга — эхнийг нэмэхийн тулд "Бүтээгдэхүүн нэмэх" дээр дарна уу.</p>`;
       return;
     }
 
     const STATUS = {
-      in:     ['adm-status--ok', 'In stock'],
-      low:    ['adm-status--warn', 'Low stock'],
-      out:    ['adm-status--bad', 'Out of stock'],
-      hidden: ['adm-status--mute', 'Hidden'],
+      in:     ['adm-status--ok', 'Нөөцөд бий'],
+      low:    ['adm-status--warn', 'Бага нөөцтэй'],
+      out:    ['adm-status--bad', 'Дууссан'],
+      hidden: ['adm-status--mute', 'Нуугдсан'],
     };
 
     // Each product contributes a header row plus its matching variants; a
@@ -481,7 +481,7 @@
     }).filter((g) => g.visible.length > 0 || (productFilter === "all" && matchesSearch(g.product.name_mn, g.product.name_en)));
 
     if (groups.length === 0) {
-      productsTab.innerHTML = `<p class="adm-empty">Nothing matches this filter.</p>`;
+      productsTab.innerHTML = `<p class="adm-empty">Энэ шүүлтэд тохирох зүйл алга.</p>`;
       return;
     }
 
@@ -489,7 +489,7 @@
       <div class="adm-table-wrap">
         <table class="adm-table">
           <thead><tr>
-            <th>Variant</th><th>Weight</th><th>Price</th><th>Stock</th><th>Available</th><th>Status</th><th></th>
+            <th>Төрөл</th><th>Жин</th><th>Үнэ</th><th>Нөөц</th><th>Бэлэн</th><th>Төлөв</th><th></th>
           </tr></thead>
           <tbody>
             ${groups.map(({ product, visible }) => `
@@ -497,13 +497,13 @@
                 <td colspan="7">
                   ${escHtml(product.name_mn)}
                   <span class="adm-group__actions">
-                    <button class="adm-rowbtn edit-product-btn" data-id="${product.id}">Edit product</button>
-                    <button class="adm-rowbtn add-variant-btn" data-product-id="${product.id}">+ Add variant</button>
+                    <button class="adm-rowbtn edit-product-btn" data-id="${product.id}">Бүтээгдэхүүн засах</button>
+                    <button class="adm-rowbtn add-variant-btn" data-product-id="${product.id}">+ Төрөл нэмэх</button>
                   </span>
                 </td>
               </tr>
               ${visible.length === 0
-                ? `<tr><td colspan="7" class="adm-table__sub" style="background:transparent">No variants yet.</td></tr>`
+                ? `<tr><td colspan="7" class="adm-table__sub" style="background:transparent">Одоогоор төрөл алга.</td></tr>`
                 : visible.map((v) => {
                     const [cls, label] = STATUS[variantState(v)];
                     return `
@@ -516,7 +516,7 @@
                         <td><span class="adm-status ${cls}">${label}</span></td>
                         <td>
                           <div class="adm-actions">
-                            <button class="adm-rowbtn edit-variant-btn" data-id="${v.id}" data-product-id="${product.id}">Edit</button>
+                            <button class="adm-rowbtn edit-variant-btn" data-id="${v.id}" data-product-id="${product.id}">Засах</button>
                           </div>
                         </td>
                       </tr>
@@ -550,7 +550,7 @@
 
   async function renderOrders() {
     if (!ordersTab) return;
-    if (!ordersCache.length) ordersTab.innerHTML = `<p class="adm-empty">Loading…</p>`;
+    if (!ordersCache.length) ordersTab.innerHTML = `<p class="adm-empty">Ачааллаж байна…</p>`;
 
     try {
       const res = await fetch("orders-admin.php", {
@@ -567,14 +567,14 @@
         return;
       }
       if (!res.ok) {
-        ordersTab.innerHTML = `<p class="admin-error" style="display:block">${escHtml(data.error || "Failed to load orders")}</p>`;
+        ordersTab.innerHTML = `<p class="admin-error" style="display:block">${escHtml(data.error || "Захиалга ачаалахад алдаа гарлаа")}</p>`;
         return;
       }
 
       ordersCache = data.orders || [];
       paintOrders();
     } catch {
-      ordersTab.innerHTML = `<p class="admin-error" style="display:block">Could not reach the server — is PHP enabled?</p>`;
+      ordersTab.innerHTML = `<p class="admin-error" style="display:block">Серверт холбогдож чадсангүй — PHP идэвхжсэн эсэхийг шалгана уу.</p>`;
     }
   }
 
@@ -595,17 +595,17 @@
     document.getElementById("navCountOrders").textContent = counts.all;
 
     document.getElementById("orderStats").innerHTML = `
-      <div class="adm-stat"><div class="adm-stat__label">Revenue</div><div class="adm-stat__value">${revenue.toLocaleString()}<small>₮</small></div></div>
-      <div class="adm-stat"><div class="adm-stat__label">Paid</div><div class="adm-stat__value">${counts.paid}</div></div>
-      <div class="adm-stat"><div class="adm-stat__label">Awaiting payment</div><div class="adm-stat__value">${counts.pending}</div></div>
-      <div class="adm-stat"><div class="adm-stat__label">Total orders</div><div class="adm-stat__value">${counts.all}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Орлого</div><div class="adm-stat__value">${revenue.toLocaleString()}<small>₮</small></div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Төлсөн</div><div class="adm-stat__value">${counts.paid}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Төлбөр хүлээж буй</div><div class="adm-stat__value">${counts.pending}</div></div>
+      <div class="adm-stat"><div class="adm-stat__label">Нийт захиалга</div><div class="adm-stat__value">${counts.all}</div></div>
     `;
 
     const tabs = [
-      ["all", "All", counts.all],
-      ["pending", "Pending", counts.pending],
-      ["paid", "Paid", counts.paid],
-      ["fulfilled", "Fulfilled", counts.fulfilled],
+      ["all", "Бүгд", counts.all],
+      ["pending", "Хүлээгдэж буй", counts.pending],
+      ["paid", "Төлсөн", counts.paid],
+      ["fulfilled", "Хүргэсэн", counts.fulfilled],
     ];
     const tabsEl = document.getElementById("orderTabs");
     tabsEl.innerHTML = tabs.map(([key, label, n]) =>
@@ -616,11 +616,11 @@
     });
 
     const STATUS = {
-      pending:   ['adm-status--warn', 'Awaiting payment'],
-      paid:      ['adm-status--ok', 'Paid'],
-      fulfilled: ['adm-status--info', 'Delivered'],
-      expired:   ['adm-status--mute', 'Expired'],
-      cancelled: ['adm-status--mute', 'Cancelled'],
+      pending:   ['adm-status--warn', 'Төлбөр хүлээж буй'],
+      paid:      ['adm-status--ok', 'Төлсөн'],
+      fulfilled: ['adm-status--info', 'Хүргэсэн'],
+      expired:   ['adm-status--mute', 'Хугацаа дууссан'],
+      cancelled: ['adm-status--mute', 'Цуцлагдсан'],
     };
 
     const rows = ordersCache.filter((o) =>
@@ -629,7 +629,7 @@
     );
 
     if (rows.length === 0) {
-      ordersTab.innerHTML = `<p class="adm-empty">${counts.all === 0 ? "No orders yet." : "Nothing matches this filter."}</p>`;
+      ordersTab.innerHTML = `<p class="adm-empty">${counts.all === 0 ? "Одоогоор захиалга алга." : "Энэ шүүлтэд тохирох зүйл алга."}</p>`;
       return;
     }
 
@@ -637,7 +637,7 @@
       <div class="adm-table-wrap">
         <table class="adm-table">
           <thead><tr>
-            <th>Order</th><th>Customer</th><th>Delivery</th><th>Slot</th><th>Total</th><th>Status</th><th></th>
+            <th>Захиалга</th><th>Харилцагч</th><th>Хүргэлт</th><th>Цаг</th><th>Нийт дүн</th><th>Төлөв</th><th></th>
           </tr></thead>
           <tbody>
             ${rows.map((o) => {
@@ -650,18 +650,18 @@
                   <td>${escHtml(o.delivery_slot)}</td>
                   <td class="adm-num adm-table__strong">${money(o.total)}</td>
                   <td><span class="adm-status ${cls}">${escHtml(label)}</span></td>
-                  <td><div class="adm-actions"><button class="adm-rowbtn see-more-btn">See more</button></div></td>
+                  <td><div class="adm-actions"><button class="adm-rowbtn see-more-btn">Дэлгэрэнгүй</button></div></td>
                 </tr>
                 <tr class="adm-detail-row" data-detail-for="${o.id}" style="display:none">
                   <td colspan="7" class="adm-detail">
                     <dl>
-                      <dt>Address</dt><dd>${escHtml(o.buyer_address)}</dd>
-                      ${o.buyer_note ? `<dt>Note</dt><dd>${escHtml(o.buyer_note)}</dd>` : ""}
-                      <dt>Items</dt>
+                      <dt>Хаяг</dt><dd>${escHtml(o.buyer_address)}</dd>
+                      ${o.buyer_note ? `<dt>Тэмдэглэл</dt><dd>${escHtml(o.buyer_note)}</dd>` : ""}
+                      <dt>Бараа</dt>
                       <dd><ul>${(o.items || []).map((it) =>
                         `<li>${escHtml(it.variant_name_snapshot)} × ${it.quantity} — ${money(it.line_total)}</li>`
                       ).join("")}</ul></dd>
-                      ${o.paid_at ? `<dt>Paid</dt><dd>${escHtml(fmtDate(o.paid_at))}</dd>` : ""}
+                      ${o.paid_at ? `<dt>Төлсөн огноо</dt><dd>${escHtml(fmtDate(o.paid_at))}</dd>` : ""}
                     </dl>
                   </td>
                 </tr>
@@ -678,7 +678,7 @@
         const detail = ordersTab.querySelector(`[data-detail-for="${id}"]`);
         const open = detail.style.display !== "none";
         detail.style.display = open ? "none" : "table-row";
-        btn.textContent = open ? "See more" : "Hide";
+        btn.textContent = open ? "Дэлгэрэнгүй" : "Хураах";
       });
     });
   }
@@ -700,30 +700,30 @@
     productEditor.style.display = "flex";
     productEditor.innerHTML = `
       <form id="productForm" class="admin-card admin-form" style="max-width:600px;max-height:85vh;overflow-y:auto">
-        <h2 style="margin-top:0">${product ? "Edit product" : "New product"}</h2>
+        <h2 style="margin-top:0">${product ? "Бүтээгдэхүүн засах" : "Шинэ бүтээгдэхүүн"}</h2>
 
-        <label for="pf_slug">Slug</label>
+        <label for="pf_slug">Slug (URL хаяг)</label>
         <input type="text" id="pf_slug" value="${product ? escAttr(product.slug) : ""}" placeholder="erdest-doloots" required>
 
-        <label for="pf_name_mn">Name (Монгол)</label>
+        <label for="pf_name_mn">Нэр (Монгол)</label>
         <input type="text" id="pf_name_mn" value="${product ? escAttr(product.name_mn) : ""}" required>
 
-        <label for="pf_name_en">Name (English)</label>
+        <label for="pf_name_en">Нэр (Англи)</label>
         <input type="text" id="pf_name_en" value="${product ? escAttr(product.name_en || "") : ""}">
 
-        <label for="pf_desc_mn">Description (Монгол)</label>
+        <label for="pf_desc_mn">Тайлбар (Монгол)</label>
         <textarea id="pf_desc_mn">${product ? escHtml(product.description_mn || "") : ""}</textarea>
 
-        <label for="pf_desc_en">Description (English)</label>
+        <label for="pf_desc_en">Тайлбар (Англи)</label>
         <textarea id="pf_desc_en">${product ? escHtml(product.description_en || "") : ""}</textarea>
 
         <label style="display:flex;align-items:center;gap:.4rem;margin-top:.9rem">
-          <input type="checkbox" id="pf_active" style="width:auto" ${!product || Number(product.active) ? "checked" : ""}> Active
+          <input type="checkbox" id="pf_active" style="width:auto" ${!product || Number(product.active) ? "checked" : ""}> Идэвхтэй
         </label>
 
         <div class="admin-form-actions">
-          <button type="submit" class="btn btn--gold">💾 Save</button>
-          <button type="button" class="btn btn--ghost" style="border-color:#999;color:#666" id="cancelProductEdit">Cancel</button>
+          <button type="submit" class="btn btn--gold">💾 Хадгалах</button>
+          <button type="button" class="btn btn--ghost" style="border-color:#999;color:#666" id="cancelProductEdit">Цуцлах</button>
         </div>
         <p class="admin-error" id="productFormError" style="display:none"></p>
       </form>
@@ -764,7 +764,7 @@
           return;
         }
         if (!res.ok) {
-          errEl.textContent = data.error || "Failed to save product";
+          errEl.textContent = data.error || "Бүтээгдэхүүн хадгалахад алдаа гарлаа";
           errEl.style.display = "block";
           return;
         }
@@ -772,7 +772,7 @@
         closeEditor();
         renderProductsTab();
       } catch (err) {
-        errEl.textContent = "Could not reach the server — is PHP enabled?";
+        errEl.textContent = "Серверт холбогдож чадсангүй — PHP идэвхжсэн эсэхийг шалгана уу.";
         errEl.style.display = "block";
       }
     });
@@ -792,62 +792,62 @@
 
     productEditor.innerHTML = `
       <form id="variantForm" class="admin-card admin-form" style="max-width:600px;max-height:85vh;overflow-y:auto">
-        <h2 style="margin-top:0">${variant ? "Edit variant" : "New variant"}</h2>
+        <h2 style="margin-top:0">${variant ? "Төрөл засах" : "Шинэ төрөл"}</h2>
 
-        <label for="vf_name_mn">Name (Монгол)</label>
+        <label for="vf_name_mn">Нэр (Монгол)</label>
         <input type="text" id="vf_name_mn" value="${variant ? escAttr(variant.name_mn) : ""}" required>
 
-        <label for="vf_name_en">Name (English)</label>
+        <label for="vf_name_en">Нэр (Англи)</label>
         <input type="text" id="vf_name_en" value="${variant ? escAttr(variant.name_en || "") : ""}">
 
         <div class="admin-form-row">
           <div>
-            <label for="vf_price">Price (₮)</label>
+            <label for="vf_price">Үнэ (₮)</label>
             <input type="number" id="vf_price" min="0" step="1" value="${variant ? variant.price : ""}" required>
           </div>
           <div>
-            <label for="vf_stock">Stock</label>
+            <label for="vf_stock">Нөөц</label>
             <input type="number" id="vf_stock" min="0" step="1" value="${variant ? variant.stock : ""}" required>
           </div>
         </div>
 
         <div class="admin-form-row">
           <div>
-            <label for="vf_weight">Weight label</label>
+            <label for="vf_weight">Жингийн шошго</label>
             <input type="text" id="vf_weight" value="${variant ? escAttr(variant.weight_label || "") : ""}" placeholder="5кг">
           </div>
           <div>
-            <label for="vf_std_code">Standard code</label>
+            <label for="vf_std_code">Стандартын код</label>
             <input type="text" id="vf_std_code" value="${variant ? escAttr(variant.standard_code || "") : ""}" placeholder="MNS 5511:2005">
           </div>
         </div>
 
-        <label for="vf_storage">Storage / shelf life (Монгол)</label>
+        <label for="vf_storage">Хадгалалт / хугацаа (Монгол)</label>
         <textarea id="vf_storage">${variant ? escHtml(variant.storage_text_mn || "") : ""}</textarea>
 
-        <label for="vf_benefits">Benefits (Монгол)</label>
+        <label for="vf_benefits">Ашиг тус (Монгол)</label>
         <textarea id="vf_benefits">${variant ? escHtml(variant.benefits_text_mn || "") : ""}</textarea>
 
-        <label for="vf_usage">Usage instructions (Монгол)</label>
+        <label for="vf_usage">Хэрэглэх заавар (Монгол)</label>
         <textarea id="vf_usage">${variant ? escHtml(variant.usage_text_mn || "") : ""}</textarea>
 
-        <label for="vf_image">Image</label>
+        <label for="vf_image">Зураг</label>
         <input type="file" id="vf_image" accept="image/jpeg,image/png,image/webp,image/gif">
         ${variant && variant.image_path ? `<img src="${escAttr(variant.image_path)}" alt="" style="display:block;max-width:160px;margin-top:.5rem;border-radius:8px;border:1px solid rgba(0,0,0,.1)">` : ""}
 
         <label style="display:flex;align-items:center;gap:.4rem;margin-top:.9rem">
-          <input type="checkbox" id="vf_active" style="width:auto" ${!variant || Number(variant.active) ? "checked" : ""}> Active
+          <input type="checkbox" id="vf_active" style="width:auto" ${!variant || Number(variant.active) ? "checked" : ""}> Идэвхтэй
         </label>
 
         <fieldset style="margin-top:1rem;border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:.8rem">
-          <legend style="font-size:.82rem;font-weight:600;color:#555">Ingredients</legend>
+          <legend style="font-size:.82rem;font-weight:600;color:#555">Найрлага</legend>
           <div id="ingredientRows">${ingredientsHtml}</div>
-          <button type="button" class="btn btn--ghost" style="border-color:#999;color:#666;padding:.35rem .8rem;font-size:.8rem" id="addIngredientRow">+ Add ingredient</button>
+          <button type="button" class="btn btn--ghost" style="border-color:#999;color:#666;padding:.35rem .8rem;font-size:.8rem" id="addIngredientRow">+ Найрлага нэмэх</button>
         </fieldset>
 
         <div class="admin-form-actions">
-          <button type="submit" class="btn btn--gold">💾 Save</button>
-          <button type="button" class="btn btn--ghost" style="border-color:#999;color:#666" id="cancelVariantEdit">Cancel</button>
+          <button type="submit" class="btn btn--gold">💾 Хадгалах</button>
+          <button type="button" class="btn btn--ghost" style="border-color:#999;color:#666" id="cancelVariantEdit">Цуцлах</button>
         </div>
         <p class="admin-error" id="variantFormError" style="display:none"></p>
       </form>
@@ -876,7 +876,7 @@
       const priceVal = document.getElementById("vf_price").value;
       const stockVal = document.getElementById("vf_stock").value;
       if (priceVal === "" || stockVal === "") {
-        errEl.textContent = "Price and stock are required";
+        errEl.textContent = "Үнэ болон нөөцийг заавал бөглөнө үү";
         errEl.style.display = "block";
         return;
       }
@@ -885,7 +885,7 @@
       const imageFile = document.getElementById("vf_image").files[0];
 
       if (imageFile && imageFile.size > 5 * 1024 * 1024) {
-        errEl.textContent = "Image is too large (max 5 MB) — choose a smaller file";
+        errEl.textContent = "Зураг хэт том байна (дээд тал нь 5 MB) — жижиг файл сонгоно уу";
         errEl.style.display = "block";
         return;
       }
@@ -908,13 +908,13 @@
             return;
           }
           if (!uploadRes.ok) {
-            errEl.textContent = uploadData.error || "Image upload failed";
+            errEl.textContent = uploadData.error || "Зураг байршуулахад алдаа гарлаа";
             errEl.style.display = "block";
             return;
           }
           imagePath = uploadData.path;
         } catch (err) {
-          errEl.textContent = "Could not reach the server — is PHP enabled?";
+          errEl.textContent = "Серверт холбогдож чадсангүй — PHP идэвхжсэн эсэхийг шалгана уу.";
           errEl.style.display = "block";
           return;
         }
@@ -955,7 +955,7 @@
           return;
         }
         if (!res.ok) {
-          errEl.textContent = data.error || "Failed to save variant";
+          errEl.textContent = data.error || "Төрөл хадгалахад алдаа гарлаа";
           errEl.style.display = "block";
           return;
         }
@@ -985,13 +985,13 @@
         }
         if (!ingRes.ok) {
           const ingData = await ingRes.json().catch(() => ({}));
-          alert(ingData.error || "Variant saved, but ingredients failed to save");
+          alert(ingData.error || "Төрөл хадгалагдсан ч найрлага хадгалагдсангүй");
         }
 
         closeEditor();
         renderProductsTab();
       } catch (err) {
-        errEl.textContent = "Could not reach the server — is PHP enabled?";
+        errEl.textContent = "Серверт холбогдож чадсангүй — PHP идэвхжсэн эсэхийг шалгана уу.";
         errEl.style.display = "block";
       }
     });
@@ -1052,15 +1052,15 @@
           prefetchCounts();
         } else {
           loginError.textContent =
-            res.status === 403 ? "Incorrect password" :
-            res.status === 429 ? (body || "Too many failed attempts — try again later.") :
-            (body || "Login failed — is PHP enabled?");
+            res.status === 403 ? "Нууц үг буруу байна" :
+            res.status === 429 ? (body || "Оролдлого хэт олон удаа буруу байна — дараа дахин оролдоно уу.") :
+            (body || "Нэвтрэхэд алдаа гарлаа — PHP идэвхжсэн эсэхийг шалгана уу.");
           loginError.style.display = "block";
           passwordInput.value = "";
           passwordInput.focus();
         }
       } catch {
-        loginError.textContent = "Could not reach the server — is PHP enabled?";
+        loginError.textContent = "Серверт холбогдож чадсангүй — PHP идэвхжсэн эсэхийг шалгана уу.";
         loginError.style.display = "block";
       } finally {
         loginBtn.disabled = false;
