@@ -1,0 +1,26 @@
+# ------------------------------------------------------------------
+# Clean URLs — agrofarm.mn/admin instead of agrofarm.mn/admin.html
+# ------------------------------------------------------------------
+RewriteEngine On
+
+# 1) If someone requests the .html file directly, send a permanent
+#    redirect to the clean URL, so each page has one canonical address
+#    (better for bookmarks, sharing links, and search engines).
+RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+RewriteRule ^ /? [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+(admin|news|shop)\.html[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# A trailing slash (/admin/) must also collapse to the one canonical address
+# — every page's CSS/JS/image tags and admin.js's fetch() calls use relative
+# paths, so leaving the address bar on /admin/ instead of /admin would
+# resolve them one directory too deep and break the page.
+RewriteCond %{THE_REQUEST} \s/+(admin|news|shop)/[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# 2) Internally serve the matching .html file when the clean URL is
+#    requested. The address bar keeps showing the clean URL.
+RewriteRule ^admin/?$ admin.html [L]
+RewriteRule ^news/?$ news.html [L]
+RewriteRule ^shop/?$ shop.html [L]

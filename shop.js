@@ -177,7 +177,7 @@
 
     root.innerHTML = `
       <div class="shop-product">
-        <a href="shop.html" class="shop-product__back" id="shopBackLink" data-en="${escAttrShop("← Back to shop")}" data-mn="${escAttrShop("← Дэлгүүр рүү буцах")}">${escHtmlShop(t("← Back to shop", "← Дэлгүүр рүү буцах"))}</a>
+        <a href="/shop" class="shop-product__back" id="shopBackLink" data-en="${escAttrShop("← Back to shop")}" data-mn="${escAttrShop("← Дэлгүүр рүү буцах")}">${escHtmlShop(t("← Back to shop", "← Дэлгүүр рүү буцах"))}</a>
         <h2 class="shop-product__title" data-en="${escAttrShop(product.name_en || product.name_mn)}" data-mn="${escAttrShop(product.name_mn)}">${escHtmlShop(displayName)}</h2>
         <p class="shop-product__switcher-label" data-en="Choose a variant" data-mn="Төрлөө сонгоно уу">${escHtmlShop(t("Choose a variant", "Төрлөө сонгоно уу"))}</p>
         <div class="shop-product__switcher" role="tablist">
