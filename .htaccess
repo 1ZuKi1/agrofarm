@@ -42,6 +42,18 @@ RewriteRule ^news/?$ news.html [L]
 RewriteRule ^shop/?$ shop.html [L]
 
 # ------------------------------------------------------------------
+# Equipment catalogue — server-rendered, so each page has a real URL:
+#   /equipment                      catalogue index
+#   /equipment/<category>           one category
+#   /equipment/<category>/<product> one product
+# Slugs are lowercase latin + digits + hyphen; anything else falls
+# through to a normal 404 rather than reaching PHP.
+# ------------------------------------------------------------------
+RewriteRule ^equipment/?$ equipment.php [L]
+RewriteRule ^equipment/([a-z0-9-]+)/?$ category.php?cat=$1 [QSA,L]
+RewriteRule ^equipment/([a-z0-9-]+)/([a-z0-9-]+)/?$ product.php?cat=$1&slug=$2 [QSA,L]
+
+# ------------------------------------------------------------------
 # Security headers
 # ------------------------------------------------------------------
 <IfModule mod_headers.c>
