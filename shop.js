@@ -267,6 +267,9 @@
     if (!cart.length) {
       items.innerHTML = `<p class="cart-drawer__empty" data-en="Your cart is empty." data-mn="Таны сагс хоосон байна.">${escHtmlShop(t("Your cart is empty.", "Таны сагс хоосон байна."))}</p>`;
       totalEl.textContent = "";
+      // An empty dairy cart does not mean an empty basket — equipment quote
+      // lines are held separately and must still render (and be sendable).
+      if (window.renderInquirySection) window.renderInquirySection(items);
       return;
     }
 
@@ -340,6 +343,10 @@
         renderCartDrawer();
       });
     });
+
+    // Equipment quote lines render below the priced ones. catalog.js owns
+    // that half; this is the only place the two baskets meet.
+    if (window.renderInquirySection) window.renderInquirySection(items);
   }
 
   /** Restores the drawer head/footer to their static "Cart" state. Checkout

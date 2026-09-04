@@ -91,9 +91,11 @@ function catalog_head(string $title, string $desc, string $canonicalPath): void 
   </a>
   <nav class="nav__links" id="navLinks" aria-label="Main">
     <a href="/#about" data-en="About" data-mn="Бидний тухай">Бидний тухай</a>
+    <a href="/#journey" data-en="Journey" data-mn="Замнал">Замнал</a>
     <a href="/#farms" data-en="Farms" data-mn="Фермүүд">Фермүүд</a>
-    <a href="/equipment" class="is-current" data-en="Equipment" data-mn="Тоног төхөөрөмж">Тоног төхөөрөмж</a>
-    <a href="/shop" data-en="Shop" data-mn="Дэлгүүр">Дэлгүүр</a>
+    <a href="/#services" data-en="Services" data-mn="Үйлчилгээ">Үйлчилгээ</a>
+    <a href="/#products" data-en="Products" data-mn="Бүтээгдэхүүн">Бүтээгдэхүүн</a>
+    <a href="/shop" class="is-current" data-en="Shop" data-mn="Дэлгүүр">Дэлгүүр</a>
     <a href="/news" data-en="News" data-mn="Мэдээ">Мэдээ</a>
     <a href="/#contact" data-en="Contact" data-mn="Холбоо барих">Холбоо барих</a>
   </nav>

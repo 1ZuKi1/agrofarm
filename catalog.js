@@ -23,6 +23,8 @@
     try { localStorage.setItem(KEY, JSON.stringify(items)); } catch { /* private mode */ }
     paintBadge();
     paintDrawer();
+    // On /shop the badge belongs to script.js and counts both baskets.
+    if (window.updateCartBadge) window.updateCartBadge();
   };
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (

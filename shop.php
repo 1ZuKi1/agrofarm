@@ -1,14 +1,43 @@
+<?php
+/**
+ * shop.php — the single storefront. Everything the company sells lives here:
+ * the dairy products (priced, cart, QPay) and the equipment catalogue
+ * (no price, inquiry only).
+ *
+ * Replaces shop.html as the target of /shop. The dairy half is unchanged —
+ * #shopRoot is still filled by shop.js from shop-data.php, so the cart,
+ * checkout, delivery slots and QPay flow are untouched. The equipment half is
+ * server-rendered here, and links out to the existing /equipment/... pages,
+ * which stay where they are so their URLs keep working.
+ */
+
+require __DIR__ . '/catalog-lib.php';
+
+$cats = [];
+try {
+  $pdo = naf_db();
+  foreach (catalog_categories($pdo) as $c) {
+    $items = catalog_products_by_category($pdo, (int)$c['id']);
+    if ($items) $cats[] = $c + ['items' => $items];
+  }
+} catch (\Throwable $e) {
+  // A catalogue outage must not take the dairy shop down with it — the
+  // equipment block simply doesn't render.
+  $cats = [];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>Shop — Nuudelchin Agro Farm LLC</title>
-<meta name="description" content="Shop Nuudelchin Agro Farm LLC products — Mongolia's pioneer of cluster dairy farming.">
+<title>Дэлгүүр — Нүүдэлчин Агро Ферм</title>
+<meta name="description" content="Сүүн бүтээгдэхүүн, фермийн тоног төхөөрөмж, тугал тэжээх хэрэгсэл, мал тэмдэглэгээ. Нүүдэлчин Агро Фермийн дэлгүүр.">
+<link rel="canonical" href="https://agrofarm.mn/shop">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
@@ -22,7 +51,7 @@
 <header class="nav nav--solid" id="nav">
   <a href="/#hero" class="nav__brand" aria-label="Nuudelchin Agro Farm — Home">
     <span class="nav__mark">
-      <img src="img/naf_logo_full.svg" alt="" width="320" height="160">
+      <img src="/img/naf_logo_full.svg" alt="" width="320" height="160">
     </span>
   </a>
   <nav class="nav__links" id="navLinks" aria-label="Main">
@@ -67,12 +96,37 @@
 <section class="shop">
   <div class="shop__head">
     <p class="kicker reveal" data-en="Shop" data-mn="Дэлгүүр">Shop</p>
-    <h1 class="reveal" data-en="Our <em>shop</em>" data-mn="Манай <em>дэлгүүр</em>">Our <em>shop</em></h1>
+    <h1 class="reveal" data-en="Everything we <em>sell</em>" data-mn="Бидний <em>нийлүүлдэг</em> бүхэн">Everything we <em>sell</em></h1>
   </div>
   <div id="shopRoot">
     <p class="shop__empty" id="shopLoading" data-en="Loading…" data-mn="Ачааллаж байна…">Loading…</p>
   </div>
 </section>
+
+<?php if ($cats): ?>
+<!-- ============ EQUIPMENT ============ -->
+<section class="eq-wrap eq-wrap--inshop" id="equipment">
+  <div class="eq-shop-head">
+    <p class="kicker" data-en="Equipment" data-mn="Тоног төхөөрөмж">Equipment</p>
+    <h2 data-en="Farm equipment and tools" data-mn="Фермийн тоног төхөөрөмж, хэрэгсэл">Фермийн тоног төхөөрөмж, хэрэгсэл</h2>
+    <p class="eq-shop-head__lead" data-en="No prices online — add what you need to your basket and we'll send you a quote and a delivery time." data-mn="Тоног төхөөрөмжийн үнийг сайтад харуулахгүй. Хэрэгтэйгээ сагсандаа нэмээд хүсэлт илгээхэд бид үнийн санал, нийлүүлэх хугацааг эргэн мэдэгдэнэ.">Тоног төхөөрөмжийн үнийг сайтад харуулахгүй. Хэрэгтэйгээ сагсандаа нэмээд хүсэлт илгээхэд бид үнийн санал, нийлүүлэх хугацааг эргэн мэдэгдэнэ.</p>
+  </div>
+
+  <?php foreach ($cats as $c): ?>
+  <div class="eq-section">
+    <div class="eq-section__head">
+      <h3><?= ce($c['name']) ?></h3>
+      <a class="eq-section__more" href="/equipment/<?= ce($c['slug']) ?>">
+        Бүгдийг харах (<?= count($c['items']) ?>)
+      </a>
+    </div>
+    <div class="eq-grid">
+      <?php foreach (array_slice($c['items'], 0, 4) as $p) catalog_card($p, $c['slug']); ?>
+    </div>
+  </div>
+  <?php endforeach; ?>
+</section>
+<?php endif; ?>
 
 </main>
 
@@ -82,7 +136,8 @@
   <p data-en="Independent Mongolian dairy company — est. 2015." data-mn="Бие даасан Монгол сүүний компани — 2015 оноос.">Independent Mongolian dairy company — est. 2015.</p>
 </footer>
 
-<script src="script.js"></script>
-<script src="shop.js"></script>
+<script src="/script.js"></script>
+<script src="/shop.js"></script>
+<script src="/catalog.js"></script>
 </body>
 </html>

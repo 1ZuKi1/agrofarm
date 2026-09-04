@@ -39,7 +39,7 @@ RewriteRule ^ /%1 [R=301,L]
 #    requested. The address bar keeps showing the clean URL.
 RewriteRule ^admin/?$ admin.html [L]
 RewriteRule ^news/?$ news.html [L]
-RewriteRule ^shop/?$ shop.html [L]
+RewriteRule ^shop/?$ shop.php [L]
 
 # ------------------------------------------------------------------
 # Equipment catalogue — server-rendered, so each page has a real URL:

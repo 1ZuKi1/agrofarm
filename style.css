@@ -1306,7 +1306,9 @@ input, textarea, select{ font-size:16px !important; }
 .eq-hero h1 em{ color:var(--green); font-style:italic; }
 .eq-hero__lead{ max-width:46rem; margin:1.4rem auto 0; color:var(--ink-soft); line-height:1.8; }
 
-.eq-wrap{ background:var(--cream); padding:2rem var(--gutter) 6rem; min-height:60vh; }
+/* 8rem clears the fixed header — the catalogue index gets less, because
+   .eq-hero above it already supplies the clearance. */
+.eq-wrap{ background:var(--cream); padding:8rem var(--gutter) 6rem; min-height:60vh; }
 .eq-wrap--full{ padding-top:1rem; }
 .eq-404{ font-family:var(--serif); font-size:2.2rem; margin:4rem 0 1.5rem; }
 
@@ -1436,3 +1438,23 @@ input, textarea, select{ font-size:16px !important; }
   .eq-detail__top{ grid-template-columns:1fr; gap:1.8rem; }
   .eq-hero{ padding-top:7rem; }
 }
+
+/* ---------- equipment inside /shop ---------- */
+.eq-wrap--inshop{ padding-top:2rem; border-top:1px solid rgba(44,44,44,.08); }
+.eq-shop-head{ max-width:1240px; margin:0 auto 2.6rem; text-align:center; }
+.eq-shop-head h2{ font-family:var(--serif); font-size:clamp(1.8rem,3.4vw,2.6rem);
+  color:var(--charcoal); margin:.4rem 0 .9rem; }
+.eq-shop-head__lead{ max-width:44rem; margin:0 auto; color:var(--ink-soft); line-height:1.75;
+  font-size:.95rem; }
+.eq-section__head h3{ font-family:var(--serif); font-size:1.5rem; color:var(--charcoal); }
+
+/* ---------- quote half of the shared basket drawer ---------- */
+.inq-block{ margin-top:1.6rem; padding-top:1.4rem; border-top:2px solid rgba(26,94,42,.18); }
+.inq-block__title{ font-family:var(--serif); font-size:1.15rem; color:var(--green);
+  margin-bottom:.2rem; }
+.inq-block__note{ font-size:.8rem; color:var(--ink-soft); margin-bottom:1rem; }
+.inq-qty{ width:60px; padding:.45rem; border:1px solid rgba(44,44,44,.2); border-radius:8px;
+  font:inherit; font-size:.9rem; }
+.inq-remove{ background:none; border:0; cursor:pointer; font-size:1rem; color:var(--ink-soft);
+  padding:.3rem .5rem; line-height:1; }
+.inq-remove:hover{ color:#8c2f2f; }

@@ -76,7 +76,11 @@
   function updateCartBadge() {
     const badge = document.getElementById("cartBadge");
     if (!badge) return;
-    const count = getCart().reduce((sum, item) => sum + item.quantity, 0);
+    // One basket in the UI, two stores underneath: priced dairy lines live in
+    // naf_cart, equipment quote lines in naf_inquiry (owned by catalog.js).
+    // The badge shows the sum so the buyer sees a single number.
+    const count = getCart().reduce((sum, item) => sum + item.quantity, 0)
+      + (window.getInquiryCount ? window.getInquiryCount() : 0);
     badge.textContent = String(count);
     badge.hidden = count === 0;
   }
