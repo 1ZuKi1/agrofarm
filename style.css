@@ -370,7 +370,7 @@ section{ position:relative; }
 .about{ padding:clamp(5.5rem, 11vw, 8.5rem) var(--gutter); }
 .about__grid{
   display:grid; grid-template-columns:1.15fr .85fr; gap:2.4rem 4.5rem;
-  max-width:1240px; margin:0 auto; align-items:start;
+  max-width:1240px; margin:0 auto; align-items:stretch;
 }
 /* The kicker + headline span both columns. Keeping them inside the left
    column made that column much taller than the photo — badly so in Mongolian,
@@ -399,9 +399,16 @@ section{ position:relative; }
 }
 .values li:hover{ background:var(--green); color:var(--cream); transform:translateY(-2px); }
 
-.about__media{ position:relative; }
+/* The photo grows to whatever height the text column needs, so the two columns
+   always end on the same line. With a fixed 4:5 photo the section is tuned to
+   one language only: at 1440px the text column runs 631px in English, 734px in
+   Mongolian and 457px in Chinese, so the photo hung 180px below the copy in
+   Chinese and 100px above it in Mongolian. It is a background-image with
+   center/cover, so the resulting ratio crops rather than distorts. */
+.about__media{ position:relative; display:flex; flex-direction:column; }
 .about__photo{
-  aspect-ratio:4/5; border-radius:var(--radius-lg); overflow:hidden;
+  flex:1 1 auto; min-height:20rem;
+  border-radius:var(--radius-lg); overflow:hidden;
   background:
     linear-gradient(rgba(10,46,22,.08), rgba(10,46,22,.22)),
     url("img/opening-ceremony.jpg") center/cover no-repeat,
@@ -765,6 +772,8 @@ section{ position:relative; }
 @media (max-width: 1024px){
   .dots{ display:none; }
   .about__grid{ grid-template-columns:1fr; gap:3rem; }
+  /* Single column: nothing to align to, so the photo goes back to its 4:5 crop. */
+  .about__photo{ flex:none; aspect-ratio:4/5; }
   .about__badge{ left:1rem; }
 }
 @media (max-width: 820px){
@@ -1458,3 +1467,43 @@ input, textarea, select{ font-size:16px !important; }
 .inq-remove{ background:none; border:0; cursor:pointer; font-size:1rem; color:var(--ink-soft);
   padding:.3rem .5rem; line-height:1; }
 .inq-remove:hover{ color:#8c2f2f; }
+
+/* ==========================================================================
+   CHINESE (中文)
+   Cormorant Garamond and Inter carry no CJK glyphs. Rather than load a CJK
+   webfont — megabytes, and fonts.googleapis.com is unreachable from mainland
+   China anyway — we append the system Chinese faces to both stacks. Latin and
+   Cyrillic keep rendering in the site's own fonts; only Chinese characters
+   fall through to the reader's installed face.
+   ========================================================================== */
+html[lang="zh"]{
+  --serif: "Cormorant Garamond", Georgia, "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", SimSun, serif;
+  --sans:  "Inter", -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+}
+/* Chinese has no italic form — browsers fake one by slanting the glyphs, which
+   reads as a rendering fault. The green/gold colour on <em> carries the accent
+   on its own. Matching on :lang(zh) rather than a descendant selector leaves
+   the Mongolian slogan (lang="mn") italic on a Chinese page. */
+html[lang="zh"] :lang(zh){ font-style:normal; }
+/* Negative tracking is tuned for the serif's Latin forms; it crowds CJK. */
+html[lang="zh"] h1:lang(zh), html[lang="zh"] h2:lang(zh){ letter-spacing:0; }
+/* The contact slogan is marked lang="mn" for its italic serif treatment, but
+   its text is swapped like any other translatable element — so on a Chinese
+   page :lang(zh) doesn't reach it and the browser would fake an oblique. */
+html[lang="zh"] .contact__intro p[lang="mn"]{ font-style:normal; }
+
+/* One line per headline in Chinese. Every CJK glyph is a full em, so a 9–13
+   character headline needs far more horizontal room than the English one it
+   replaces; the centred section heads are sized for English measure (600–660px)
+   and would break the Chinese line at an arbitrary point. Widening them for
+   Chinese only keeps every headline on one line at full display size. */
+html[lang="zh"] :is(.journey__head, .services__head, .products__head, .green__head){ max-width:56rem; }
+html[lang="zh"] .green__lede{ max-width:42rem; margin-left:auto; margin-right:auto; }
+/* Two-column heads: the extra room goes to the headline column instead.
+   Gated on min-width because both collapse to one column at 820px, and an
+   html[lang] selector outweighs the bare class inside that media query —
+   without the gate these two stayed two-up on phones in Chinese only. */
+@media (min-width: 821px){
+  html[lang="zh"] .farms__head{ grid-template-columns:1.2fr .8fr; }
+  html[lang="zh"] .contact__grid{ grid-template-columns:1.15fr .85fr; }
+}

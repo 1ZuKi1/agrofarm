@@ -13,33 +13,45 @@
   /* ---------- Footer year ---------- */
   document.getElementById("year").textContent = new Date().getFullYear();
 
-  /* ---------- Bilingual toggle (MN/EN) ----------
-     Every translatable element carries data-mn + data-en. We swap with
-     innerHTML (not textContent) because several headings/paragraphs contain
-     inline markup (<br>, <em>, <strong>) that must survive the switch.
-     All strings are static author-authored attributes — no user input flows
-     through innerHTML. Preference persists in localStorage; default is EN. */
+  /* ---------- Language toggle (EN / MN / 中文) ----------
+     Every translatable element carries data-mn + data-en; the home page also
+     carries data-zh. We swap with innerHTML (not textContent) because several
+     headings/paragraphs contain inline markup (<br>, <em>, <strong>) that must
+     survive the switch. All strings are static author-authored attributes — no
+     user input flows through innerHTML.
+
+     Chinese exists on the home page only. LANGS is derived from the page
+     itself, so a page carrying no data-zh simply offers EN/MN — and a saved
+     "zh" preference is displayed there as English WITHOUT being overwritten,
+     so returning to the home page comes back in Chinese. */
   const langToggle = document.getElementById("langToggle");
+  const LANGS = document.querySelector("[data-zh]") ? ["en", "mn", "zh"] : ["en", "mn"];
+  const LANG_LABEL = { en: "EN", mn: "MN", zh: "中文" };
+  const LANG_ARIA = { en: "Switch to English", mn: "Switch to Mongolian", zh: "切换到中文" };
+  const nextLang = (lang) => LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
   let currentLang = localStorage.getItem("lang") || "en";
+  if (!LANGS.includes(currentLang)) currentLang = "en"; // page lacks this language — show English, keep the preference
   function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem("lang", lang);
     document.querySelectorAll("[data-mn][data-en]").forEach((el) => {
-      el.innerHTML = el.getAttribute(`data-${lang}`);
+      // Fall back to English for any element the page hasn't translated yet
+      el.innerHTML = el.getAttribute(`data-${lang}`) || el.getAttribute("data-en");
     });
-    // Re-render counters with language-aware prefix/suffix
+    // Re-render counters with language-aware prefix/suffix (data-suffix-en / -mn / -zh)
+    const Lang = lang[0].toUpperCase() + lang.slice(1);
     document.querySelectorAll(".stat__num").forEach((el) => {
       const target = +el.dataset.count;
-      const prefix = el.dataset[`prefix${lang === "mn" ? "Mn" : "En"}`] || el.dataset.prefix || "";
-      const suffix = el.dataset[`suffix${lang === "mn" ? "Mn" : "En"}`] || el.dataset.suffix || "";
+      const prefix = el.dataset[`prefix${Lang}`] || el.dataset.prefix || "";
+      const suffix = el.dataset[`suffix${Lang}`] || el.dataset.suffix || "";
       el.textContent = prefix + target.toLocaleString() + suffix;
     });
     document.documentElement.lang = lang;
     // The button shows the language you would switch TO
-    langToggle.textContent = lang === "mn" ? "EN" : "MN";
-    langToggle.setAttribute("aria-label", lang === "mn" ? "Switch to English" : "Switch to Mongolian");
+    langToggle.textContent = LANG_LABEL[nextLang(lang)];
+    langToggle.setAttribute("aria-label", LANG_ARIA[nextLang(lang)]);
   }
-  langToggle.addEventListener("click", () => setLanguage(currentLang === "mn" ? "en" : "mn"));
+  langToggle.addEventListener("click", () => setLanguage(nextLang(currentLang)));
   if (currentLang !== "en") setLanguage(currentLang); // apply saved preference on load
 
   /* ---------- Cart (shared across every page via localStorage) ----------
@@ -113,9 +125,8 @@
       if (!variants.length) return;
       const minPrice = Math.min(...variants.map((v) => v.price));
       const lang = document.documentElement.lang || "en";
-      const labelEn = "From";
-      const labelMn = "Эхлэх үнэ";
-      shopCardPrice.innerHTML = `<span data-en="${labelEn}" data-mn="${labelMn}">${lang === "mn" ? labelMn : labelEn}</span> <span id="shopCardPriceValue">${minPrice.toLocaleString()}₮</span>`;
+      const label = { en: "From", mn: "Эхлэх үнэ", zh: "起价" };
+      shopCardPrice.innerHTML = `<span data-en="${label.en}" data-mn="${label.mn}" data-zh="${label.zh}">${label[lang] || label.en}</span> <span id="shopCardPriceValue">${minPrice.toLocaleString()}₮</span>`;
     }).catch(() => {}); // silent — the static fallback text already covers this
   }
 
