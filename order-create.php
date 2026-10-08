@@ -150,6 +150,7 @@ try {
     $qpayToken = qpay_token();
     $callbackUrl = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/qpay-callback.php?order=' . $publicToken;
     $invoice = qpay_create_invoice($qpayToken, $publicToken, $total, $callbackUrl, 'Nuudelchin Agro Farm order');
+    $banks = qpay_bank_links($invoice);
   } catch (Throwable $e) {
     http_response_code(502);
     echo json_encode(['error' => "Could not start payment — please try again"]);
@@ -164,11 +165,12 @@ try {
     // qr_image/qr_text are persisted so a buyer who navigates away mid-payment
     // (or revisits the ?order=<token> link) can be shown the same QR again
     // without re-creating the order — see order-status.php and shop.js.
+    // qpay_urls (bank-app deep links) likewise, for phone buyers.
     $orderStmt = $pdo->prepare(
-      "INSERT INTO orders (public_token, status, buyer_name, buyer_phone, buyer_address, buyer_note, delivery_date, delivery_slot, subtotal, total, qpay_invoice_id, qr_image, qr_text, expires_at)
-       VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 20 MINUTE))"
+      "INSERT INTO orders (public_token, status, buyer_name, buyer_phone, buyer_address, buyer_note, delivery_date, delivery_slot, subtotal, total, qpay_invoice_id, qr_image, qr_text, qpay_urls, expires_at)
+       VALUES (?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 20 MINUTE))"
     );
-    $orderStmt->execute([$publicToken, $buyerName, $buyerPhone, $buyerAddress, $buyerNote, $deliveryDate, $deliverySlot, $total, $total, $invoice['invoice_id'], $invoice['qr_image'] ?? null, $invoice['qr_text'] ?? null]);
+    $orderStmt->execute([$publicToken, $buyerName, $buyerPhone, $buyerAddress, $buyerNote, $deliveryDate, $deliverySlot, $total, $total, $invoice['invoice_id'], $invoice['qr_image'] ?? null, $invoice['qr_text'] ?? null, json_encode($banks, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
     $orderId = (int)$pdo->lastInsertId();
 
     $itemStmt = $pdo->prepare(
@@ -190,6 +192,7 @@ try {
     'total' => $total,
     'qr_image' => $invoice['qr_image'] ?? null,
     'qr_text' => $invoice['qr_text'] ?? null,
+    'banks' => $banks,
   ]);
 } catch (\Throwable $e) {
   http_response_code(500);

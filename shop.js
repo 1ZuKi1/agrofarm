@@ -4,6 +4,7 @@
   let shopProducts = [];
   let activeVariantId = null;
   let qrPollInterval = null; // active QPay status-poll interval, if any (see stopQrPolling)
+  let qrVisibilityHandler = null; // re-check on return from a bank app (see renderQrScreen)
 
   // ?order=<token> — the bookmarkable confirmation link. Read once, at
   // module load, so both loadShop() below and the ?order= handler further
@@ -371,6 +372,10 @@
       clearInterval(qrPollInterval);
       qrPollInterval = null;
     }
+    if (qrVisibilityHandler) {
+      document.removeEventListener("visibilitychange", qrVisibilityHandler);
+      qrVisibilityHandler = null;
+    }
   }
 
   function openCartDrawer() {
@@ -548,9 +553,9 @@
     stopQrPolling();
 
     const heading = document.querySelector(".cart-drawer__head h2");
-    heading.dataset.en = "Scan to pay";
-    heading.dataset.mn = "Сканнердаж төлнө үү";
-    heading.textContent = t("Scan to pay", "Сканнердаж төлнө үү");
+    heading.dataset.en = "Pay with QPay";
+    heading.dataset.mn = "QPay-ээр төлөх";
+    heading.textContent = t("Pay with QPay", "QPay-ээр төлөх");
     document.querySelector(".cart-drawer__footer").style.display = "none";
 
     const items = document.getElementById("cartDrawerItems");
@@ -567,35 +572,92 @@
     // long as the order stays 'pending', and the ?order= handler below
     // re-renders this same screen from that link.
     const orderLink = `${location.origin}/shop.html?order=${token}`;
+    // Bank-app buttons: a buyer on a phone can't scan a QR on their own
+    // screen, so each button opens that bank's app with this invoice filled
+    // in. Shown only on phones/tablets via CSS (.qr-screen__banks); the links
+    // come from QPay's invoice `urls`, trimmed and scheme-checked server-side
+    // in qpay_bank_links().
+    const banks = Array.isArray(orderData.banks) ? orderData.banks : [];
+    const banksHtml = banks.length
+      ? `<p class="qr-screen__banks-title" data-en="Choose your bank app" data-mn="Банкны аппаа сонгоно уу">${escHtmlShop(t("Choose your bank app", "Банкны аппаа сонгоно уу"))}</p>
+         <div class="qr-screen__banks">${banks.map((b) => `
+           <a class="qr-bank" href="${escAttrShop(b.link)}">
+             ${b.logo ? `<img src="${escAttrShop(b.logo)}" alt="" loading="lazy">` : ""}
+             <span>${escHtmlShop(b.name)}</span>
+           </a>`).join("")}
+         </div>
+         <p class="qr-screen__or" data-en="or scan the QR from another phone" data-mn="эсвэл өөр утаснаас QR уншуулна уу">${escHtmlShop(t("or scan the QR from another phone", "эсвэл өөр утаснаас QR уншуулна уу"))}</p>`
+      : "";
     items.innerHTML = `
-      <div class="qr-screen">
-        ${qrImg}
+      <div class="qr-screen${banks.length ? " has-banks" : ""}">
         <p class="qr-screen__total">${orderData.total.toLocaleString()}₮</p>
+        ${banksHtml}
+        ${qrImg}
         <p class="qr-screen__waiting" data-en="Waiting for payment…" data-mn="Төлбөр хүлээгдэж байна…">${escHtmlShop(t("Waiting for payment…", "Төлбөр хүлээгдэж байна…"))}</p>
+        <button type="button" class="btn btn--gold qr-screen__check" data-en="Check payment" data-mn="Төлбөр шалгах">${escHtmlShop(t("Check payment", "Төлбөр шалгах"))}</button>
         <p class="qr-screen__link"><span data-en="Come back to this later" data-mn="Дараа буцаж ирэх бол">${escHtmlShop(t("Come back to this later", "Дараа буцаж ирэх бол"))}</span>: ${escHtmlShop(orderLink)}</p>
       </div>
     `;
 
-    qrPollInterval = setInterval(() => {
-      fetch(`order-status.php?token=${encodeURIComponent(token)}`)
+    // A logo that fails to load is removed so the tile shows just the name,
+    // not a broken-image icon.
+    items.querySelectorAll(".qr-bank img").forEach((img) => {
+      img.addEventListener("error", () => img.remove());
+    });
+
+    function setWaiting(enMsg, mnMsg) {
+      const waiting = document.querySelector(".qr-screen__waiting");
+      if (waiting) {
+        waiting.dataset.en = enMsg;
+        waiting.dataset.mn = mnMsg;
+        waiting.textContent = t(enMsg, mnMsg);
+      }
+    }
+
+    function handleStatus(status) {
+      if (status.status === "paid") {
+        stopQrPolling();
+        renderConfirmation(token, status);
+      } else if (status.status === "expired" || status.status === "cancelled") {
+        stopQrPolling();
+        document.querySelector(".qr-screen__check")?.remove();
+        setWaiting("This order expired — please try again", "Энэ захиалга хугацаа дууссан — дахин оролдоно уу");
+      }
+    }
+
+    // withCheck=true asks the server to verify with QPay (rate-limited to
+    // once per 10s per order server-side); plain polls only read our DB,
+    // which qpay-callback.php updates — QPay forbids frequent checks.
+    function poll(withCheck) {
+      return fetch(`order-status.php?token=${encodeURIComponent(token)}${withCheck ? "&check=1" : ""}`)
         .then((r) => r.json())
+        .then((status) => { handleStatus(status); return status; });
+    }
+
+    const checkBtn = items.querySelector(".qr-screen__check");
+    checkBtn.addEventListener("click", () => {
+      checkBtn.disabled = true;
+      setWaiting("Checking…", "Шалгаж байна…");
+      poll(true)
         .then((status) => {
-          if (status.status === "paid") {
-            stopQrPolling();
-            renderConfirmation(token, status);
-          } else if (status.status === "expired" || status.status === "cancelled") {
-            stopQrPolling();
-            const waiting = document.querySelector(".qr-screen__waiting");
-            if (waiting) {
-              const enMsg = "This order expired — please try again";
-              const mnMsg = "Энэ захиалга хугацаа дууссан — дахин оролдоно уу";
-              waiting.dataset.en = enMsg;
-              waiting.dataset.mn = mnMsg;
-              waiting.textContent = t(enMsg, mnMsg);
-            }
+          if (status.status === "pending") {
+            setWaiting("Payment not received yet. If you've paid, wait a moment and check again.", "Төлбөр хараахан ирээгүй байна. Төлсөн бол түр хүлээгээд дахин шалгана уу.");
           }
         })
-        .catch(() => {}); // transient network error — next poll retries
+        .catch(() => setWaiting("Could not reach the server — please try again", "Сервертэй холбогдож чадсангүй — дахин оролдоно уу"))
+        .finally(() => setTimeout(() => { checkBtn.disabled = false; }, 10000));
+    });
+
+    // Coming back to this tab (typically from a bank app on the same phone)
+    // triggers one verified check, so the buyer sees the result right away
+    // even if QPay's callback is slow.
+    qrVisibilityHandler = () => {
+      if (document.visibilityState === "visible") poll(true).catch(() => {});
+    };
+    document.addEventListener("visibilitychange", qrVisibilityHandler);
+
+    qrPollInterval = setInterval(() => {
+      poll(false).catch(() => {}); // transient network error — next poll retries
     }, 3000);
   }
   window.renderQrScreen = renderQrScreen;
@@ -667,7 +729,9 @@
     // clobber this handler's render once shop-data.php resolves.)
     if (orderToken) {
       document.getElementById("cartDrawer")?.classList.add("is-open");
-      fetch(`order-status.php?token=${encodeURIComponent(orderToken)}`)
+      // check=1: someone opening this link may have just paid (e.g. the phone
+      // browser reloaded the page after the bank app) — verify once with QPay.
+      fetch(`order-status.php?token=${encodeURIComponent(orderToken)}&check=1`)
         .then((r) => r.json())
         .then((status) => {
           if (status.status === "paid") {

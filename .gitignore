@@ -8,9 +8,8 @@ news-data.json
 img/news/
 img/products/
 
-# Claude Code / dev-process tooling — internal to this workspace, not part
+# Dev-process tooling — internal to this workspace, not part
 # of the site and not meant to be public or deployed.
-.claude/
 .superpowers/
 docs/
 

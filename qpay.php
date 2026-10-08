@@ -3,10 +3,13 @@
  * qpay.php — QPay Merchant V2 API client.
  *
  * Auth is HTTP Basic (username:password) against /v2/auth/token, returning a
- * bearer token used for subsequent calls. The token is not cached across
- * requests — each PHP request re-authenticates. That's simple and avoids
- * stale-token edge cases; fine at this traffic volume (QPay's own docs warn
- * against polling via cron, not against re-authenticating per request).
+ * bearer token used for subsequent calls. QPay asks merchants to reuse the
+ * token until it expires rather than re-authenticating on every request, so
+ * qpay_token() caches it in a small JSON file OUTSIDE the web root (next to
+ * config.php; falls back to the system temp dir if that isn't writable).
+ * NOTE: QPay's `expires_in` is an absolute Unix timestamp, not seconds — a
+ * deviation from OAuth. If QPay ever answers 401, the cache is dropped so the
+ * next request re-authenticates.
  *
  * All three functions throw RuntimeException on any failure — callers must
  * catch and translate to a user-facing error, never let this surface raw.
@@ -21,7 +24,48 @@ require_once (file_exists(__DIR__ . '/../config.php'))
   ? __DIR__ . '/../config.php'
   : __DIR__ . '/config.php';
 
+function qpay_token_cache_path(): string {
+  $dir = is_writable(dirname(__DIR__)) ? dirname(__DIR__) : sys_get_temp_dir();
+  // Keyed by endpoint + username so a sandbox token is never reused in production.
+  return $dir . '/naf-qpay-token-' . md5(NAF_QPAY_BASE_URL . '|' . NAF_QPAY_USERNAME) . '.json';
+}
+
+function qpay_forget_token(): void {
+  @unlink(qpay_token_cache_path());
+}
+
 function qpay_token(): string {
+  $path = qpay_token_cache_path();
+  $fh = @fopen($path, 'c+');
+  if ($fh) flock($fh, LOCK_EX); // one request refreshes; concurrent ones wait and reuse
+  try {
+    if ($fh) {
+      $cached = json_decode((string)stream_get_contents($fh), true);
+      if (is_array($cached) && isset($cached['access_token'], $cached['expires_at'])
+          && time() < (int)$cached['expires_at'] - 60) {
+        return $cached['access_token'];
+      }
+    }
+    $data = qpay_fetch_token();
+    $expiresAt = (int)($data['expires_in'] ?? 0);
+    if ($expiresAt > 0 && $expiresAt < 1000000000) $expiresAt += time(); // tolerate relative seconds
+    if ($fh && $expiresAt > time() + 60) {
+      ftruncate($fh, 0);
+      rewind($fh);
+      fwrite($fh, json_encode(['access_token' => $data['access_token'], 'expires_at' => $expiresAt]));
+      fflush($fh);
+      @chmod($path, 0600);
+    }
+    return $data['access_token'];
+  } finally {
+    if ($fh) {
+      flock($fh, LOCK_UN);
+      fclose($fh);
+    }
+  }
+}
+
+function qpay_fetch_token(): array {
   $ch = curl_init(NAF_QPAY_BASE_URL . '/v2/auth/token');
   curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
@@ -39,7 +83,7 @@ function qpay_token(): string {
   if ($status !== 200) throw new RuntimeException('QPay auth failed: HTTP ' . $status);
   $data = json_decode($res, true);
   if (!isset($data['access_token'])) throw new RuntimeException('QPay auth response missing access_token');
-  return $data['access_token'];
+  return $data;
 }
 
 function qpay_create_invoice(string $token, string $senderInvoiceNo, int $amount, string $callbackUrl, string $description): array {
@@ -63,10 +107,32 @@ function qpay_create_invoice(string $token, string $senderInvoiceNo, int $amount
   $err = curl_error($ch);
   curl_close($ch);
   if ($res === false) throw new RuntimeException('QPay invoice request failed: ' . $err);
+  if ($status === 401) qpay_forget_token();
   if ($status !== 200) throw new RuntimeException('QPay invoice creation failed: HTTP ' . $status);
   $data = json_decode($res, true);
   if (!isset($data['invoice_id'])) throw new RuntimeException('QPay invoice response missing invoice_id');
   return $data;
+}
+
+/**
+ * Trims an invoice's `urls` (bank-app deep links, ~9 KB raw) to
+ * [{name, logo, link}] for the phone checkout. `name` is QPay's Mongolian
+ * `description` (e.g. "Хаан банк"). Links must be an app scheme (khanbank://…)
+ * and logos https — anything else is dropped, since these end up in an href/src.
+ */
+function qpay_bank_links(array $invoice): array {
+  $out = [];
+  foreach (($invoice['urls'] ?? []) as $u) {
+    if (!is_array($u)) continue;
+    $link = (string)($u['link'] ?? '');
+    $logo = (string)($u['logo'] ?? '');
+    if (!preg_match('~^[a-z][a-z0-9+.-]*://~i', $link) || preg_match('~^(javascript|data|vbscript):~i', $link)) continue;
+    if (strpos($logo, 'https://') !== 0) $logo = '';
+    $name = trim((string)($u['description'] ?? '')) ?: trim((string)($u['name'] ?? ''));
+    if ($name === '') continue;
+    $out[] = ['name' => $name, 'logo' => $logo, 'link' => $link];
+  }
+  return $out;
 }
 
 function qpay_check_payment(string $token, string $invoiceId): array {
@@ -87,6 +153,7 @@ function qpay_check_payment(string $token, string $invoiceId): array {
   $err = curl_error($ch);
   curl_close($ch);
   if ($res === false) throw new RuntimeException('QPay payment check request failed: ' . $err);
+  if ($status === 401) qpay_forget_token();
   if ($status !== 200) throw new RuntimeException('QPay payment check failed: HTTP ' . $status);
   $data = json_decode($res, true);
   if (!is_array($data) || !isset($data['count'], $data['rows'])) {
@@ -104,6 +171,10 @@ function qpay_check_payment(string $token, string $invoiceId): array {
  * has been live-verified against the sandbox. This MUST be re-confirmed
  * against a real completed sandbox payment before config.php is switched to
  * production QPay credentials.
+ * Update 2026-10-08: field names cross-checked against the qpay-client
+ * library's v2 schema — top-level count / paid_amount / rows[], and
+ * rows[].payment_status ∈ NEW, FAILED, PAID, PARTIAL, REFUND. Still confirm
+ * with one small real payment after going live.
  *
  * Favors false negatives: prefers the top-level paid_amount when present and
  * numeric, otherwise sums rows[].payment_amount. A row with an explicit
