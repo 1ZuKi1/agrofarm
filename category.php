@@ -1,7 +1,7 @@
 <?php
 /**
  * category.php — one category: the drop-down tree on the left, the products
- * on the right. Reached as /equipment/<cat-slug> via .htaccess.
+ * on the right. Reached as /shop/equipment/<cat-slug> via .htaccess.
  */
 
 require __DIR__ . '/catalog-lib.php';
@@ -20,9 +20,9 @@ try {
 if (!$cat) {
   http_response_code(404);
   catalog_head('Ангилал олдсонгүй — Нүүдэлчин Агро Ферм',
-    'Хүссэн ангилал олдсонгүй.', '/equipment');
+    'Хүссэн ангилал олдсонгүй.', '/shop/equipment');
   echo '<section class="eq-wrap"><h1 class="eq-404">Ангилал олдсонгүй</h1>'
-     . '<p><a class="btn" href="/equipment">Каталог руу буцах</a></p></section>';
+     . '<p><a class="btn" href="/shop/equipment">Каталог руу буцах</a></p></section>';
   catalog_foot();
   exit;
 }
@@ -33,13 +33,14 @@ catalog_head(
   ce($cat['name']) . ' — Нүүдэлчин Агро Ферм',
   mb_substr($cat['name'] . '. Фермийн тоног төхөөрөмж, сэлбэг хэрэгсэл. '
     . 'Үнийн санал авахыг хүсвэл хүсэлтээ илгээнэ үү.', 0, 300, 'UTF-8'),
-  '/equipment/' . $cat['slug']
+  '/shop/equipment/' . $cat['slug']
 );
 ?>
 <section class="eq-wrap">
   <?php catalog_crumbs([
     ['Нүүр', '/'],
-    ['Тоног төхөөрөмж', '/equipment'],
+    ['Дэлгүүр', '/shop'],
+    ['Тоног төхөөрөмж', '/shop/equipment'],
     [$cat['name'], null],
   ]); ?>
 

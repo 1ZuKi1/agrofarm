@@ -1,17 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>Nuudelchin Agro Farm LLC — Intensive Livestock Farming &amp; Dairy, Mongolia</title>
-<meta name="description" content="Nuudelchin Agro Farm LLC — Mongolia's pioneer of cluster dairy farming. 1,620 cows across four cluster farms in Töv province, supplying 4–5 million litres of milk to domestic dairies every year.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- Cormorant Garamond (serif headlines) + Inter (body) — full Latin + Mongolian
-     Cyrillic incl. ө/ү, which Playfair Display was missing (fell back to Georgia). -->
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="preload" as="image" href="img/hero-cattle-arrival.jpg" fetchpriority="high">
-<link rel="stylesheet" href="style.css">
+<?php
+/**
+ * index.php — the home page, and the only multilingual page (EN / MN / 中文).
+ * Every translatable element carries data-en / data-mn / data-zh; script.js's
+ * setLanguage() swaps them. The shared header and footer come from
+ * inc/layout.php ('multilang' => true gives them the same attributes).
+ * Was index.html; .htaccess sends /index.html here.
+ */
+
+require __DIR__ . '/inc/layout.php';
+
+page_start([
+  'title' => 'Nuudelchin Agro Farm LLC — Intensive Livestock Farming & Dairy, Mongolia',
+  'desc' => 'Nuudelchin Agro Farm LLC — Mongolia\'s pioneer of cluster dairy farming. 1,620 cows across four cluster farms in Töv province, supplying 4–5 million litres of milk to domestic dairies every year.',
+  'canonical' => '/',
+  'multilang' => true,
+  'home' => true,
+  'head' => <<<'HTML'
+<link rel="preload" as="image" href="/img/hero-cattle-arrival.jpg" fetchpriority="high">
 <style>
 /* Homepage: Facebook feed nested inside the News section */
 .fb-sub{ text-align:center; margin-top:3rem; }
@@ -20,47 +25,14 @@
 .fb-home__embed::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:340px; background:linear-gradient(to bottom, rgba(243,234,217,0) 0%, rgba(243,234,217,.92) 55%, rgba(243,234,217,1) 100%); pointer-events:none; }
 .fb-home__more{ text-align:center; margin-top:1.75rem; }
 </style>
-</head>
-<body>
 
-<!-- Scroll progress bar (top of viewport, width driven by JS) -->
-<div class="progress-bar" id="progressBar" aria-hidden="true"></div>
-
+HTML,
+  'body_start' => <<<'HTML'
 <!-- Soft radial glow that follows the cursor (desktop only) -->
 <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
-<!-- Grain overlay for tactile, print-like feel -->
-<div class="grain" aria-hidden="true"></div>
-
-<!-- ============ NAVIGATION ============ -->
-<header class="nav" id="nav">
-  <a href="#hero" class="nav__brand" aria-label="Nuudelchin Agro Farm — Home">
-    <span class="nav__mark">
-      <img src="img/naf_logo_full.svg" alt="" width="320" height="160">
-    </span>
-  </a>
-  <nav class="nav__links" id="navLinks" aria-label="Main">
-    <a href="#about" data-en="About" data-mn="Бидний тухай" data-zh="关于我们">About</a>
-    <a href="#journey" data-en="Journey" data-mn="Замнал" data-zh="发展历程">Journey</a>
-    <a href="#farms" data-en="Farms" data-mn="Фермүүд" data-zh="牧场">Farms</a>
-    <a href="#services" data-en="Services" data-mn="Үйлчилгээ" data-zh="服务">Services</a>
-    <a href="#products" data-en="Products" data-mn="Бүтээгдэхүүн" data-zh="产品">Products</a>
-    <a href="/shop" data-en="Shop" data-mn="Дэлгүүр" data-zh="商城">Shop</a>
-    <a href="#news" data-en="News" data-mn="Мэдээ" data-zh="新闻">News</a>
-    <a href="#contact" data-en="Contact" data-mn="Холбоо барих" data-zh="联系我们">Contact</a>
-  </nav>
-  <a href="#contact" class="btn nav__cta" data-en="Get in touch" data-mn="Холбогдох" data-zh="洽谈合作">Get in touch</a>
-  <a href="/shop#cart" id="cartToggle" class="cart-toggle" aria-label="Cart">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-    <span class="cart-toggle__badge" id="cartBadge" hidden>0</span>
-  </a>
-  <!-- Language toggle: shows the language you can switch TO -->
-  <button class="lang-toggle" id="langToggle" aria-label="Switch language">MN</button>
-  <button class="nav__burger" id="burger" aria-label="Open menu" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
-</header>
-
+HTML,
+  'after_nav' => <<<'HTML'
 <!-- Scroll-spy dots (desktop) -->
 <nav class="dots" id="dots" aria-label="Section navigation">
   <a href="#hero" data-spy="hero"><i></i><b data-en="Home" data-mn="Нүүр" data-zh="首页">Home</b></a>
@@ -75,7 +47,9 @@
   <a href="#contact" data-spy="contact"><i></i><b data-en="Contact" data-mn="Холбоо" data-zh="联系">Contact</b></a>
 </nav>
 
-<main>
+HTML,
+]);
+?>
 
 <!-- ============ HERO ============ -->
 <section class="hero" id="hero">
@@ -468,14 +442,12 @@
       </li>
     </ul>
   </div>
-  <footer class="footer">
-    <!-- Line 1 is intentionally untranslated: it is bilingual by design and contains the live #year span -->
-    <p>© <span id="year"></span> Nuudelchin Agro Farm LLC · Нүүдэлчин Агро Ферм ХХК · agrofarm.mn</p>
-    <p data-en="Independent Mongolian dairy company — est. 2015." data-mn="Бие даасан Монгол сүүний компани — 2015 оноос." data-zh="蒙古国独立乳业公司 · 创立于 2015">Independent Mongolian dairy company — est. 2015.</p>
-  </footer>
+  <?php site_footer(true); ?>
 </section>
 
-</main>
+<?php page_end([
+  'footer' => false, // printed inside the contact section above
+  'after_main' => <<<'HTML'
 
 <!-- Scroll-to-top FAB -->
 <button class="fab" id="fab" aria-label="Scroll to top">
@@ -488,8 +460,11 @@
   <a href="#contact" class="mobilebar__quote" data-en="Get a quote" data-mn="Үнийн санал авах" data-zh="索取报价">Get a quote</a>
 </div>
 
-<script src="script.js"></script>
+
+HTML,
+  'scripts' => <<<'HTML'
 <!-- SociableKit — renders the Facebook teaser above -->
 <script src="https://widgets.sociablekit.com/facebook-page-posts/widget.js" defer></script>
-</body>
-</html>
+
+HTML,
+]);

@@ -2,5 +2,13 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/agrofhui/public_html/
-    - /bin/cp -f .htaccess admin.html admin.js index.html login.php logout.php news.html shop.html shop.js publish.php script.js style.css db.php products-admin.php shop-data.php qpay.php slots.php order-create.php order-status.php qpay-callback.php orders-admin.php catalog-lib.php equipment.php category.php product.php inquiry-create.php catalog.js shop.php $DEPLOYPATH
+    - /bin/cp -f .htaccess admin.html admin.js index.php news.php login.php logout.php shop.php shop-product.php shop.js publish.php script.js style.css db.php products-admin.php shop-data.php qpay.php slots.php order-create.php order-status.php qpay-callback.php orders-admin.php catalog-lib.php equipment.php category.php product.php inquiry-create.php catalog.js $DEPLOYPATH
+    # Shared page shell and helpers (inc/layout.php, inc/shop-lib.php).
+    # .htaccess refuses /inc/ over HTTP; PHP includes it from the pages.
+    - /bin/mkdir -p $DEPLOYPATH/inc
+    - /bin/cp -f inc/*.php $DEPLOYPATH/inc/
     - /bin/cp -f img/*.* $DEPLOYPATH/img/
+    # index.html, news.html and shop.html became index.php, news.php and
+    # shop.php. Copying never deletes, so remove the old files explicitly —
+    # .htaccess already redirects their addresses, this just tidies up.
+    - /bin/rm -f $DEPLOYPATH/index.html $DEPLOYPATH/news.html $DEPLOYPATH/shop.html

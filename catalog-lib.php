@@ -1,23 +1,16 @@
 <?php
 /**
- * catalog-lib.php — shared helpers and page chrome for the equipment catalogue.
+ * catalog-lib.php — data helpers and page pieces for the equipment catalogue,
+ * which lives under /shop/equipment/… (it used to be /equipment/…; .htaccess
+ * redirects the old addresses).
  *
- * The catalogue is server-rendered, unlike shop.html which builds itself in
- * JavaScript from shop-data.php. That difference is deliberate: this section
- * exists to be found in search, so every product needs a real URL with real
- * markup and its own <title> and meta description in the HTML response.
- *
- * All product text is Mongolian. Only the surrounding chrome (nav, buttons)
- * carries data-mn/data-en, so the site-wide language toggle keeps working
- * without ever translating a product name.
+ * Server-rendered so every product has a real URL with real markup and its
+ * own <title> and meta description in the HTML response. All text is
+ * Mongolian; the page shell comes from inc/layout.php like every other page.
  */
 
 require_once __DIR__ . '/db.php';
-
-/** Escape for HTML text and attribute contexts. */
-function ce(?string $s): string {
-  return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-}
+require_once __DIR__ . '/inc/layout.php';
 
 /**
  * Decode a features/spec_table column. These are written as JSON into
@@ -52,94 +45,22 @@ function catalog_products_by_category(PDO $pdo, int $categoryId): array {
 }
 
 /**
- * Opens the document and renders the header. $desc becomes the meta
- * description — the line Google shows under the result — so it is worth
- * filling per product rather than leaving to a default.
+ * Opens the page. $desc becomes the meta description — the line Google shows
+ * under the result — so it is worth filling per product rather than leaving
+ * to a default.
  */
 function catalog_head(string $title, string $desc, string $canonicalPath): void {
-  $t = ce($title);
-  $d = ce($desc);
-  $c = ce('https://agrofarm.mn' . $canonicalPath);
-  echo <<<HTML
-<!DOCTYPE html>
-<html lang="mn">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>$t</title>
-<meta name="description" content="$d">
-<link rel="canonical" href="$c">
-<meta property="og:type" content="website">
-<meta property="og:title" content="$t">
-<meta property="og:description" content="$d">
-<meta property="og:url" content="$c">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css">
-</head>
-<body>
-
-<div class="progress-bar" id="progressBar" aria-hidden="true"></div>
-<div class="grain" aria-hidden="true"></div>
-
-<header class="nav nav--solid" id="nav">
-  <a href="/#hero" class="nav__brand" aria-label="Nuudelchin Agro Farm — Home">
-    <span class="nav__mark">
-      <img src="/img/naf_logo_full.svg" alt="" width="320" height="160">
-    </span>
-  </a>
-  <nav class="nav__links" id="navLinks" aria-label="Main">
-    <a href="/#about" data-en="About" data-mn="Бидний тухай">Бидний тухай</a>
-    <a href="/#journey" data-en="Journey" data-mn="Замнал">Замнал</a>
-    <a href="/#farms" data-en="Farms" data-mn="Фермүүд">Фермүүд</a>
-    <a href="/#services" data-en="Services" data-mn="Үйлчилгээ">Үйлчилгээ</a>
-    <a href="/#products" data-en="Products" data-mn="Бүтээгдэхүүн">Бүтээгдэхүүн</a>
-    <a href="/shop" class="is-current" data-en="Shop" data-mn="Дэлгүүр">Дэлгүүр</a>
-    <a href="/news" data-en="News" data-mn="Мэдээ">Мэдээ</a>
-    <a href="/#contact" data-en="Contact" data-mn="Холбоо барих">Холбоо барих</a>
-  </nav>
-  <a href="/#contact" class="btn nav__cta" data-en="Get in touch" data-mn="Холбогдох">Холбогдох</a>
-  <button type="button" id="inquiryToggle" class="cart-toggle" aria-label="Хүсэлтийн жагсаалт">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-    <span class="cart-toggle__badge" id="inquiryBadge" hidden>0</span>
-  </button>
-  <button class="lang-toggle" id="langToggle" aria-label="Switch language">EN</button>
-  <button class="nav__burger" id="burger" aria-label="Open menu" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
-</header>
-
-<main>
-HTML;
+  page_start([
+    'title' => $title,
+    'desc' => $desc,
+    'canonical' => $canonicalPath,
+    'active' => 'shop',
+  ]);
 }
 
+/** Closes the page; catalogue pages are shop pages and share its basket. */
 function catalog_foot(): void {
-  echo <<<HTML
-</main>
-
-<div class="cart-drawer" id="inquiryDrawer">
-  <div class="cart-drawer__backdrop" id="inquiryBackdrop"></div>
-  <div class="cart-drawer__panel">
-    <div class="cart-drawer__head">
-      <h2>Хүсэлтийн жагсаалт</h2>
-      <button type="button" id="inquiryClose" aria-label="Хаах">✕</button>
-    </div>
-    <div class="cart-drawer__items" id="inquiryItems"></div>
-    <div class="cart-drawer__footer" id="inquiryFooter"></div>
-  </div>
-</div>
-
-<footer class="footer">
-  <p>© <span id="year"></span> Nuudelchin Agro Farm LLC · Нүүдэлчин Агро Ферм ХХК · agrofarm.mn</p>
-  <p data-en="Independent Mongolian dairy company — est. 2015." data-mn="Бие даасан Монгол сүүний компани — 2015 оноос.">Бие даасан Монгол сүүний компани — 2015 оноос.</p>
-</footer>
-
-<script src="/script.js"></script>
-<script src="/catalog.js"></script>
-</body>
-</html>
-HTML;
+  page_end(['shop' => true]);
 }
 
 /** Left-hand category tree. The current category is expanded to its products. */
@@ -148,14 +69,14 @@ function catalog_sidebar(PDO $pdo, ?string $currentCat, ?string $currentProduct)
   echo '<aside class="cat-side"><nav aria-label="Ангилал"><ul class="cat-side__list">';
   foreach ($cats as $c) {
     $isCurrent = ($c['slug'] === $currentCat);
-    printf('<li class="cat-side__item%s"><a href="/equipment/%s">%s</a>',
+    printf('<li class="cat-side__item%s"><a href="/shop/equipment/%s">%s</a>',
       $isCurrent ? ' is-open' : '', ce($c['slug']), ce($c['name']));
     if ($isCurrent) {
       $kids = catalog_products_by_category($pdo, (int)$c['id']);
       if ($kids) {
         echo '<ul class="cat-side__sub">';
         foreach ($kids as $k) {
-          printf('<li><a href="/equipment/%s/%s"%s>%s</a></li>',
+          printf('<li><a href="/shop/equipment/%s/%s"%s>%s</a></li>',
             ce($c['slug']), ce($k['slug']),
             $k['slug'] === $currentProduct ? ' class="is-current"' : '',
             ce($k['name']));
@@ -189,7 +110,7 @@ function catalog_card(array $p, string $catSlug): void {
     : '<span class="eq-card__noimg" aria-hidden="true"></span>';
   printf(
     '<article class="eq-card reveal reveal--scale">
-       <a href="/equipment/%s/%s">
+       <a href="/shop/equipment/%s/%s">
          <div class="eq-card__media">%s</div>
          <div class="eq-card__body"><h3>%s</h3><p>%s</p></div>
        </a>

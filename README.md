@@ -25,50 +25,52 @@
 
 ## Project Structure
 
+Plain PHP on cPanel shared hosting (PHP 7.4) — no framework, no build step.
+Every public page is built from one shared shell, `inc/layout.php`.
+
 ```
 new-naf/
-├── index.html          # Main HTML — all sections, bilingual via data-mn/data-en
-├── style.css           # All styles — responsive, scroll-reveal, parallax, dark sections
-├── script.js           # Interactions — language toggle, reveal observer, counters,
-│                         progress bar, cursor glow, parallax, timeline spine, nav
-├── img/                # Images and SVG assets
-│   ├── naf_logo_full.svg
-│   ├── farm-barn.jpg
-│   ├── opening-ceremony.jpg
-│   ├── proj-farm.jpg
-│   ├── cow-holstein.jpg
-│   └── calves.png
-└── README.md
+├── inc/
+│   ├── layout.php      # page_start()/page_end(): head, header + menu, footer,
+│   │                     basket drawer, scripts. The menu lives here only.
+│   └── shop-lib.php    # priced products query, shared by the shop pages + JSON
+├── index.php           # home — the only page in EN / MN / 中文 (data-en/-mn/-zh)
+├── news.php            # /news — Mongolian only
+├── shop.php            # /shop — priced products + equipment preview
+├── shop-product.php    # /shop/<slug> — one priced product
+├── equipment.php       # /shop/equipment
+├── category.php        # /shop/equipment/<category>
+├── product.php         # /shop/equipment/<category>/<product>
+├── catalog-lib.php     # equipment queries + page pieces (sidebar, crumbs, cards)
+├── shop-data.php       # JSON for shop.js (live prices/stock for the basket)
+├── order-*.php, qpay*.php, slots.php   # checkout and QPay
+├── inquiry-create.php  # equipment quote requests
+├── admin.html/.js, *-admin.php, login.php, publish.php   # /admin
+├── style.css           # all styles
+├── script.js           # every page: header, menu, reveals, basket badge,
+│                         language toggle (home only)
+├── shop.js             # shop pages: basket drawer, checkout, QPay
+├── catalog.js          # shop pages: equipment quote list, gallery
+├── .htaccess           # clean URLs, redirects from old addresses, security
+├── .cpanel.yml         # deploy: git push copies the listed files to public_html
+└── sql/                # schema and migrations, run by hand in phpMyAdmin
 ```
+
+Old addresses keep working: `/index.html`, `/news.html`, `/shop.html`,
+`/shop?product=…` and `/equipment/…` all redirect to the new ones.
 
 ## How to Run Locally
 
-No build tools or dependencies required — just serve the folder:
-
-```bash
-# Python 3
-python -m http.server 8080
-
-# Node.js
-npx serve .
-
-# VS Code
-# Install "Live Server" extension and click "Go Live"
-```
-
-Then open `http://localhost:8080` (or whichever port your server uses).
+Needs Apache with `mod_rewrite` (the clean URLs are `.htaccess` rules), PHP 7.4+
+and MySQL/MariaDB with the tables from `sql/`. Put a filled-in `config.php`
+(see `config.example.php`) one folder above the site root.
 
 ## Deploy
 
-Any static host works:
-
-```bash
-# Vercel
-npx vercel
-
-# Netlify
-npx netlify-cli deploy --prod
-```
+`git push` to the cPanel repository runs `.cpanel.yml`, which copies the listed
+files into `public_html`. A new top-level file must be added to that list.
+Database changes in `sql/` are run by hand in phpMyAdmin before deploying the
+code that needs them. Secrets live in `config.php`, outside `public_html`.
 
 ## Browser Support
 

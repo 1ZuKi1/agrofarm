@@ -1,7 +1,7 @@
 <?php
 /**
  * equipment.php — catalogue landing page: every category, with its products
- * listed underneath. Reached as /equipment via .htaccess.
+ * listed underneath. Reached as /shop/equipment via .htaccess.
  */
 
 require __DIR__ . '/catalog-lib.php';
@@ -11,7 +11,7 @@ try {
   $cats = catalog_categories($pdo);
 } catch (\Throwable $e) {
   http_response_code(500);
-  catalog_head('Алдаа гарлаа — Нүүдэлчин Агро Ферм', 'Түр хүлээгээд дахин оролдоно уу.', '/equipment');
+  catalog_head('Алдаа гарлаа — Нүүдэлчин Агро Ферм', 'Түр хүлээгээд дахин оролдоно уу.', '/shop/equipment');
   echo '<section class="eq-wrap"><p class="shop__empty">Түр зуурын алдаа гарлаа. Дахин оролдоно уу.</p></section>';
   catalog_foot();
   exit;
@@ -20,7 +20,7 @@ try {
 catalog_head(
   'Фермийн тоног төхөөрөмж, хэрэгсэл — Нүүдэлчин Агро Ферм',
   'Саалтуурын эд анги, тугал тэжээх хэрэгсэл, мал тэмдэглэгээ, цэвэрлэгээний хэрэгсэл. Сонгосон чанартай бүтээгдэхүүн, шууд нийлүүлэлт.',
-  '/equipment'
+  '/shop/equipment'
 );
 ?>
 <section class="eq-hero">
@@ -42,7 +42,7 @@ catalog_head(
   <div class="eq-section">
     <div class="eq-section__head">
       <h2><?= ce($c['name']) ?></h2>
-      <a class="eq-section__more" href="/equipment/<?= ce($c['slug']) ?>">
+      <a class="eq-section__more" href="/shop/equipment/<?= ce($c['slug']) ?>">
         Бүгдийг харах (<?= count($items) ?>)
       </a>
     </div>

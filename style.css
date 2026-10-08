@@ -1450,6 +1450,10 @@ input, textarea, select{ font-size:16px !important; }
 /* ---------- drawer extras (the shell itself is .cart-drawer, already styled) ---------- */
 .cart-drawer__sku{ font-size:.78rem; color:var(--ink-soft); letter-spacing:.03em; }
 .cart-drawer__empty{ color:var(--ink-soft); text-align:center; padding:2.5rem 1rem; }
+/* Equipment quote lines, below any priced lines in the same basket. */
+.cart-drawer__item + .cart-drawer__quotes{ margin-top:1.4rem; padding-top:1.2rem; border-top:1px solid rgba(44,44,44,.14); }
+.cart-drawer__group{ font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-text); margin-bottom:.2rem; }
+.cart-drawer__quotes .eq-form--drawer{ margin-top:1.2rem; }
 
 /* ---------- flash ---------- */
 .eq-flash{ margin:0; padding:1rem var(--gutter); text-align:center; font-weight:600;
@@ -1458,9 +1462,12 @@ input, textarea, select{ font-size:16px !important; }
 .eq-flash.is-err{ background:#8c2f2f; color:#fff; }
 
 @media (max-width:900px){
-  .eq-layout{ grid-template-columns:1fr; gap:2rem; }
+  /* minmax(0,…), not plain 1fr: a 1fr track grows to its widest child, so
+     the spec table pushed every equipment product page wider than a phone
+     screen. With a 0 minimum the table scrolls inside .eq-table-wrap. */
+  .eq-layout{ grid-template-columns:minmax(0,1fr); gap:2rem; }
   .cat-side{ position:static; }
-  .eq-detail__top{ grid-template-columns:1fr; gap:1.8rem; }
+  .eq-detail__top{ grid-template-columns:minmax(0,1fr); gap:1.8rem; }
   .eq-hero{ padding-top:7rem; }
 }
 
@@ -1522,4 +1529,17 @@ html[lang="zh"] .green__lede{ max-width:42rem; margin-left:auto; margin-right:au
 @media (min-width: 821px){
   html[lang="zh"] .farms__head{ grid-template-columns:1.2fr .8fr; }
   html[lang="zh"] .contact__grid{ grid-template-columns:1.15fr .85fr; }
+}
+
+/* ==========================================================================
+   PAGE TRANSITIONS
+   Moving between pages cross-fades instead of flashing white. The header has
+   its own transition name, so it is carried across as one piece while only
+   the content below it fades. Browsers without cross-document view
+   transitions (and visitors who ask for reduced motion) simply change pages
+   as before.
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference){
+  @view-transition{ navigation:auto; }
+  .nav{ view-transition-name:site-header; }
 }

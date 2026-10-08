@@ -19,9 +19,9 @@ const NAF_INQUIRY_TO = 'info@agrofarm.mn';
 const NAF_INQUIRY_FROM = 'no-reply@agrofarm.mn';   // must be on our own domain for SPF
 
 function back_with(string $status, ?string $token = null): void {
-  $ref = $_SERVER['HTTP_REFERER'] ?? '/equipment';
+  $ref = $_SERVER['HTTP_REFERER'] ?? '/shop';
   // Only ever redirect within this site.
-  if (!preg_match('#^https?://(www\.)?agrofarm\.mn/#i', $ref)) $ref = '/equipment';
+  if (!preg_match('#^https?://(www\.)?agrofarm\.mn/#i', $ref)) $ref = '/shop';
   $ref = strtok($ref, '#');
   // strpos, not str_contains — this host runs PHP 7.4.
   $sep = (strpos($ref, '?') !== false) ? '&' : '?';

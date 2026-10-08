@@ -46,17 +46,16 @@
     return (str == null ? "" : String(str)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
+  /** Loads live prices and stock for the basket. The pages themselves are
+   * rendered by PHP (shop.php, shop-product.php); this data is only what the
+   * basket drawer and checkout need. */
   async function loadShop() {
-    const root = document.getElementById("shopRoot");
     try {
-      const res = await fetch("shop-data.php");
+      const res = await fetch("/shop-data.php");
       const data = await res.json();
       shopProducts = data.products || [];
     } catch {
-      const msgEn = "Could not load products — try again later.";
-      const msgMn = "Бүтээгдэхүүн ачаалж чадсангүй — дараа дахин оролдоно уу.";
-      root.innerHTML = `<p class="shop__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
-      return;
+      shopProducts = [];
     }
 
     // shopProducts is now populated — if the cart drawer should be showing
@@ -67,192 +66,52 @@
     // Skipped entirely when ?order=<token> is present: that handler (below,
     // in the final DOMContentLoaded listener) owns #cartDrawerItems for the
     // whole page load in that case, and frequently resolves before this
-    // fetch does (order-status.php is a single indexed lookup; shop-data.php
-    // is N+1). Without this guard, this check would see is-open already
+    // fetch does. Without this guard, this check would see is-open already
     // true — set by that handler, not by a real cart-open action — and call
     // openCartDrawer(), silently overwriting the order confirmation/status
-    // screen with the empty/generic cart view the moment shop-data.php
-    // caught up.
+    // screen with the cart view the moment shop-data.php caught up.
     const drawer = document.getElementById("cartDrawer");
     if (!orderToken && (location.hash === "#cart" || drawer?.classList.contains("is-open"))) {
       openCartDrawer();
     }
-
-    if (!shopProducts.length) {
-      const msgEn = "No products yet — check back soon.";
-      const msgMn = "Одоогоор бүтээгдэхүүн алга — удахгүй дахин орно уу.";
-      root.innerHTML = `<p class="shop__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
-      return;
-    }
-
-    renderForCurrentUrl();
   }
 
-  /** Reads ?product=<slug> from the current URL and shows that product's
-   * detail view if it matches a loaded product, otherwise the grid — the
-   * single source of truth for "which view is showing" so the initial page
-   * load, a card click, and the browser back/forward buttons all agree. */
-  function renderForCurrentUrl() {
-    const slug = new URLSearchParams(location.search).get("product");
-    const product = slug ? shopProducts.find((p) => p.slug === slug) : null;
-    if (product && product.variants.length) {
-      renderProductDetail(product);
-    } else {
-      renderProductGrid();
-    }
-  }
-
-  function goToProduct(product) {
-    history.pushState(null, "", `?product=${encodeURIComponent(product.slug)}`);
-    renderProductDetail(product);
-  }
-  function goToGrid() {
-    history.pushState(null, "", location.pathname);
-    renderProductGrid();
-  }
-  addEventListener("popstate", renderForCurrentUrl);
-
-  /** Product listing — one card per product, styled identically to the
-   * homepage's Products section cards (.prod) so the shop reads as a
-   * continuation of that section rather than a different template. */
-  function renderProductGrid() {
-    const root = document.getElementById("shopRoot");
-    const buyable = shopProducts.filter((p) => p.variants.length);
-    if (!buyable.length) {
-      const msgEn = "No products yet — check back soon.";
-      const msgMn = "Одоогоор бүтээгдэхүүн алга — удахгүй дахин орно уу.";
-      root.innerHTML = `<p class="shop__empty" style="display:block" data-en="${escAttrShop(msgEn)}" data-mn="${escAttrShop(msgMn)}">${escHtmlShop(t(msgEn, msgMn))}</p>`;
-      return;
-    }
-
-    root.innerHTML = `
-      <div class="products__grid shop-grid">
-        ${buyable.map((p) => {
-          const inStock = p.variants.some((v) => v.available > 0);
-          const minPrice = Math.min(...p.variants.map((v) => v.price));
-          const displayName = t(p.name_en || p.name_mn, p.name_mn);
-          const desc = p.description_mn ? escHtmlShop(t(p.description_en || p.description_mn, p.description_mn)) : "";
-          const img = p.variants[0].image_path;
-          const media = img
-            ? `background-image:linear-gradient(rgba(44,44,44,.15), rgba(44,44,44,.3)), url('${escAttrShop(img)}'); background-size:cover; background-position:center`
-            : `background:linear-gradient(135deg, var(--green), var(--green-deep))`;
-          return `
-            <article class="prod reveal reveal--scale">
-              <a href="?product=${escAttrShop(p.slug)}" class="shop-grid__card-link" data-slug="${escAttrShop(p.slug)}">
-                <div class="prod__media" style="${media}"></div>
-                <div class="prod__body">
-                  <h3 data-en="${escAttrShop(p.name_en || p.name_mn)}" data-mn="${escAttrShop(p.name_mn)}">${escHtmlShop(displayName)}</h3>
-                  ${desc ? `<p class="shop-grid__desc">${desc}</p>` : ''}
-                  <p class="shop-grid__price">${inStock
-                    ? `<span data-en="From" data-mn="Эхлэх үнэ">${escHtmlShop(t("From", "Эхлэх үнэ"))}</span> ${minPrice.toLocaleString()}₮`
-                    : `<span data-en="Out of stock" data-mn="Дууссан">${escHtmlShop(t("Out of stock", "Дууссан"))}</span>`
-                  }</p>
-                </div>
-              </a>
-            </article>
-          `;
-        }).join('')}
-      </div>
-    `;
-
-    // .reveal starts at opacity:0 and only becomes visible once script.js's
-    // IntersectionObserver adds .in — but that observer sweeps the DOM once at
-    // load, long before these fetched cards exist. Without handing them over
-    // they stay permanently invisible while still being clickable. Same
-    // handoff news.html does for its fetched posts.
-    root.querySelectorAll(".reveal").forEach((el) => window.observeReveal?.(el));
-
-    root.querySelectorAll(".shop-grid__card-link").forEach((link) => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        const product = shopProducts.find((p) => p.slug === link.dataset.slug);
-        if (product) goToProduct(product);
-      });
-    });
-  }
-
-  function renderProductDetail(product) {
-    const root = document.getElementById("shopRoot");
-    activeVariantId = product.variants[0].id;
-    const displayName = t(product.name_en || product.name_mn, product.name_mn);
-
-    root.innerHTML = `
-      <div class="shop-product">
-        <a href="/shop" class="shop-product__back" id="shopBackLink" data-en="${escAttrShop("← Back to shop")}" data-mn="${escAttrShop("← Дэлгүүр рүү буцах")}">${escHtmlShop(t("← Back to shop", "← Дэлгүүр рүү буцах"))}</a>
-        <h2 class="shop-product__title" data-en="${escAttrShop(product.name_en || product.name_mn)}" data-mn="${escAttrShop(product.name_mn)}">${escHtmlShop(displayName)}</h2>
-        <p class="shop-product__switcher-label" data-en="Choose a variant" data-mn="Төрлөө сонгоно уу">${escHtmlShop(t("Choose a variant", "Төрлөө сонгоно уу"))}</p>
-        <div class="shop-product__switcher" role="tablist">
-          ${product.variants.map((v) => `
-            <button type="button" class="variant-pill${v.id === activeVariantId ? ' is-active' : ''}" data-variant-id="${v.id}" data-en="${escAttrShop(v.name_en || v.name_mn)}" data-mn="${escAttrShop(v.name_mn)}">${escHtmlShop(variantDisplayName(v))}</button>
-          `).join('')}
-        </div>
-        <div id="shopVariantDetail"></div>
-      </div>
-    `;
-
-    document.getElementById("shopBackLink").addEventListener("click", (e) => { e.preventDefault(); goToGrid(); });
-
-    root.querySelectorAll('.variant-pill').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        activeVariantId = Number(btn.dataset.variantId);
-        root.querySelectorAll('.variant-pill').forEach((b) => b.classList.toggle('is-active', Number(b.dataset.variantId) === activeVariantId));
-        renderVariantDetail(product);
+  /* ---------- Product page (/shop/<slug>) ----------
+     shop-product.php renders every variant as a panel; the pills only switch
+     which panel is visible. Each panel has its own quantity box and
+     "Сагслах" button carrying its variant id. */
+  function initProductPage() {
+    const pills = document.querySelectorAll(".shop-product .variant-pill");
+    pills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        activeVariantId = Number(pill.dataset.variantId);
+        pills.forEach((p) => {
+          const on = Number(p.dataset.variantId) === activeVariantId;
+          p.classList.toggle("is-active", on);
+          p.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        document.querySelectorAll(".shop-variant-panel").forEach((panel) => {
+          panel.hidden = Number(panel.dataset.variantId) !== activeVariantId;
+        });
       });
     });
 
-    renderVariantDetail(product);
-  }
-
-  function renderVariantDetail(product) {
-    const variant = product.variants.find((v) => Number(v.id) === Number(activeVariantId));
-    const detail = document.getElementById("shopVariantDetail");
-    // available (stock minus everything reserved by pending/paid/fulfilled
-    // orders) reflects true availability — the raw stock column can be
-    // higher than what's actually left to buy. See shop-data.php.
-    const inStock = variant.available > 0;
-    const displayName = variantDisplayName(variant);
-
-    const stockEn = inStock ? `In stock: ${variant.available}` : "Out of stock";
-    const stockMn = inStock ? `Нөөцөд бий: ${variant.available}` : "Дууссан";
-
-    detail.innerHTML = `
-      <div class="shop-variant${variant.image_path ? ' shop-variant--with-img' : ''}">
-        ${variant.image_path ? `<img class="shop-variant__img" src="${escAttrShop(variant.image_path)}" alt="${escAttrShop(displayName)}">` : ''}
-        <div class="shop-variant__body">
-          <h2 class="shop-variant__name" data-en="${escAttrShop(variant.name_en || variant.name_mn)}" data-mn="${escAttrShop(variant.name_mn)}">${escHtmlShop(displayName)}</h2>
-          <p class="shop-variant__price">${variant.price.toLocaleString()}₮ <span class="shop-variant__weight">${escHtmlShop(variant.weight_label || '')}</span></p>
-          <p class="shop-variant__stock" data-en="${escAttrShop(stockEn)}" data-mn="${escAttrShop(stockMn)}">${escHtmlShop(t(stockEn, stockMn))}</p>
-          ${variant.benefits_text_mn ? `<p class="shop-variant__benefits">${escHtmlShop(variant.benefits_text_mn)}</p>` : ''}
-          <div class="shop-variant__qty">
-            <label for="shopQty" data-en="Qty" data-mn="Тоо ширхэг">${escHtmlShop(t("Qty", "Тоо ширхэг"))}</label>
-            <input type="number" id="shopQty" min="1" max="${variant.available}" value="1" ${inStock ? '' : 'disabled'}>
-            <button type="button" class="btn btn--gold" id="shopAddToCart" data-en="Add to cart" data-mn="Сагслах" ${inStock ? '' : 'disabled'}>${escHtmlShop(t("Add to cart", "Сагслах"))}</button>
-          </div>
-          ${variant.usage_text_mn ? `<div class="shop-variant__section"><h3 data-en="Usage" data-mn="Хэрэглээ">${escHtmlShop(t("Usage", "Хэрэглээ"))}</h3><p>${escHtmlShop(variant.usage_text_mn)}</p></div>` : ''}
-          ${variant.storage_text_mn ? `<div class="shop-variant__section"><h3 data-en="Storage" data-mn="Хадгалалт">${escHtmlShop(t("Storage", "Хадгалалт"))}</h3><p>${escHtmlShop(variant.storage_text_mn)}</p></div>` : ''}
-          ${variant.ingredients.length ? `
-            <div class="shop-variant__section">
-              <h3 data-en="Ingredients" data-mn="Найрлага">${escHtmlShop(t("Ingredients", "Найрлага"))}</h3>
-              <div class="ingredient-table">
-                ${variant.ingredients.map((ing) => `<div class="ingredient-table__row"><span>${escHtmlShop(ing.name)}</span><span>${escHtmlShop(ing.percentage)}</span></div>`).join('')}
-              </div>
-            </div>
-          ` : ''}
-        </div>
-      </div>
-    `;
-
-    const addBtn = document.getElementById("shopAddToCart");
-    if (addBtn) {
-      addBtn.addEventListener("click", () => {
-        const qty = Math.max(1, Math.min(variant.available, Number(document.getElementById("shopQty").value) || 1));
-        if (window.addToCart) window.addToCart(variant.id, qty);
+    document.querySelectorAll(".shop-add").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.dataset.variantId);
+        const max = Number(btn.dataset.max) || 1;
+        const input = document.getElementById(`shopQty-${id}`);
+        const qty = Math.max(1, Math.min(max, Number(input?.value) || 1));
+        if (window.addToCart) window.addToCart(id, qty);
+        const label = btn.textContent;
+        btn.textContent = t("Added ✓", "Сагсанд нэмэгдлээ ✓");
+        setTimeout(() => { btn.textContent = label; }, 1800);
       });
-    }
+    });
   }
 
   window.getShopProducts = () => shopProducts;
-  document.addEventListener("DOMContentLoaded", loadShop);
+  document.addEventListener("DOMContentLoaded", () => { initProductPage(); loadShop(); });
 
   /* ---------- Cart drawer ----------
      Renders window.getCart() lines against the product data already loaded
@@ -265,12 +124,18 @@
     const items = document.getElementById("cartDrawerItems");
     const totalEl = document.getElementById("cartDrawerTotal");
 
+    const footer = document.querySelector(".cart-drawer__footer");
     if (!cart.length) {
-      items.innerHTML = `<p class="cart-drawer__empty" data-en="Your cart is empty." data-mn="Таны сагс хоосон байна.">${escHtmlShop(t("Your cart is empty.", "Таны сагс хоосон байна."))}</p>`;
-      totalEl.textContent = "";
-      // An empty dairy cart does not mean an empty basket — equipment quote
+      // An empty priced cart does not mean an empty basket — equipment quote
       // lines are held separately and must still render (and be sendable).
-      if (window.renderInquirySection) window.renderInquirySection(items);
+      // The checkout footer only belongs to priced lines.
+      items.innerHTML = "";
+      totalEl.textContent = "";
+      if (footer) footer.style.display = "none";
+      const hasQuotes = window.renderInquirySection ? window.renderInquirySection(items) : false;
+      if (!hasQuotes) {
+        items.innerHTML = `<p class="cart-drawer__empty" data-en="Your cart is empty." data-mn="Таны сагс хоосон байна.">${escHtmlShop(t("Your cart is empty.", "Таны сагс хоосон байна."))}</p>`;
+      }
       return;
     }
 
@@ -285,11 +150,10 @@
       // Hide the footer entirely rather than leaving a live checkout button
       // the buyer could still click through — order-create.php can only
       // reject it once product data hasn't actually loaded.
-      const footer = document.querySelector(".cart-drawer__footer");
       if (footer) footer.style.display = "none";
+      if (window.renderInquirySection) window.renderInquirySection(items);
       return;
     }
-    const footer = document.querySelector(".cart-drawer__footer");
     if (footer) footer.style.display = "";
 
     // Resolve each line against the currently loaded product data.
@@ -360,7 +224,7 @@
     heading.dataset.en = "Cart";
     heading.dataset.mn = "Сагс";
     heading.textContent = t("Cart", "Сагс");
-    document.querySelector(".cart-drawer__footer").style.display = "";
+    // Footer visibility is decided by renderCartDrawer (priced lines only).
   }
 
   /** Clears the QPay status-poll interval started by renderQrScreen, if one
@@ -384,6 +248,10 @@
     renderCartDrawer();
     document.getElementById("cartDrawer").classList.add("is-open");
   }
+  // catalog.js opens the same drawer after "Хүсэлтийн жагсаалтад нэмэх" and
+  // re-renders it when a quote line changes.
+  window.openCartDrawer = openCartDrawer;
+  window.renderCartDrawer = () => { if (document.getElementById("cartDrawer")?.classList.contains("is-open")) renderCartDrawer(); };
   function closeCartDrawer() {
     stopQrPolling();
     document.getElementById("cartDrawer").classList.remove("is-open");
@@ -396,7 +264,7 @@
      the whole drawer throughout. "Back to cart" just calls openCartDrawer()
      again, which resets the head/footer and re-renders the cart lines. */
   async function loadSlots() {
-    const res = await fetch("slots.php");
+    const res = await fetch("/slots.php");
     const data = await res.json();
     return data.days || [];
   }
@@ -517,7 +385,7 @@
       };
 
       try {
-        const res = await fetch("order-create.php", {
+        const res = await fetch("/order-create.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -571,7 +439,7 @@
     // screen — order-status.php keeps returning qr_image/qr_text for as
     // long as the order stays 'pending', and the ?order= handler below
     // re-renders this same screen from that link.
-    const orderLink = `${location.origin}/shop.html?order=${token}`;
+    const orderLink = `${location.origin}/shop?order=${token}`;
     // Bank-app buttons: a buyer on a phone can't scan a QR on their own
     // screen, so each button opens that bank's app with this invoice filled
     // in. Shown only on phones/tablets via CSS (.qr-screen__banks); the links
@@ -629,7 +497,7 @@
     // once per 10s per order server-side); plain polls only read our DB,
     // which qpay-callback.php updates — QPay forbids frequent checks.
     function poll(withCheck) {
-      return fetch(`order-status.php?token=${encodeURIComponent(token)}${withCheck ? "&check=1" : ""}`)
+      return fetch(`/order-status.php?token=${encodeURIComponent(token)}${withCheck ? "&check=1" : ""}`)
         .then((r) => r.json())
         .then((status) => { handleStatus(status); return status; });
     }
@@ -670,7 +538,7 @@
     document.querySelector(".cart-drawer__footer").style.display = "none";
 
     const items = document.getElementById("cartDrawerItems");
-    const orderLink = `${location.origin}/shop.html?order=${token}`;
+    const orderLink = `${location.origin}/shop?order=${token}`;
     // "Delivery"/"Order link" labels are wrapped in their own data-en/data-mn
     // span (same pattern as #cartDrawerTotal in renderCartDrawer above) so a
     // language toggle only swaps the label, not the dynamic value after it —
@@ -731,7 +599,7 @@
       document.getElementById("cartDrawer")?.classList.add("is-open");
       // check=1: someone opening this link may have just paid (e.g. the phone
       // browser reloaded the page after the bank app) — verify once with QPay.
-      fetch(`order-status.php?token=${encodeURIComponent(orderToken)}&check=1`)
+      fetch(`/order-status.php?token=${encodeURIComponent(orderToken)}&check=1`)
         .then((r) => r.json())
         .then((status) => {
           if (status.status === "paid") {

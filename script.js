@@ -20,17 +20,17 @@
      survive the switch. All strings are static author-authored attributes — no
      user input flows through innerHTML.
 
-     Chinese exists on the home page only. LANGS is derived from the page
-     itself, so a page carrying no data-zh simply offers EN/MN — and a saved
-     "zh" preference is displayed there as English WITHOUT being overwritten,
-     so returning to the home page comes back in Chinese. */
+     Only the home page is multilingual, and only it has #langToggle (see
+     inc/layout.php). Every other page is Mongolian only: no toggle, so none
+     of this runs there and <html lang="mn"> stays as the server sent it —
+     while the saved preference is left alone for the next visit home. */
   const langToggle = document.getElementById("langToggle");
   const LANGS = document.querySelector("[data-zh]") ? ["en", "mn", "zh"] : ["en", "mn"];
   const LANG_LABEL = { en: "EN", mn: "MN", zh: "中文" };
   const LANG_ARIA = { en: "Switch to English", mn: "Switch to Mongolian", zh: "切换到中文" };
   const nextLang = (lang) => LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
-  let currentLang = localStorage.getItem("lang") || "en";
-  if (!LANGS.includes(currentLang)) currentLang = "en"; // page lacks this language — show English, keep the preference
+  let currentLang = langToggle ? (localStorage.getItem("lang") || "en") : document.documentElement.lang;
+  if (langToggle && !LANGS.includes(currentLang)) currentLang = "en";
   function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem("lang", lang);
@@ -51,8 +51,10 @@
     langToggle.textContent = LANG_LABEL[nextLang(lang)];
     langToggle.setAttribute("aria-label", LANG_ARIA[nextLang(lang)]);
   }
-  langToggle.addEventListener("click", () => setLanguage(nextLang(currentLang)));
-  if (currentLang !== "en") setLanguage(currentLang); // apply saved preference on load
+  if (langToggle) {
+    langToggle.addEventListener("click", () => setLanguage(nextLang(currentLang)));
+    if (currentLang !== "en") setLanguage(currentLang); // apply saved preference on load
+  }
 
   /* ---------- Cart (shared across every page via localStorage) ----------
      Holds {variantId, quantity} only — never a price. Display price is always
@@ -88,11 +90,14 @@
   function updateCartBadge() {
     const badge = document.getElementById("cartBadge");
     if (!badge) return;
-    // One basket in the UI, two stores underneath: priced dairy lines live in
+    // One basket in the UI, two stores underneath: priced lines live in
     // naf_cart, equipment quote lines in naf_inquiry (owned by catalog.js).
-    // The badge shows the sum so the buyer sees a single number.
+    // The badge shows the sum so the buyer sees a single number — read here
+    // directly, so it is right on pages that don't load catalog.js too.
+    let quotes = [];
+    try { quotes = JSON.parse(localStorage.getItem("naf_inquiry") || "[]"); } catch { quotes = []; }
     const count = getCart().reduce((sum, item) => sum + item.quantity, 0)
-      + (window.getInquiryCount ? window.getInquiryCount() : 0);
+      + (Array.isArray(quotes) ? quotes.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0) : 0);
     badge.textContent = String(count);
     badge.hidden = count === 0;
   }
@@ -120,7 +125,7 @@
      erase the fetched price back to the static fallback text. */
   const shopCardPrice = document.getElementById("shopCardPrice");
   if (shopCardPrice) {
-    fetch("shop-data.php").then((r) => r.json()).then((data) => {
+    fetch("/shop-data.php").then((r) => r.json()).then((data) => {
       const variants = data.products?.[0]?.variants || [];
       if (!variants.length) return;
       const minPrice = Math.min(...variants.map((v) => v.price));
@@ -181,7 +186,7 @@
   document.querySelectorAll(".stat__num").forEach((el) => counterObserver.observe(el));
 
   /* ---------- Scroll-spy dots + dark-section inversion ----------
-     #dots is homepage-only — shop.html and news.html have no such element,
+     #dots is homepage-only — the shop and news pages have no such element,
      so skip this setup entirely there rather than throwing (a throw here
      would abort every later top-level statement in this IIFE, including the
      burger-menu wiring and the window.fetchNews/window.renderNewsPost
@@ -224,8 +229,8 @@
   const heroBg = document.querySelector("[data-parallax]");
   const parallaxFactor = heroBg ? +heroBg.dataset.parallax : 0;
   const heroInner = document.querySelector(".hero__inner");
-  // Pages without a #hero (news.html, shop.html) hardcode nav--solid in their
-  // markup since there's no dark hero for the nav to start transparent over —
+  // Pages without a #hero (every page but home) get nav--solid from
+  // inc/layout.php since there's no dark hero for the nav to start transparent over —
   // the scroll-based toggle below must never touch that class there, or the
   // nav text flips to the hero-only cream color against a light page background.
   const hasHero = !!document.getElementById("hero");
@@ -377,7 +382,7 @@
   /** Fetch posts from news-data.json. Returns the posts array (or [] on error). */
   async function fetchNews() {
     try {
-      const res = await fetch("news-data.json?v=" + Date.now());
+      const res = await fetch("/news-data.json?v=" + Date.now());
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
       return Array.isArray(data.posts) ? data.posts : [];
