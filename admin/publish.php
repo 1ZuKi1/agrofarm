@@ -76,7 +76,7 @@ if ($action === 'upload') {
   }
   $ext = $extByMime[$info['mime']];
 
-  $dir = __DIR__ . '/img/news';
+  $dir = dirname(__DIR__) . '/img/news'; // site root, not admin/
   if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
     http_response_code(500);
     echo 'img/news фолдер үүсгэж чадсангүй — зөвшөөрлийг шалгана уу';
@@ -105,7 +105,7 @@ if ($decoded === null || !isset($decoded->posts) || !is_array($decoded->posts)) 
   exit;
 }
 
-if (file_put_contents(__DIR__ . '/news-data.json', $data) === false) {
+if (file_put_contents(dirname(__DIR__) . '/news-data.json', $data) === false) {
   http_response_code(500);
   echo 'news-data.json бичиж чадсангүй — файлын зөвшөөрлийг шалгана уу';
   exit;

@@ -17,9 +17,9 @@
  * in-webroot spot only if it hasn't been moved yet — safe during migration.
  */
 
-require (file_exists(__DIR__ . '/../config.php'))
-  ? __DIR__ . '/../config.php'
-  : __DIR__ . '/config.php';
+require (file_exists(dirname(__DIR__, 2) . '/config.php'))
+  ? dirname(__DIR__, 2) . '/config.php'   // above public_html — where it belongs
+  : dirname(__DIR__) . '/config.php';     // public_html — not moved yet
 
 session_set_cookie_params([
   'httponly' => true,

@@ -13,6 +13,10 @@ img/products/
 .superpowers/
 docs/
 
+# Old backups, zips and retired scripts — kept locally, never committed
+# or deployed.
+_archive/
+
 # OS junk
 .DS_Store
 Thumbs.db

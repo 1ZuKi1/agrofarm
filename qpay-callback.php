@@ -7,8 +7,8 @@
  * order-status.php's polling is the fallback if this is ever missed.
  */
 
-require __DIR__ . '/db.php';
-require __DIR__ . '/qpay.php';
+require __DIR__ . '/inc/db.php';
+require __DIR__ . '/inc/qpay.php';
 
 header('Content-Type: application/json; charset=utf-8');
 

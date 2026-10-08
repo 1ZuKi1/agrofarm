@@ -9,7 +9,7 @@
  * the basket. The query lives in inc/shop-lib.php, shared with those pages.
  */
 
-require __DIR__ . '/inc/shop-lib.php';
+require dirname(__DIR__) . '/inc/shop-lib.php';
 
 header('Content-Type: application/json; charset=utf-8');
 

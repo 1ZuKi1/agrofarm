@@ -3,7 +3,7 @@
  * slots.php — public, read-only delivery slot availability for the next 7 days.
  */
 
-require __DIR__ . '/db.php';
+require dirname(__DIR__) . '/inc/db.php';
 
 header('Content-Type: application/json; charset=utf-8');
 

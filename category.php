@@ -4,7 +4,7 @@
  * on the right. Reached as /shop/equipment/<cat-slug> via .htaccess.
  */
 
-require __DIR__ . '/catalog-lib.php';
+require __DIR__ . '/inc/catalog-lib.php';
 
 $catSlug = (string)($_GET['cat'] ?? '');
 

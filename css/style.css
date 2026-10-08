@@ -100,6 +100,17 @@ section{ position:relative; }
   outline-offset:2px;
   box-shadow:0 0 0 5px rgba(251,246,237,.85);
 }
+/* <main> receives focus from the skip link only; no ring around the page. */
+main:focus{ outline:none; box-shadow:none; }
+
+/* Skip link: off-screen until a keyboard user tabs to it. */
+.skip-link{
+  position:fixed; left:1rem; top:-4rem; z-index:2000;
+  padding:.7rem 1.1rem; border-radius:10px;
+  background:var(--green); color:var(--cream); font-weight:600; text-decoration:none;
+  transition:top .15s ease;
+}
+.skip-link:focus{ top:1rem; }
 
 /* ==========================================================================
    GLOBAL OVERLAYS — progress bar, cursor glow, film grain
@@ -288,7 +299,7 @@ section{ position:relative; }
   position:absolute; inset:-12% 0; z-index:0; will-change:transform;
   background:
     linear-gradient(160deg, rgba(10,46,22,.22), rgba(10,46,22,.55)),
-    url("img/hero-cattle-arrival.jpg") center/cover no-repeat,
+    url("/img/hero-cattle-arrival.jpg") center/cover no-repeat,
     radial-gradient(120% 90% at 75% 15%, #2c7a3f 0%, var(--green) 45%, var(--green-deep) 100%);
 }
 .hero__veil{
@@ -411,7 +422,7 @@ section{ position:relative; }
   border-radius:var(--radius-lg); overflow:hidden;
   background:
     linear-gradient(rgba(10,46,22,.08), rgba(10,46,22,.22)),
-    url("img/opening-ceremony.jpg") center/cover no-repeat,
+    url("/img/opening-ceremony.jpg") center/cover no-repeat,
     linear-gradient(150deg, var(--green) 0%, var(--green-deep) 100%);
   box-shadow:var(--shadow-green);
 }
@@ -554,9 +565,9 @@ section{ position:relative; }
 .prod:hover .prod__media{ transform:scale(1.06); }
 /* Real photos with a light brand-tinted veil — subtle enough that the
    photography reads clearly (heavy blend modes flattened the images) */
-.prod__media--equipment{ background-image:linear-gradient(rgba(44,44,44,.22), rgba(44,44,44,.38)), url("img/proj-farm.jpg"); background-size:cover; background-position:center; }
-.prod__media--milk{ background-image:linear-gradient(rgba(212,165,74,.14), rgba(184,134,47,.26)), url("img/cow-holstein.jpg"); background-size:cover; background-position:center; }
-.prod__media--livestock{ background-image:linear-gradient(rgba(26,94,42,.16), rgba(14,61,26,.34)), url("img/cows-feeding.jpg"); background-size:cover; background-position:center; }
+.prod__media--equipment{ background-image:linear-gradient(rgba(44,44,44,.22), rgba(44,44,44,.38)), url("/img/proj-farm.jpg"); background-size:cover; background-position:center; }
+.prod__media--milk{ background-image:linear-gradient(rgba(212,165,74,.14), rgba(184,134,47,.26)), url("/img/cow-holstein.jpg"); background-size:cover; background-position:center; }
+.prod__media--livestock{ background-image:linear-gradient(rgba(26,94,42,.16), rgba(14,61,26,.34)), url("/img/cows-feeding.jpg"); background-size:cover; background-position:center; }
 .prod__body{ padding:1.6rem 1.8rem 1.9rem; }
 .prod__body h3{ font-size:1.4rem; color:var(--green); margin-bottom:.4rem; }
 .prod__body p{ font-size:.92rem; color:var(--ink-soft); }

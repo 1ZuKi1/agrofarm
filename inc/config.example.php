@@ -6,7 +6,7 @@
  * credentials) and is gitignored — it never enters version control. Copy this
  * file to config.php on each environment and fill in real values there.
  *
- *     cp config.example.php config.php
+ *     cp inc/config.example.php config.php
  *
  * On the live server, place the filled-in config.php ONE DIRECTORY ABOVE
  * public_html (e.g. /home/agrofhui/config.php, not

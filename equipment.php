@@ -4,7 +4,7 @@
  * listed underneath. Reached as /shop/equipment via .htaccess.
  */
 
-require __DIR__ . '/catalog-lib.php';
+require __DIR__ . '/inc/catalog-lib.php';
 
 try {
   $pdo = naf_db();

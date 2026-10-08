@@ -30,45 +30,57 @@ Every public page is built from one shared shell, `inc/layout.php`.
 
 ```
 new-naf/
-├── inc/
-│   ├── layout.php      # page_start()/page_end(): head, header + menu, footer,
-│   │                     basket drawer, scripts. The menu lives here only.
-│   └── shop-lib.php    # priced products query, shared by the shop pages + JSON
-├── index.php           # home — the only page in EN / MN / 中文 (data-en/-mn/-zh)
-├── news.php            # /news — Mongolian only
+├── index.php           # home — the only page in EN / MN / 中文
+├── news.php            # /news
 ├── shop.php            # /shop — priced products + equipment preview
 ├── shop-product.php    # /shop/<slug> — one priced product
 ├── equipment.php       # /shop/equipment
 ├── category.php        # /shop/equipment/<category>
 ├── product.php         # /shop/equipment/<category>/<product>
-├── catalog-lib.php     # equipment queries + page pieces (sidebar, crumbs, cards)
-├── shop-data.php       # JSON for shop.js (live prices/stock for the basket)
-├── order-*.php, qpay*.php, slots.php   # checkout and QPay
-├── inquiry-create.php  # equipment quote requests
-├── admin.html/.js, *-admin.php, login.php, publish.php   # /admin
-├── style.css           # all styles
-├── script.js           # every page: header, menu, reveals, basket badge,
-│                         language toggle (home only)
-├── shop.js             # shop pages: basket drawer, checkout, QPay
-├── catalog.js          # shop pages: equipment quote list, gallery
+├── qpay-callback.php   # QPay webhook — must stay at this address (it is
+│                         inside every invoice already sent to QPay)
+├── inc/                # included by pages, refused over HTTP
+│   ├── layout.php      #   page_start()/page_end(): head, header + menu,
+│   │                       footer, basket drawer, scripts
+│   ├── i18n.php        #   ta()/tx()/tmn() — read lang/strings.php
+│   ├── db.php          #   MySQL (PDO); finds config.php above public_html
+│   ├── qpay.php        #   QPay Merchant V2 client
+│   ├── shop-lib.php    #   priced products query
+│   ├── catalog-lib.php #   equipment queries + sidebar, crumbs, cards
+│   └── config.example.php
+├── lang/strings.php    # every multilingual text, EN / MN / 中文 side by side
+├── api/                # JSON/form endpoints: shop-data, slots, order-create,
+│                         order-status, inquiry-create
+├── admin/              # /admin/ — panel (index.html, admin.js) + its endpoints
+├── css/style.css       # all styles
+├── js/                 # script.js (every page), shop.js (basket, checkout,
+│                         QPay), catalog.js (equipment quote list, gallery)
+├── img/
 ├── .htaccess           # clean URLs, redirects from old addresses, security
-├── .cpanel.yml         # deploy: git push copies the listed files to public_html
+├── .cpanel.yml         # deploy: git push copies root pages + the folders
 └── sql/                # schema and migrations, run by hand in phpMyAdmin
 ```
 
 Old addresses keep working: `/index.html`, `/news.html`, `/shop.html`,
-`/shop?product=…` and `/equipment/…` all redirect to the new ones.
+`/shop?product=…`, `/equipment/…` and `/admin` redirect to the new ones, and
+files that moved into folders (`/style.css`, `/shop-data.php`, `/login.php`…)
+are still served at their old paths.
+
+To change a text on the home page (in any language), edit `lang/strings.php`.
+Every other page is Mongolian only; its text is in the page file itself.
 
 ## How to Run Locally
 
 Needs Apache with `mod_rewrite` (the clean URLs are `.htaccess` rules), PHP 7.4+
 and MySQL/MariaDB with the tables from `sql/`. Put a filled-in `config.php`
-(see `config.example.php`) one folder above the site root.
+(see `inc/config.example.php`) one folder above the site root.
 
 ## Deploy
 
-`git push` to the cPanel repository runs `.cpanel.yml`, which copies the listed
-files into `public_html`. A new top-level file must be added to that list.
+`git push` to the cPanel repository runs `.cpanel.yml`, which copies every
+`*.php` page in the root plus the `inc lang admin api css js` folders into
+`public_html`. New pages and new files inside those folders deploy with no
+change to `.cpanel.yml`; a new top-level folder must be added to it.
 Database changes in `sql/` are run by hand in phpMyAdmin before deploying the
 code that needs them. Secrets live in `config.php`, outside `public_html`.
 

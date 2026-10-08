@@ -50,7 +50,7 @@
 
   async function loadPosts() {
     try {
-      const res = await fetch("news-data.json?v=" + Date.now());
+      const res = await fetch("/news-data.json?v=" + Date.now());
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
       posts = Array.isArray(data.posts) ? data.posts : [];
@@ -98,7 +98,7 @@
     publishStatus.style.display = "block";
 
     try {
-      const res = await fetch("publish.php", {
+      const res = await fetch("/admin/publish.php", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: "data=" + encodeURIComponent(data) + "&csrf=" + encodeURIComponent(sessionStorage.getItem("naf_csrf_token") || ""),
@@ -144,7 +144,7 @@
     form.append("csrf", sessionStorage.getItem("naf_csrf_token") || "");
 
     try {
-      const res = await fetch("publish.php", { method: "POST", body: form });
+      const res = await fetch("/admin/publish.php", { method: "POST", body: form });
       const text = await res.text();
 
       if (res.ok && text.startsWith("img/news/")) {
@@ -378,7 +378,7 @@
     if (!productsCache.length) productsTab.innerHTML = `<p class="adm-empty">Ачааллаж байна…</p>`;
 
     try {
-      const res = await fetch("products-admin.php", {
+      const res = await fetch("/admin/products-admin.php", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: "action=list&csrf=" + encodeURIComponent(sessionStorage.getItem("naf_csrf_token") || ""),
@@ -553,7 +553,7 @@
     if (!ordersCache.length) ordersTab.innerHTML = `<p class="adm-empty">Ачааллаж байна…</p>`;
 
     try {
-      const res = await fetch("orders-admin.php", {
+      const res = await fetch("/admin/orders-admin.php", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: "action=list&csrf=" + encodeURIComponent(sessionStorage.getItem("naf_csrf_token") || ""),
@@ -749,7 +749,7 @@
       if (product) params.id = product.id;
 
       try {
-        const res = await fetch("products-admin.php", {
+        const res = await fetch("/admin/products-admin.php", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: toFormBody(params),
@@ -897,7 +897,7 @@
         uploadBody.append("image", imageFile);
 
         try {
-          const uploadRes = await fetch("products-admin.php", { method: "POST", body: uploadBody });
+          const uploadRes = await fetch("/admin/products-admin.php", { method: "POST", body: uploadBody });
           const uploadData = await uploadRes.json();
 
           if (uploadRes.status === 401 || uploadRes.status === 403) {
@@ -940,7 +940,7 @@
       if (variant) params.id = variant.id;
 
       try {
-        const res = await fetch("products-admin.php", {
+        const res = await fetch("/admin/products-admin.php", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: toFormBody(params),
@@ -965,7 +965,7 @@
           percentage: row.querySelector(".ing-pct").value.trim(),
         })).filter((ing) => ing.name && ing.percentage);
 
-        const ingRes = await fetch("products-admin.php", {
+        const ingRes = await fetch("/admin/products-admin.php", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: toFormBody({
@@ -1034,7 +1034,7 @@
       const pwd = passwordInput.value;
       loginBtn.disabled = true;
       try {
-        const res = await fetch("login.php", {
+        const res = await fetch("/admin/login.php", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: "password=" + encodeURIComponent(pwd),
@@ -1074,7 +1074,7 @@
     });
 
     logoutBtn.addEventListener("click", async () => {
-      try { await fetch("logout.php", { method: "POST" }); } catch {}
+      try { await fetch("/admin/logout.php", { method: "POST" }); } catch {}
       sessionStorage.removeItem("naf_admin_auth");
       sessionStorage.removeItem("naf_csrf_token");
       passwordInput.value = "";

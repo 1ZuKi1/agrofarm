@@ -9,7 +9,7 @@
  */
 
 require __DIR__ . '/inc/shop-lib.php';
-require __DIR__ . '/catalog-lib.php'; // catalog_crumbs()
+require __DIR__ . '/inc/catalog-lib.php'; // catalog_crumbs()
 
 $slug = (string)($_GET['slug'] ?? '');
 $product = null;

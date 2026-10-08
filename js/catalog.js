@@ -53,7 +53,7 @@
         <button type="button" class="cart-drawer__remove" data-sku="${esc(i.sku)}"
                 aria-label="Хасах">✕</button>
       </div>`).join("")}
-      <form class="eq-form eq-form--drawer" method="post" action="/inquiry-create.php">
+      <form class="eq-form eq-form--drawer" method="post" action="/api/inquiry-create.php">
         <input type="hidden" name="items" class="inquiry-payload">
         <div class="eq-form__hp" aria-hidden="true">
           <label>Хаяг<input type="text" name="website" tabindex="-1" autocomplete="off"></label>

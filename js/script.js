@@ -27,7 +27,9 @@
   const langToggle = document.getElementById("langToggle");
   const LANGS = document.querySelector("[data-zh]") ? ["en", "mn", "zh"] : ["en", "mn"];
   const LANG_LABEL = { en: "EN", mn: "MN", zh: "中文" };
-  const LANG_ARIA = { en: "Switch to English", mn: "Switch to Mongolian", zh: "切换到中文" };
+  // Each label is written in the language it switches to, so a screen-reader
+  // user hears it in a language they can understand.
+  const LANG_ARIA = { en: "Switch to English", mn: "Монгол хэл рүү шилжих", zh: "切换到中文" };
   const nextLang = (lang) => LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
   let currentLang = langToggle ? (localStorage.getItem("lang") || "en") : document.documentElement.lang;
   if (langToggle && !LANGS.includes(currentLang)) currentLang = "en";
@@ -125,7 +127,7 @@
      erase the fetched price back to the static fallback text. */
   const shopCardPrice = document.getElementById("shopCardPrice");
   if (shopCardPrice) {
-    fetch("/shop-data.php").then((r) => r.json()).then((data) => {
+    fetch("/api/shop-data.php").then((r) => r.json()).then((data) => {
       const variants = data.products?.[0]?.variants || [];
       if (!variants.length) return;
       const minPrice = Math.min(...variants.map((v) => v.price));

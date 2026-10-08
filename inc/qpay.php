@@ -1,6 +1,6 @@
 <?php
 /**
- * qpay.php — QPay Merchant V2 API client.
+ * inc/qpay.php — QPay Merchant V2 API client.
  *
  * Auth is HTTP Basic (username:password) against /v2/auth/token, returning a
  * bearer token used for subsequent calls. QPay asks merchants to reuse the
@@ -20,12 +20,13 @@
  * in-webroot spot only if it hasn't been moved yet — safe during migration.
  */
 
-require_once (file_exists(__DIR__ . '/../config.php'))
-  ? __DIR__ . '/../config.php'
-  : __DIR__ . '/config.php';
+require_once (file_exists(dirname(__DIR__, 2) . '/config.php'))
+  ? dirname(__DIR__, 2) . '/config.php'   // above public_html — where it belongs
+  : dirname(__DIR__) . '/config.php';     // public_html — not moved yet
 
 function qpay_token_cache_path(): string {
-  $dir = is_writable(dirname(__DIR__)) ? dirname(__DIR__) : sys_get_temp_dir();
+  // Two levels up = the folder above public_html (this file is in public_html/inc/).
+  $dir = is_writable(dirname(__DIR__, 2)) ? dirname(__DIR__, 2) : sys_get_temp_dir();
   // Keyed by endpoint + username so a sandbox token is never reused in production.
   return $dir . '/naf-qpay-token-' . md5(NAF_QPAY_BASE_URL . '|' . NAF_QPAY_USERNAME) . '.json';
 }

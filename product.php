@@ -7,7 +7,7 @@
  * buyers ask, we quote.
  */
 
-require __DIR__ . '/catalog-lib.php';
+require __DIR__ . '/inc/catalog-lib.php';
 
 $catSlug  = (string)($_GET['cat'] ?? '');
 $prodSlug = (string)($_GET['slug'] ?? '');
@@ -157,7 +157,7 @@ catalog_head(
         <p class="eq-inquiry__lead">
           Утас, нэрээ үлдээгээрэй. Бид эргэн холбогдож үнийн санал илгээнэ.
         </p>
-        <form class="eq-form" method="post" action="/inquiry-create.php">
+        <form class="eq-form" method="post" action="/api/inquiry-create.php">
           <input type="hidden" name="items"
                  value='<?= ce(json_encode([[
                    'sku' => $p['sku'], 'name' => $p['name'], 'quantity' => 1,

@@ -15,11 +15,14 @@
  * passes 'multilang' => true: the shared header and footer then carry
  * data-en / data-mn / data-zh for script.js's setLanguage(), and the language
  * toggle is shown. Every other page is Mongolian only — plain Mongolian text,
- * <html lang="mn">, no toggle, no data-* copies to keep in sync.
+ * <html lang="mn">, no toggle, no data-* copies to keep in sync. Every text
+ * that exists in several languages lives in lang/strings.php (inc/i18n.php).
  *
  * This file is included, never requested: .htaccess refuses /inc/ over HTTP.
  * PHP 7.4 on the live host — no str_contains, match, nullsafe ?->, etc.
  */
+
+require_once __DIR__ . '/i18n.php';
 
 /** Escape for HTML text and attribute contexts. */
 function ce(?string $s): string {
@@ -38,35 +41,42 @@ function asset(string $path): string {
 
 /**
  * The main menu, in order. Columns: key, href on the home page, href on every
- * other page, then the English / Mongolian / Chinese label. On the home page
+ * other page. Labels are 'nav.<key>' in lang/strings.php. On the home page
  * the section links stay bare #anchors, because script.js's scroll-spy
  * matches header links against "#<section id>".
  */
 const NAF_NAV = [
-  ['about',    '#about',    '/#about',    'About',    'Бидний тухай', '关于我们'],
-  ['journey',  '#journey',  '/#journey',  'Journey',  'Замнал',       '发展历程'],
-  ['farms',    '#farms',    '/#farms',    'Farms',    'Фермүүд',      '牧场'],
-  ['services', '#services', '/#services', 'Services', 'Үйлчилгээ',    '服务'],
-  ['products', '#products', '/#products', 'Products', 'Бүтээгдэхүүн', '产品'],
-  ['shop',     '/shop',     '/shop',      'Shop',     'Дэлгүүр',      '商城'],
-  ['news',     '#news',     '/news',      'News',     'Мэдээ',        '新闻'],
-  ['contact',  '#contact',  '/#contact',  'Contact',  'Холбоо барих', '联系我们'],
+  ['about',    '#about',    '/#about'],
+  ['journey',  '#journey',  '/#journey'],
+  ['farms',    '#farms',    '/#farms'],
+  ['services', '#services', '/#services'],
+  ['products', '#products', '/#products'],
+  ['shop',     '/shop',     '/shop'],
+  ['news',     '#news',     '/news'],
+  ['contact',  '#contact',  '/#contact'],
 ];
 
 /**
- * One piece of shared-chrome text. On the multilingual home page it renders
- * the data-en/data-mn/data-zh attributes plus the English default (what the
- * page has always shown before script.js applies a saved language); on every
- * other page just the Mongolian text. Returns [attributes, inner text].
+ * One piece of shared-chrome text from lang/strings.php. On the multilingual
+ * home page: the data-en/data-mn/data-zh attributes plus the English default
+ * (what the page shows before script.js applies a saved language). On every
+ * other page: just the Mongolian text. Returns [attributes, inner HTML].
  */
-function chrome_text(bool $multi, string $en, string $mn, string $zh): array {
-  if (!$multi) return ['', ce($mn)];
-  return [sprintf(' data-en="%s" data-mn="%s" data-zh="%s"', ce($en), ce($mn), ce($zh)), ce($en)];
+function chrome_text(bool $multi, string $key): array {
+  return $multi ? [ta($key), tx($key)] : ['', tmn($key)];
+}
+
+/** Print a page_start/page_end extra: an HTML string, or a function that prints. */
+function layout_extra($x): void {
+  if ($x instanceof Closure) $x();
+  elseif (is_string($x)) echo $x;
 }
 
 /**
  * Options:
  *   title       <title> text (required)
+ *   title_key   lang/strings.php key that translates the <title> on the
+ *               multilingual home page (setLanguage() swaps it like any text)
  *   desc        meta description — the line search engines show under the result
  *   canonical   path of the page's one official address, e.g. '/shop'
  *   multilang   true on the home page only (see the file comment)
@@ -77,6 +87,8 @@ function chrome_text(bool $multi, string $en, string $mn, string $zh): array {
  *   head        extra HTML for <head> (page-only <style>, preloads)
  *   body_start  extra HTML before the header (home: the cursor glow)
  *   after_nav   extra HTML between the header and <main> (home: section dots)
+ * The three extras take an HTML string or a function that prints it (use a
+ * function when the HTML calls ta()/tx()).
  */
 function page_start(array $o): void {
   $multi  = !empty($o['multilang']);
@@ -86,12 +98,13 @@ function page_start(array $o): void {
   $desc   = ce($o['desc'] ?? '');
   $canon  = isset($o['canonical']) ? ce('https://agrofarm.mn' . $o['canonical']) : '';
   $lang   = $multi ? 'en' : 'mn';
-  $css    = ce(asset('/style.css'));
+  $css    = ce(asset('/css/style.css'));
 
   echo "<!DOCTYPE html>\n<html lang=\"$lang\">\n<head>\n";
   echo "<meta charset=\"UTF-8\">\n";
   echo "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes\">\n";
-  echo "<title>$title</title>\n";
+  $titleAttrs = ($multi && isset($o['title_key'])) ? ta($o['title_key']) : '';
+  echo "<title$titleAttrs>$title</title>\n";
   if ($desc !== '') echo "<meta name=\"description\" content=\"$desc\">\n";
   if ($canon !== '') echo "<link rel=\"canonical\" href=\"$canon\">\n";
   echo "<meta property=\"og:type\" content=\"website\">\n";
@@ -108,10 +121,13 @@ function page_start(array $o): void {
 HTML;
   echo "<link rel=\"stylesheet\" href=\"$css\">\n";
   // After style.css, so a page's own <style> wins over it as before.
-  echo $o['head'] ?? '';
+  layout_extra($o['head'] ?? '');
   echo "</head>\n<body>\n\n";
+  // First thing a keyboard or screen-reader user reaches: jump past the menu.
+  [$attrs, $text] = chrome_text($multi, 'a11y.skip');
+  echo "<a class=\"skip-link\" href=\"#main\"$attrs>$text</a>\n";
   echo "<div class=\"progress-bar\" id=\"progressBar\" aria-hidden=\"true\"></div>\n";
-  echo $o['body_start'] ?? '';
+  layout_extra($o['body_start'] ?? '');
   echo "<div class=\"grain\" aria-hidden=\"true\"></div>\n\n";
 
   // ---- header ----
@@ -121,13 +137,13 @@ HTML;
   echo "  <a href=\"$brandHref\" class=\"nav__brand\" aria-label=\"Nuudelchin Agro Farm — Home\">\n";
   echo "    <span class=\"nav__mark\">\n      <img src=\"/img/naf_logo_full.svg\" alt=\"\" width=\"320\" height=\"160\">\n    </span>\n  </a>\n";
   echo "  <nav class=\"nav__links\" id=\"navLinks\" aria-label=\"Main\">\n";
-  foreach (NAF_NAV as [$key, $hrefHome, $href, $en, $mn, $zh]) {
-    [$attrs, $text] = chrome_text($multi, $en, $mn, $zh);
+  foreach (NAF_NAV as [$key, $hrefHome, $href]) {
+    [$attrs, $text] = chrome_text($multi, 'nav.' . $key);
     $cur = ($key === $active) ? ' class="is-current" aria-current="page"' : '';
     printf("    <a href=\"%s\"%s%s>%s</a>\n", ce($home ? $hrefHome : $href), $cur, $attrs, $text);
   }
   echo "  </nav>\n";
-  [$attrs, $text] = chrome_text($multi, 'Get in touch', 'Холбогдох', '洽谈合作');
+  [$attrs, $text] = chrome_text($multi, 'nav.cta');
   printf("  <a href=\"%s\" class=\"btn nav__cta\"%s>%s</a>\n", $home ? '#contact' : '/#contact', $attrs, $text);
   // The basket. On shop pages shop.js turns this link into a drawer toggle;
   // anywhere else it simply goes to the shop with the drawer open.
@@ -141,26 +157,24 @@ HTML;
 HTML;
   if ($multi) {
     // Shows the language you would switch TO; script.js keeps it current.
-    echo "  <button class=\"lang-toggle\" id=\"langToggle\" aria-label=\"Switch language\">MN</button>\n";
+    echo "  <button class=\"lang-toggle\" id=\"langToggle\" aria-label=\"Монгол хэл рүү шилжих\">MN</button>\n";
   }
   $menuLabel = $multi ? 'Open menu' : 'Цэс нээх';
   echo <<<HTML
-  <button class="nav__burger" id="burger" aria-label="$menuLabel" aria-expanded="false">
+  <button class="nav__burger" id="burger" aria-label="$menuLabel" aria-expanded="false" aria-controls="navLinks">
     <span></span><span></span><span></span>
   </button>
 </header>
 
 HTML;
-  echo $o['after_nav'] ?? '';
-  echo "\n<main id=\"main\">\n";
+  layout_extra($o['after_nav'] ?? '');
+  // tabindex="-1" so the skip link moves keyboard focus here, not just the view.
+  echo "\n<main id=\"main\" tabindex=\"-1\">\n";
 }
 
 /** The two-line site footer. The home page prints it inside its contact section. */
 function site_footer(bool $multi = false): void {
-  [$attrs, $text] = chrome_text($multi,
-    'Independent Mongolian dairy company — est. 2015.',
-    'Бие даасан Монгол сүүний компани — 2015 оноос.',
-    '蒙古国独立乳业公司 · 创立于 2015');
+  [$attrs, $text] = chrome_text($multi, 'footer.tagline');
   echo <<<HTML
 <footer class="footer">
   <p>© <span id="year"></span> Nuudelchin Agro Farm LLC · Нүүдэлчин Агро Ферм ХХК · agrofarm.mn</p>
@@ -181,12 +195,12 @@ HTML;
  */
 function page_end(array $o = []): void {
   echo "\n</main>\n\n";
-  echo $o['after_main'] ?? '';
+  layout_extra($o['after_main'] ?? '');
   if (!empty($o['shop'])) {
     // One basket, two kinds of line: priced items (shop.js, paid by QPay) and
     // equipment quote requests (catalog.js, sent as an inquiry).
     echo <<<HTML
-<div class="cart-drawer" id="cartDrawer">
+<div class="cart-drawer" id="cartDrawer" inert>
   <div class="cart-drawer__backdrop" id="cartDrawerBackdrop"></div>
   <div class="cart-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="cartDrawerTitle">
     <div class="cart-drawer__head">
@@ -204,11 +218,11 @@ function page_end(array $o = []): void {
 HTML;
   }
   if (!isset($o['footer']) || $o['footer']) site_footer();
-  printf("\n<script src=\"%s\"></script>\n", ce(asset('/script.js')));
+  printf("\n<script src=\"%s\"></script>\n", ce(asset('/js/script.js')));
   if (!empty($o['shop'])) {
-    printf("<script src=\"%s\"></script>\n", ce(asset('/shop.js')));
-    printf("<script src=\"%s\"></script>\n", ce(asset('/catalog.js')));
+    printf("<script src=\"%s\"></script>\n", ce(asset('/js/shop.js')));
+    printf("<script src=\"%s\"></script>\n", ce(asset('/js/catalog.js')));
   }
-  echo $o['scripts'] ?? '';
+  layout_extra($o['scripts'] ?? '');
   echo "</body>\n</html>\n";
 }

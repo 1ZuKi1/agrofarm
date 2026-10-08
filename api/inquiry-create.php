@@ -13,7 +13,7 @@
  * SKU, so a tampered form cannot put invented products into our inbox.
  */
 
-require __DIR__ . '/db.php';
+require dirname(__DIR__) . '/inc/db.php';
 
 const NAF_INQUIRY_TO = 'info@agrofarm.mn';
 const NAF_INQUIRY_FROM = 'no-reply@agrofarm.mn';   // must be on our own domain for SPF

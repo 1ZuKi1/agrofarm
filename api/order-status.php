@@ -11,8 +11,8 @@
  * per 10 seconds per order (qpay_checked_at, claimed atomically below).
  */
 
-require __DIR__ . '/db.php';
-require __DIR__ . '/qpay.php';
+require dirname(__DIR__) . '/inc/db.php';
+require dirname(__DIR__) . '/inc/qpay.php';
 
 header('Content-Type: application/json; charset=utf-8');
 

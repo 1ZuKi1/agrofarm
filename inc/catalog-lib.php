@@ -1,6 +1,6 @@
 <?php
 /**
- * catalog-lib.php — data helpers and page pieces for the equipment catalogue,
+ * inc/catalog-lib.php — data helpers and page pieces for the equipment catalogue,
  * which lives under /shop/equipment/… (it used to be /equipment/…; .htaccess
  * redirects the old addresses).
  *
@@ -10,7 +10,7 @@
  */
 
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/inc/layout.php';
+require_once __DIR__ . '/layout.php';
 
 /**
  * Decode a features/spec_table column. These are written as JSON into

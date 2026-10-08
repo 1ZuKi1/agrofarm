@@ -51,7 +51,7 @@
    * basket drawer and checkout need. */
   async function loadShop() {
     try {
-      const res = await fetch("/shop-data.php");
+      const res = await fetch("/api/shop-data.php");
       const data = await res.json();
       shopProducts = data.products || [];
     } catch {
@@ -242,11 +242,22 @@
     }
   }
 
+  // The drawer is `inert` while closed (inc/layout.php), so keyboard focus
+  // can't wander into its off-screen fields. Opening moves focus to the close
+  // button; closing returns it to whatever opened the drawer.
+  let drawerOpener = null;
+  function showDrawer() {
+    const drawer = document.getElementById("cartDrawer");
+    if (!drawer.classList.contains("is-open")) drawerOpener = document.activeElement;
+    drawer.inert = false;
+    drawer.classList.add("is-open");
+    document.getElementById("cartDrawerClose")?.focus({ preventScroll: true });
+  }
   function openCartDrawer() {
     stopQrPolling();
     resetCartPanelToCartView();
     renderCartDrawer();
-    document.getElementById("cartDrawer").classList.add("is-open");
+    showDrawer();
   }
   // catalog.js opens the same drawer after "Хүсэлтийн жагсаалтад нэмэх" and
   // re-renders it when a quote line changes.
@@ -254,8 +265,15 @@
   window.renderCartDrawer = () => { if (document.getElementById("cartDrawer")?.classList.contains("is-open")) renderCartDrawer(); };
   function closeCartDrawer() {
     stopQrPolling();
-    document.getElementById("cartDrawer").classList.remove("is-open");
+    const drawer = document.getElementById("cartDrawer");
+    drawer.classList.remove("is-open");
+    drawer.inert = true;
+    if (drawerOpener && document.contains(drawerOpener)) drawerOpener.focus({ preventScroll: true });
+    drawerOpener = null;
   }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.getElementById("cartDrawer")?.classList.contains("is-open")) closeCartDrawer();
+  });
 
   /* ---------- Checkout form ----------
      Repurposes #cartDrawerItems (normally the cart line list) to host the
@@ -264,7 +282,7 @@
      the whole drawer throughout. "Back to cart" just calls openCartDrawer()
      again, which resets the head/footer and re-renders the cart lines. */
   async function loadSlots() {
-    const res = await fetch("/slots.php");
+    const res = await fetch("/api/slots.php");
     const data = await res.json();
     return data.days || [];
   }
@@ -385,7 +403,7 @@
       };
 
       try {
-        const res = await fetch("/order-create.php", {
+        const res = await fetch("/api/order-create.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -497,7 +515,7 @@
     // once per 10s per order server-side); plain polls only read our DB,
     // which qpay-callback.php updates — QPay forbids frequent checks.
     function poll(withCheck) {
-      return fetch(`/order-status.php?token=${encodeURIComponent(token)}${withCheck ? "&check=1" : ""}`)
+      return fetch(`/api/order-status.php?token=${encodeURIComponent(token)}${withCheck ? "&check=1" : ""}`)
         .then((r) => r.json())
         .then((status) => { handleStatus(status); return status; });
     }
@@ -596,10 +614,10 @@
     // see the comment there and in loadShop() for why loadShop() must not
     // clobber this handler's render once shop-data.php resolves.)
     if (orderToken) {
-      document.getElementById("cartDrawer")?.classList.add("is-open");
+      showDrawer();
       // check=1: someone opening this link may have just paid (e.g. the phone
       // browser reloaded the page after the bank app) — verify once with QPay.
-      fetch(`/order-status.php?token=${encodeURIComponent(orderToken)}&check=1`)
+      fetch(`/api/order-status.php?token=${encodeURIComponent(orderToken)}&check=1`)
         .then((r) => r.json())
         .then((status) => {
           if (status.status === "paid") {

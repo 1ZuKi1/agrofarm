@@ -13,7 +13,7 @@
  */
 
 require __DIR__ . '/inc/shop-lib.php';
-require __DIR__ . '/catalog-lib.php';
+require __DIR__ . '/inc/catalog-lib.php';
 
 // Old product links were /shop?product=<slug>, drawn by JavaScript. Each
 // product now has a real address.

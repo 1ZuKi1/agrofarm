@@ -7,7 +7,7 @@
  * structured (nested products/variants/ingredients), not a single string.
  */
 
-require __DIR__ . '/db.php';
+require dirname(__DIR__) . '/inc/db.php';
 
 session_set_cookie_params([
   'httponly' => true,
@@ -271,7 +271,7 @@ if ($action === 'upload_image') {
   }
   $ext = $extByMime[$info['mime']];
 
-  $dir = __DIR__ . '/img/products';
+  $dir = dirname(__DIR__) . '/img/products'; // site root, not admin/
   if (!is_dir($dir) && !mkdir($dir, 0755, true)) {
     http_response_code(500);
     echo json_encode(['error' => 'img/products фолдер үүсгэж чадсангүй — зөвшөөрлийг шалгана уу']);

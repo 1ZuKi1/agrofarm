@@ -13,7 +13,7 @@
  * deliberately.
  */
 
-require __DIR__ . '/db.php';
+require dirname(__DIR__) . '/inc/db.php';
 
 session_set_cookie_params([
   'httponly' => true,

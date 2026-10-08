@@ -15,13 +15,26 @@ RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-# The home page is index.php. Named explicitly: the old index.html may still
-# sit in public_html from earlier deploys, and must never win.
-DirectoryIndex index.php
+# The home page is index.php. Named first: the old index.html may still sit
+# in public_html from earlier deploys, and must never win. index.html is
+# only for /admin/ (admin/index.html).
+DirectoryIndex index.php index.html
 
-# inc/ holds the page shell and shared PHP — included by pages, never
-# requested directly.
-RewriteRule ^inc(/|$) - [F,L]
+# inc/ (page shell, shared PHP, DB/QPay clients) and lang/ (translations)
+# are included by pages, never requested directly.
+RewriteRule ^(inc|lang)(/|$) - [F,L]
+
+# ------------------------------------------------------------------
+# Files that moved into folders (2026-10 tidy-up). Their old addresses keep
+# working — a page cached in someone's browser, a half-finished checkout,
+# or an old bookmark still reaches the right file. Internal rewrites, so
+# a POST (checkout, inquiry form) arrives intact.
+# ------------------------------------------------------------------
+RewriteRule ^(shop-data|order-create|order-status|slots|inquiry-create)\.php$ api/$1.php [L]
+RewriteRule ^(login|logout|publish|products-admin|orders-admin)\.php$ admin/$1.php [L]
+RewriteRule ^admin\.js$ admin/admin.js [L]
+RewriteRule ^style\.css$ css/style.css [L]
+RewriteRule ^(script|shop|catalog)\.js$ js/$1.js [L]
 
 # ------------------------------------------------------------------
 # Clean URLs — agrofarm.mn/news instead of agrofarm.mn/news.php
@@ -34,21 +47,22 @@ RewriteRule ^inc(/|$) - [F,L]
 RewriteCond %{THE_REQUEST} \s/+index\.(html|php)[\s?] [NC]
 RewriteRule ^ /? [R=301,L]
 
-RewriteCond %{THE_REQUEST} \s/+(admin|news|shop)\.html[\s?] [NC]
+RewriteCond %{THE_REQUEST} \s/+(news|shop)\.html[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
+
+# The admin panel is the admin/ folder; its address is /admin/ (Apache adds
+# the slash to /admin itself, because admin/ is a real folder).
+RewriteCond %{THE_REQUEST} \s/+(admin\.html|admin/index\.html)[\s?] [NC]
+RewriteRule ^ /admin/ [R=301,L]
 
 RewriteCond %{THE_REQUEST} \s/+(news|shop)\.php[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
-# A trailing slash (/admin/) must also collapse to the one canonical address
-# — admin.html's CSS/JS tags and admin.js's fetch() calls use relative
-# paths, so leaving the address bar on /admin/ instead of /admin would
-# resolve them one directory too deep and break the page.
-RewriteCond %{THE_REQUEST} \s/+(admin|news|shop)/[\s?] [NC]
+# A trailing slash (/news/, /shop/) collapses to the one canonical address.
+RewriteCond %{THE_REQUEST} \s/+(news|shop)/[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
 # 2) Serve the page behind each clean URL. The address bar keeps the clean URL.
-RewriteRule ^admin/?$ admin.html [L]
 RewriteRule ^news/?$ news.php [L]
 RewriteRule ^shop/?$ shop.php [L]
 

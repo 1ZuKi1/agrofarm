@@ -3,7 +3,7 @@
  * inc/shop-lib.php — the priced products (products → product_variants →
  * variant_ingredients), read the same way for every consumer:
  *
- *   shop-data.php     JSON for shop.js (the basket needs live prices/stock)
+ *   api/shop-data.php JSON for shop.js (the basket needs live prices/stock)
  *   shop.php          the /shop grid, rendered on the server
  *   shop-product.php  /shop/<slug>, rendered on the server
  *
@@ -11,7 +11,7 @@
  * shop.js drew them in the browser after the page loaded.
  */
 
-require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/db.php';
 
 /**
  * Active products with their active variants. Each variant carries
