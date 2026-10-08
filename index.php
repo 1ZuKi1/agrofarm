@@ -10,12 +10,12 @@
 
 require __DIR__ . '/inc/layout.php';
 // ta('key') prints the data-en/data-mn/data-zh attributes, tx('key') the
-// English text shown before script.js applies a saved language. The texts
+// Mongolian text the page is sent with (the default language). The texts
 // themselves live in lang/strings.php.
 
 page_start([
-  'title' => 'Nuudelchin Agro Farm LLC — Intensive Livestock Farming & Dairy, Mongolia',
-  'desc' => 'Nuudelchin Agro Farm LLC — Mongolia\'s pioneer of cluster dairy farming. 1,620 cows across four cluster farms in Töv province, supplying 4–5 million litres of milk to domestic dairies every year.',
+  'title' => tmn('home.title'),
+  'desc' => 'Нүүдэлчин Агро Ферм ХХК — Монголын кластер сүүний фермийн анхдагч. Төв аймгийн дөрвөн кластер фермд 1,620 үнээ маллаж, жил бүр дотоодын сүүний үйлдвэрүүдэд 4–5 сая литр сүү нийлүүлдэг.',
   'title_key' => 'home.title',
   'canonical' => '/',
   'multilang' => true,

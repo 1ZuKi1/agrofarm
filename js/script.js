@@ -25,14 +25,16 @@
      of this runs there and <html lang="mn"> stays as the server sent it —
      while the saved preference is left alone for the next visit home. */
   const langToggle = document.getElementById("langToggle");
-  const LANGS = document.querySelector("[data-zh]") ? ["en", "mn", "zh"] : ["en", "mn"];
+  // Mongolian is the default and comes first: the page arrives in Mongolian
+  // and the toggle cycles MN → EN → 中文.
+  const LANGS = document.querySelector("[data-zh]") ? ["mn", "en", "zh"] : ["mn", "en"];
   const LANG_LABEL = { en: "EN", mn: "MN", zh: "中文" };
   // Each label is written in the language it switches to, so a screen-reader
   // user hears it in a language they can understand.
   const LANG_ARIA = { en: "Switch to English", mn: "Монгол хэл рүү шилжих", zh: "切换到中文" };
   const nextLang = (lang) => LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
-  let currentLang = langToggle ? (localStorage.getItem("lang") || "en") : document.documentElement.lang;
-  if (langToggle && !LANGS.includes(currentLang)) currentLang = "en";
+  let currentLang = langToggle ? (localStorage.getItem("lang") || "mn") : document.documentElement.lang;
+  if (langToggle && !LANGS.includes(currentLang)) currentLang = "mn";
   function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem("lang", lang);
@@ -55,7 +57,7 @@
   }
   if (langToggle) {
     langToggle.addEventListener("click", () => setLanguage(nextLang(currentLang)));
-    if (currentLang !== "en") setLanguage(currentLang); // apply saved preference on load
+    if (currentLang !== "mn") setLanguage(currentLang); // apply a saved English/Chinese choice on load
   }
 
   /* ---------- Cart (shared across every page via localStorage) ----------
@@ -174,7 +176,10 @@
       counterObserver.unobserve(el);
       const target = +el.dataset.count;
       const prefix = el.dataset.prefix || "";
-      const suffix = el.dataset[`suffix${currentLang === "mn" ? "Mn" : "En"}`] || el.dataset.suffix || "";
+      // Same per-language suffix lookup as setLanguage() (it used to pick the
+      // English suffix on the Chinese page once the counter animated).
+      const Lang = currentLang[0].toUpperCase() + currentLang.slice(1);
+      const suffix = el.dataset[`suffix${Lang}`] || el.dataset.suffix || "";
       if (reduceMotion) { el.textContent = prefix + target.toLocaleString() + suffix; return; }
       const t0 = performance.now();
       const tick = (now) => {

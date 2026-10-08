@@ -9,8 +9,9 @@
  *
  *   <h2<?= ta('about.who-we-are') ?>><?= tx('about.who-we-are') ?></h2>
  *
- * ta() prints the three attributes, tx() the English text that shows before
- * script.js applies a saved language. A missing key is a bug in the page, so
+ * ta() prints the three attributes, tx() the Mongolian text the page is sent
+ * with — Mongolian is the default language; script.js switches to a saved
+ * English or Chinese choice after load. A missing key is a bug in the page, so
  * it fails loudly in the server log and shows the key itself on the page.
  */
 
@@ -37,9 +38,9 @@ function ta(string $key): string {
   return sprintf(' data-en="%s" data-mn="%s" data-zh="%s"', $esc($t['en']), $esc($t['mn']), $esc($t['zh']));
 }
 
-/** The English text for a key, as HTML (may contain <em>, <strong>, <br>). */
+/** The default (Mongolian) text for a key, as HTML (may contain <em>, <strong>, <br>). */
 function tx(string $key): string {
-  return str3($key)['en'];
+  return str3($key)['mn'];
 }
 
 /** The Mongolian text for a key — what every Mongolian-only page shows. */

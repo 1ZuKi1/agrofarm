@@ -58,9 +58,10 @@ const NAF_NAV = [
 
 /**
  * One piece of shared-chrome text from lang/strings.php. On the multilingual
- * home page: the data-en/data-mn/data-zh attributes plus the English default
- * (what the page shows before script.js applies a saved language). On every
- * other page: just the Mongolian text. Returns [attributes, inner HTML].
+ * home page: the data-en/data-mn/data-zh attributes plus the Mongolian default
+ * (Mongolian is the default language; script.js applies a saved English or
+ * Chinese choice after load). On every other page: just the Mongolian text.
+ * Returns [attributes, inner HTML].
  */
 function chrome_text(bool $multi, string $key): array {
   return $multi ? [ta($key), tx($key)] : ['', tmn($key)];
@@ -97,7 +98,7 @@ function page_start(array $o): void {
   $title  = ce($o['title']);
   $desc   = ce($o['desc'] ?? '');
   $canon  = isset($o['canonical']) ? ce('https://agrofarm.mn' . $o['canonical']) : '';
-  $lang   = $multi ? 'en' : 'mn';
+  $lang   = 'mn'; // every page is sent in Mongolian; home can switch after load
   $css    = ce(asset('/css/style.css'));
 
   echo "<!DOCTYPE html>\n<html lang=\"$lang\">\n<head>\n";
@@ -147,7 +148,7 @@ HTML;
   printf("  <a href=\"%s\" class=\"btn nav__cta\"%s>%s</a>\n", $home ? '#contact' : '/#contact', $attrs, $text);
   // The basket. On shop pages shop.js turns this link into a drawer toggle;
   // anywhere else it simply goes to the shop with the drawer open.
-  $cartLabel = $multi ? 'Cart' : 'Сагс';
+  $cartLabel = 'Сагс';
   echo <<<HTML
   <a href="/shop#cart" id="cartToggle" class="cart-toggle" aria-label="$cartLabel">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
@@ -156,10 +157,11 @@ HTML;
 
 HTML;
   if ($multi) {
-    // Shows the language you would switch TO; script.js keeps it current.
-    echo "  <button class=\"lang-toggle\" id=\"langToggle\" aria-label=\"Монгол хэл рүү шилжих\">MN</button>\n";
+    // Shows the language you would switch TO (MN → EN → 中文 → MN);
+    // script.js keeps it current.
+    echo "  <button class=\"lang-toggle\" id=\"langToggle\" aria-label=\"Switch to English\">EN</button>\n";
   }
-  $menuLabel = $multi ? 'Open menu' : 'Цэс нээх';
+  $menuLabel = 'Цэс нээх';
   echo <<<HTML
   <button class="nav__burger" id="burger" aria-label="$menuLabel" aria-expanded="false" aria-controls="navLinks">
     <span></span><span></span><span></span>
