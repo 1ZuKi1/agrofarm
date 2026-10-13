@@ -34,6 +34,7 @@ new-naf/
 ├── news.php            # /news
 ├── shop.php            # /shop — priced products + equipment preview
 ├── shop-product.php    # /shop/<slug> — one priced product
+├── shop-checkout.php   # /shop/checkout — delivery or pick-up, day, QPay
 ├── equipment.php       # /shop/equipment
 ├── category.php        # /shop/equipment/<category>
 ├── product.php         # /shop/equipment/<category>/<product>
@@ -45,29 +46,50 @@ new-naf/
 │   ├── i18n.php        #   ta()/tx()/tmn() — read lang/strings.php
 │   ├── db.php          #   MySQL (PDO); finds config.php above public_html
 │   ├── qpay.php        #   QPay Merchant V2 client
+│   ├── orders.php      #   paid / expired order changes, staff email
+│   ├── fulfillment.php #   delivery / pick-up day rules, fee
+│   ├── settings.php    #   values edited in /admin/ → Тохиргоо
 │   ├── shop-lib.php    #   priced products query
 │   ├── catalog-lib.php #   equipment queries + sidebar, crumbs, cards
 │   └── config.example.php
 ├── lang/strings.php    # every multilingual text, EN / MN / 中文 side by side
-├── api/                # JSON/form endpoints: shop-data, slots, order-create,
-│                         order-status, inquiry-create
+├── api/                # JSON/form endpoints: shop-data, checkout-options,
+│                         order-create, order-status, inquiry-create
 ├── admin/              # /admin/ — panel (index.html, admin.js) + its endpoints
 ├── css/style.css       # all styles
-├── js/                 # script.js (every page), shop.js (basket, checkout,
-│                         QPay), catalog.js (equipment quote list, gallery)
+├── js/                 # script.js (every page), shop.js (basket drawer,
+│                         product page), checkout.js (checkout page, QPay QR),
+│                         catalog.js (equipment quote list, gallery)
 ├── img/
 ├── .htaccess           # clean URLs, redirects from old addresses, security
 ├── .cpanel.yml         # deploy: git push copies root pages + the folders
-└── sql/                # schema and migrations, run by hand in phpMyAdmin
+├── sql/                # schema and migrations, run by hand in phpMyAdmin
+└── tests/              # fulfillment_test.php (php tests/fulfillment_test.php);
+                          not deployed
 ```
 
 Old addresses keep working: `/index.html`, `/news.html`, `/shop.html`,
-`/shop?product=…`, `/equipment/…` and `/admin` redirect to the new ones, and
+`/shop?product=…`, `/shop?order=…`, `/equipment/…` and `/admin` redirect to the new ones, and
 files that moved into folders (`/style.css`, `/shop-data.php`, `/login.php`…)
 are still served at their old paths.
 
 To change a text on the home page (in any language), edit `lang/strings.php`.
 Every other page is Mongolian only; its text is in the page file itself.
+
+## Order days (delivery or pick-up)
+
+At checkout the buyer chooses **Хүргүүлэх** (delivery, Ulaanbaatar, with a fee)
+or **Очиж авах** (pick-up at the office), then a **day** — not a time; staff
+phone the buyer to agree the time.
+
+- Delivery: the next two working days, never today.
+- Pick-up: today (working days, before 13:00) plus the next two working days.
+- Working days are Monday–Friday minus the closed days in /admin/ → Тохиргоо,
+  where the delivery fee is set too. Add Цагаан сар and Наадам there ahead of
+  time.
+
+All of these rules live in `inc/fulfillment.php`, and every decision uses
+Ulaanbaatar time whatever the server's own clock says.
 
 ## How to Run Locally
 
@@ -82,7 +104,9 @@ and MySQL/MariaDB with the tables from `sql/`. Put a filled-in `config.php`
 `public_html`. New pages and new files inside those folders deploy with no
 change to `.cpanel.yml`; a new top-level folder must be added to it.
 Database changes in `sql/` are run by hand in phpMyAdmin before deploying the
-code that needs them. Secrets live in `config.php`, outside `public_html`.
+code that needs them, in order: `orders-schema-v3.sql`, then
+`orders-schema-v4.sql` (delivery / pick-up, the `settings` table). Each is run
+once. Secrets live in `config.php`, outside `public_html`.
 
 ## Browser Support
 

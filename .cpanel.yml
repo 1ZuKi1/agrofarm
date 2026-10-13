@@ -15,3 +15,5 @@ deployment:
     - /bin/rm -f $DEPLOYPATH/db.php $DEPLOYPATH/qpay.php $DEPLOYPATH/catalog-lib.php
     - /bin/rm -f $DEPLOYPATH/shop-data.php $DEPLOYPATH/order-create.php $DEPLOYPATH/order-status.php $DEPLOYPATH/slots.php $DEPLOYPATH/inquiry-create.php
     - /bin/rm -f $DEPLOYPATH/style.css $DEPLOYPATH/script.js $DEPLOYPATH/shop.js $DEPLOYPATH/catalog.js
+    # The delivery time slots became days (2026-10 checkout); its endpoint is gone.
+    - /bin/rm -f $DEPLOYPATH/api/slots.php
