@@ -17,3 +17,5 @@ deployment:
     - /bin/rm -f $DEPLOYPATH/style.css $DEPLOYPATH/script.js $DEPLOYPATH/shop.js $DEPLOYPATH/catalog.js
     # The delivery time slots became days (2026-10 checkout); its endpoint is gone.
     - /bin/rm -f $DEPLOYPATH/api/slots.php
+    # The one-page admin became separate pages (2026-10 admin); its old files go.
+    - /bin/rm -f $DEPLOYPATH/admin/index.html $DEPLOYPATH/admin/admin.js $DEPLOYPATH/admin/orders-admin.php $DEPLOYPATH/admin/settings-admin.php

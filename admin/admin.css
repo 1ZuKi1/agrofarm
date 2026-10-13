@@ -102,7 +102,7 @@ body.ad { margin: 0; background: var(--paper); color: var(--ink); font: 400 15px
 .ad-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: clamp(16px, 2.4vw, 22px); }
 .ad-panel + .ad-panel { margin-top: 16px; }
 .ad-panel__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-.ad-panel__head h2 { display: flex; align-items: center; gap: 9px; margin: 0; }
+.ad-panel__head h2, .ad-panel__head h3 { display: flex; align-items: center; gap: 9px; margin: 0; }
 .ad-panel__head a { font-weight: 600; font-size: .9rem; text-decoration: none; }
 .ad-panel--alert { border-color: #e9b4ae; box-shadow: 0 0 0 3px var(--bad-tint); }
 .ad-panel--todo { border-top: 3px solid var(--gold); }

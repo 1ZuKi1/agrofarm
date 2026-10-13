@@ -49,13 +49,19 @@ new-naf/
 │   ├── orders.php      #   paid / expired order changes, staff email
 │   ├── fulfillment.php #   delivery / pick-up day rules, fee
 │   ├── settings.php    #   values edited in /admin/ → Тохиргоо
+│   ├── admin-auth.php  #   staff accounts: login, lockout, roles, CSRF, activity log
+│   ├── admin-layout.php#   the /admin/ frame: sidebar, counters, messages
+│   ├── admin-data.php  #   what the /admin/ pages read: jobs, sales, orders, quotes
 │   ├── shop-lib.php    #   priced products, /shop sections, card prices
 │   ├── catalog-lib.php #   equipment queries, sidebar, crumbs, shop_card()
 │   └── config.example.php
 ├── lang/strings.php    # every multilingual text, EN / MN / 中文 side by side
 ├── api/                # JSON/form endpoints: shop-data, checkout-options,
 │                         order-create, order-status, inquiry-create
-├── admin/              # /admin/ — panel (index.html, admin.js) + its endpoints
+├── admin/              # /admin/ — the staff workspace: one page per section
+│                         (index, orders, order, quotes, products, news,
+│                         settings, account, help, login), admin.css, js/, and
+│                         the editors' JSON endpoints (products-admin, publish)
 ├── css/style.css       # all styles
 ├── js/                 # script.js (every page), shop.js (basket drawer,
 │                         product page), checkout.js (checkout page, QPay QR),
@@ -65,8 +71,9 @@ new-naf/
 ├── .cpanel.yml         # deploy: git push copies root pages + the folders
 ├── sql/                # schema and migrations, run by hand in phpMyAdmin
 └── tests/              # php tests/<name>.php — fulfillment_test (order days),
-                          shop_test (shop sections), php74_functions_test
-                          (no PHP 8-only calls); not deployed
+                          shop_test (shop sections), admin_auth_test (staff
+                          accounts), php74_functions_test (no PHP 8-only
+                          calls); not deployed
 ```
 
 Old addresses keep working: `/index.html`, `/news.html`, `/shop.html`,
@@ -103,6 +110,32 @@ phone the buyer to agree the time.
 All of these rules live in `inc/fulfillment.php`, and every decision uses
 Ulaanbaatar time whatever the server's own clock says.
 
+## Staff workspace (/admin/)
+
+Each person has their own account (email + password) with one of two roles:
+
+- **Ажилтан** — orders ("Хүргэсэн", cancel), quote requests, products, news.
+- **Админ** — all of that, plus Тохиргоо: the delivery fee, the closed days
+  and Хэрэглэгчид (add people, reset a password, change a role, deactivate).
+
+Нүүр shows today's and tomorrow's jobs (and late ones first), new quote
+requests, low stock and the week's and month's sales. Every change to an
+order, a request, a product or a setting is logged with who did it, and each
+order and request shows its history. A password needs 8 characters; five wrong
+tries lock the account for 15 minutes; a forgotten password is reset by an
+Админ (a temporary one, changed at the next login). Тусламж (/admin/help) is
+the staff guide, in Mongolian.
+
+**First Админ, once, right after deploying with `orders-schema-v6.sql`:**
+
+1. Open `/admin/login`. While there are no accounts it shows "Анхны тохиргоо".
+2. Type the old shared admin password (the one behind
+   `NAF_ADMIN_PASSWORD_HASH` in `config.php`), then your name, work email and
+   a new password twice. You are logged in as the first Админ.
+3. Add everyone else in Тохиргоо → Хэрэглэгчид.
+4. Delete the `NAF_ADMIN_PASSWORD_HASH` line from `config.php` — it does
+   nothing once an account exists.
+
 ## How to Run Locally
 
 Needs Apache with `mod_rewrite` (the clean URLs are `.htaccess` rules), PHP 7.4+
@@ -118,8 +151,10 @@ change to `.cpanel.yml`; a new top-level folder must be added to it.
 Database changes in `sql/` are run by hand in phpMyAdmin before deploying the
 code that needs them, in order: `orders-schema-v3.sql`, then
 `orders-schema-v4.sql` (delivery / pick-up, the `settings` table), then
-`orders-schema-v5.sql` (product categories, the cow statue and the book). Each
-is run once. Secrets live in `config.php`, outside `public_html`.
+`orders-schema-v5.sql` (product categories, the cow statue and the book), then
+`orders-schema-v6.sql` (staff accounts, the activity log, notes on quote
+requests). Each is run once. Until v6 is run, `/admin/login` says which file is
+missing; the public site works either way. Secrets live in `config.php`, outside `public_html`.
 
 ## Browser Support
 
