@@ -32,7 +32,7 @@ Every public page is built from one shared shell, `inc/layout.php`.
 new-naf/
 ├── index.php           # home — the only page in EN / MN / 中文
 ├── news.php            # /news
-├── shop.php            # /shop — priced products + equipment preview
+├── shop.php            # /shop — one section per category, one card style
 ├── shop-product.php    # /shop/<slug> — one priced product
 ├── shop-checkout.php   # /shop/checkout — delivery or pick-up, day, QPay
 ├── equipment.php       # /shop/equipment
@@ -49,8 +49,8 @@ new-naf/
 │   ├── orders.php      #   paid / expired order changes, staff email
 │   ├── fulfillment.php #   delivery / pick-up day rules, fee
 │   ├── settings.php    #   values edited in /admin/ → Тохиргоо
-│   ├── shop-lib.php    #   priced products query
-│   ├── catalog-lib.php #   equipment queries + sidebar, crumbs, cards
+│   ├── shop-lib.php    #   priced products, /shop sections, card prices
+│   ├── catalog-lib.php #   equipment queries, sidebar, crumbs, shop_card()
 │   └── config.example.php
 ├── lang/strings.php    # every multilingual text, EN / MN / 中文 side by side
 ├── api/                # JSON/form endpoints: shop-data, checkout-options,
@@ -64,8 +64,9 @@ new-naf/
 ├── .htaccess           # clean URLs, redirects from old addresses, security
 ├── .cpanel.yml         # deploy: git push copies root pages + the folders
 ├── sql/                # schema and migrations, run by hand in phpMyAdmin
-└── tests/              # fulfillment_test.php (php tests/fulfillment_test.php);
-                          not deployed
+└── tests/              # php tests/<name>.php — fulfillment_test (order days),
+                          shop_test (shop sections), php74_functions_test
+                          (no PHP 8-only calls); not deployed
 ```
 
 Old addresses keep working: `/index.html`, `/news.html`, `/shop.html`,
@@ -75,6 +76,17 @@ are still served at their old paths.
 
 To change a text on the home page (in any language), edit `lang/strings.php`.
 Every other page is Mongolian only; its text is in the page file itself.
+
+## Shop categories
+
+Every item for sale sits in one category list (the `categories` table):
+QPay products and price-on-request equipment alike. /shop shows one section
+per category that has something in it, in the categories' order, and every
+item uses the same card (`shop_card()`). A product's category is chosen in
+/admin/ → Бүтээгдэхүүн → Ангилал; a product with no category appears in a
+last section, "Бусад". An item sold in one form (one option named like the
+product) is shown by its name alone in the basket, on the QPay invoice and in
+the staff email.
 
 ## Order days (delivery or pick-up)
 
@@ -105,8 +117,9 @@ and MySQL/MariaDB with the tables from `sql/`. Put a filled-in `config.php`
 change to `.cpanel.yml`; a new top-level folder must be added to it.
 Database changes in `sql/` are run by hand in phpMyAdmin before deploying the
 code that needs them, in order: `orders-schema-v3.sql`, then
-`orders-schema-v4.sql` (delivery / pick-up, the `settings` table). Each is run
-once. Secrets live in `config.php`, outside `public_html`.
+`orders-schema-v4.sql` (delivery / pick-up, the `settings` table), then
+`orders-schema-v5.sql` (product categories, the cow statue and the book). Each
+is run once. Secrets live in `config.php`, outside `public_html`.
 
 ## Browser Support
 
