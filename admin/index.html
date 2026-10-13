@@ -215,11 +215,13 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
 /* ---------- News editor + status banners ---------- */
 .admin-form label{ display:block; font-size:.8rem; font-weight:600; margin:.9rem 0 .3rem; color:#555; }
 .admin-form input,
+.admin-form select,
 .admin-form textarea{
   width:100%; padding:.65rem .85rem; border:1.5px solid var(--adm-line); border-radius:10px;
   font-size:.9rem; font-family:inherit; box-sizing:border-box; background:var(--adm-sunken);
 }
 .admin-form input:focus,
+.admin-form select:focus,
 .admin-form textarea:focus{ outline:none; border-color:var(--green); background:#fff; }
 .admin-form textarea{ min-height:110px; resize:vertical; }
 .admin-form-row{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; }

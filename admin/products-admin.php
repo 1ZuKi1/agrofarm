@@ -69,7 +69,10 @@ if ($action === 'list') {
   }
   unset($product);
 
-  echo json_encode(['products' => $products]);
+  // For the product form's "Ангилал" dropdown.
+  $categories = $pdo->query('SELECT id, name FROM categories WHERE active = 1 AND parent_id IS NULL ORDER BY sort_order, id')->fetchAll();
+
+  echo json_encode(['products' => $products, 'categories' => $categories]);
   exit;
 }
 
@@ -81,6 +84,20 @@ if ($action === 'save_product') {
   $descMn = trim($_POST['description_mn'] ?? '') ?: null;
   $descEn = trim($_POST['description_en'] ?? '') ?: null;
   $active = ($_POST['active'] ?? '1') === '1' ? 1 : 0;
+  // Which /shop section the product appears in ('' = none → "Бусад").
+  $categoryRaw = trim((string)($_POST['category_id'] ?? ''));
+  $categoryId = null;
+  if ($categoryRaw !== '') {
+    $catCheck = $pdo->prepare('SELECT id FROM categories WHERE id = ?');
+    $catCheck->execute([(int)$categoryRaw]);
+    $categoryId = $catCheck->fetchColumn();
+    if ($categoryId === false || !ctype_digit($categoryRaw)) {
+      http_response_code(400);
+      echo json_encode(['error' => 'Ангилал олдсонгүй']);
+      exit;
+    }
+    $categoryId = (int)$categoryId;
+  }
 
   if ($nameMn === '') {
     http_response_code(400);
@@ -96,20 +113,20 @@ if ($action === 'save_product') {
   try {
     if ($id !== '') {
       $stmt = $pdo->prepare(
-        'UPDATE products SET slug=?, name_mn=?, name_en=?, description_mn=?, description_en=?, active=? WHERE id=?'
+        'UPDATE products SET slug=?, category_id=?, name_mn=?, name_en=?, description_mn=?, description_en=?, active=? WHERE id=?'
       );
-      $stmt->execute([$slug, $nameMn, $nameEn, $descMn, $descEn, $active, (int)$id]);
+      $stmt->execute([$slug, $categoryId, $nameMn, $nameEn, $descMn, $descEn, $active, (int)$id]);
       echo json_encode(['id' => (int)$id]);
     } else {
       $stmt = $pdo->prepare(
-        'INSERT INTO products (slug, name_mn, name_en, description_mn, description_en, active) VALUES (?, ?, ?, ?, ?, ?)'
+        'INSERT INTO products (slug, category_id, name_mn, name_en, description_mn, description_en, active) VALUES (?, ?, ?, ?, ?, ?, ?)'
       );
-      $stmt->execute([$slug, $nameMn, $nameEn, $descMn, $descEn, $active]);
+      $stmt->execute([$slug, $categoryId, $nameMn, $nameEn, $descMn, $descEn, $active]);
       echo json_encode(['id' => (int)$pdo->lastInsertId()]);
     }
   } catch (PDOException $e) {
     http_response_code(400);
-    echo json_encode(['error' => str_contains($e->getMessage(), 'Duplicate entry')
+    echo json_encode(['error' => strpos($e->getMessage(), 'Duplicate entry') !== false
       ? 'Энэ slug-ийг өөр бүтээгдэхүүн ашиглаж байна'
       : 'Бүтээгдэхүүн хадгалж чадсангүй']);
   }
@@ -179,7 +196,7 @@ if ($action === 'save_variant') {
     }
   } catch (PDOException $e) {
     http_response_code(400);
-    echo json_encode(['error' => str_contains($e->getMessage(), 'foreign key')
+    echo json_encode(['error' => strpos($e->getMessage(), 'foreign key') !== false
       ? 'Төрөл хадгалж чадсангүй — бүтээгдэхүүн байгаа эсэхийг шалгана уу'
       : 'Төрөл хадгалж чадсангүй']);
   }
@@ -218,7 +235,7 @@ if ($action === 'save_ingredients') {
   } catch (PDOException $e) {
     $pdo->rollback();
     http_response_code(400);
-    echo json_encode(['error' => str_contains($e->getMessage(), 'foreign key')
+    echo json_encode(['error' => strpos($e->getMessage(), 'foreign key') !== false
       ? 'Найрлага хадгалж чадсангүй — төрөл байгаа эсэхийг шалгана уу'
       : 'Найрлага хадгалж чадсангүй']);
   }

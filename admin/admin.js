@@ -43,6 +43,8 @@
   let posts = [];
   let editingId = null;
   let productsCache = [];
+  let categoriesCache = []; // [{id, name}] for the product form's "Ангилал"
+  const categoryName = (id) => (categoriesCache.find((c) => Number(c.id) === Number(id)) || {}).name || "";
   let ordersCache = [];
   let currentSection = "news";   // news | products | orders | settings (editor overlays news)
   let productFilter = "all";
@@ -402,6 +404,7 @@
       }
 
       productsCache = data.products || [];
+      categoriesCache = data.categories || [];
       paintProducts();
     } catch (err) {
       productsTab.innerHTML = `<p class="admin-error" style="display:block">Серверт холбогдож чадсангүй — PHP идэвхжсэн эсэхийг шалгана уу.</p>`;
@@ -500,6 +503,7 @@
               <tr class="adm-group">
                 <td colspan="7">
                   ${escHtml(product.name_mn)}
+                  <span class="adm-table__sub">${product.category_id ? escHtml(categoryName(product.category_id)) : "Ангилалгүй — дэлгүүрт «Бусад» хэсэгт гарна"}</span>
                   <span class="adm-group__actions">
                     <button class="adm-rowbtn edit-product-btn" data-id="${product.id}">Бүтээгдэхүүн засах</button>
                     <button class="adm-rowbtn add-variant-btn" data-product-id="${product.id}">+ Төрөл нэмэх</button>
@@ -814,6 +818,12 @@
         <label for="pf_name_mn">Нэр (Монгол)</label>
         <input type="text" id="pf_name_mn" value="${product ? escAttr(product.name_mn) : ""}" required>
 
+        <label for="pf_category">Ангилал</label>
+        <select id="pf_category">
+          <option value="">— ангилалгүй</option>
+          ${categoriesCache.map((c) => `<option value="${escAttr(c.id)}"${product && Number(product.category_id) === Number(c.id) ? " selected" : ""}>${escHtml(c.name)}</option>`).join("")}
+        </select>
+
         <label for="pf_name_en">Нэр (Англи)</label>
         <input type="text" id="pf_name_en" value="${product ? escAttr(product.name_en || "") : ""}">
 
@@ -851,6 +861,7 @@
         description_mn: document.getElementById("pf_desc_mn").value.trim(),
         description_en: document.getElementById("pf_desc_en").value.trim(),
         active: document.getElementById("pf_active").checked ? "1" : "0",
+        category_id: document.getElementById("pf_category").value,
       };
       if (product) params.id = product.id;
 
