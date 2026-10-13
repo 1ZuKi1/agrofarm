@@ -4,8 +4,9 @@
  * variant_ingredients), read the same way for every consumer:
  *
  *   api/shop-data.php JSON for shop.js (the basket needs live prices/stock)
- *   shop.php          the /shop grid, rendered on the server
+ *   shop.php          /shop — every category, via shop_sections() below
  *   shop-product.php  /shop/<slug>, rendered on the server
+ *   order-create.php  shop_line_name() for the QPay invoice line
  *
  * Server rendering is what lets search engines see these products; before,
  * shop.js drew them in the browser after the page loaded.
@@ -78,4 +79,102 @@ function shop_img(?string $path): string {
 /** 15000 → "15,000₮" — the same grouping the browser's toLocaleString() gave. */
 function shop_price(int $amount): string {
   return number_format($amount) . '₮';
+}
+
+/**
+ * The name a basket line, the QPay invoice and the staff email show for one
+ * option of a product. An item sold in one form (the cow statue, the book)
+ * has a single option named like the product, so it reads "Үнээний баримал",
+ * not "Үнээний баримал — Үнээний баримал". js/checkout.js mirrors this rule.
+ */
+function shop_line_name(string $product, string $option, ?string $weight): string {
+  $name = ($option === $product) ? $product : $product . ' — ' . $option;
+  return ($weight !== null && $weight !== '') ? $name . ' (' . $weight . ')' : $name;
+}
+
+/**
+ * The bottom line of a priced card, from the product's variants (each with
+ * 'id', 'price', 'available'):
+ *   one option in stock      "120,000₮"     + add that option straight away
+ *   several options          "15,000₮-өөс"  (lowest price in stock) + "Сонгох"
+ *   nothing in stock         "Дууссан"
+ * Returns ['label' => string, 'add' => ?int, 'choose' => bool, 'sold_out' => bool].
+ */
+function shop_price_label(array $variants): array {
+  $inStock = array_values(array_filter($variants, function ($v) { return (int)$v['available'] > 0; }));
+  if (!$inStock) return ['label' => 'Дууссан', 'add' => null, 'choose' => false, 'sold_out' => true];
+  if (count($variants) === 1) {
+    return ['label' => shop_price((int)$inStock[0]['price']), 'add' => (int)$inStock[0]['id'], 'choose' => false, 'sold_out' => false];
+  }
+  $min = min(array_map(function ($v) { return (int)$v['price']; }, $inStock));
+  return ['label' => shop_price($min) . '-өөс', 'add' => null, 'choose' => true, 'sold_out' => false];
+}
+
+/**
+ * Everything /shop shows, one section per category that has something in it,
+ * in the categories' sort order:
+ *   [['slug', 'name', 'items' => [card…], 'more' => null|['url', 'total']], …]
+ * A card is ['kind' => 'priced'|'quote', 'name', 'text', 'url',
+ *            'image' => ?string (root-absolute), 'price' => shop_price_label()|null].
+ * In a category, priced items come first (all of them), then equipment
+ * (the first 4, with 'more' pointing at the group page when there are more).
+ * Priced items with no category end up in a last section, "Бусад", so nothing
+ * for sale is ever unreachable.
+ *
+ * Needs products.category_id (sql/orders-schema-v5.sql); without it, throws a
+ * RuntimeException naming that file. shop_products() — and with it the
+ * product pages and checkout — does not need the column.
+ */
+function shop_sections(PDO $pdo): array {
+  require_once __DIR__ . '/catalog-lib.php'; // catalog_categories(), catalog_products_by_category()
+
+  try {
+    $catOf = $pdo->query('SELECT id, category_id FROM products')->fetchAll(PDO::FETCH_KEY_PAIR);
+  } catch (PDOException $e) {
+    if ($e->getCode() === '42S22') { // unknown column
+      throw new RuntimeException('products.category_id missing — run sql/orders-schema-v5.sql', 0, $e);
+    }
+    throw $e;
+  }
+
+  $priced = []; // category id ('' = none) => cards
+  foreach (shop_products($pdo) as $p) {
+    if (!$p['variants']) continue;
+    $img = $p['variants'][0]['image_path'];
+    $priced[(string)($catOf[$p['id']] ?? '')][] = [
+      'kind' => 'priced',
+      'name' => $p['name_mn'],
+      'text' => (string)($p['description_mn'] ?: $p['variants'][0]['benefits_text_mn']),
+      'url' => '/shop/' . $p['slug'],
+      'image' => $img ? shop_img($img) : null,
+      'price' => shop_price_label($p['variants']),
+    ];
+  }
+
+  $sections = [];
+  foreach (catalog_categories($pdo) as $c) {
+    $items = $priced[(string)$c['id']] ?? [];
+    $equipment = catalog_products_by_category($pdo, (int)$c['id']);
+    foreach (array_slice($equipment, 0, 4) as $e) {
+      $items[] = [
+        'kind' => 'quote',
+        'name' => $e['name'],
+        'text' => (string)$e['intro'],
+        'url' => '/shop/equipment/' . $c['slug'] . '/' . $e['slug'],
+        'image' => $e['thumb'] ? '/' . $e['thumb'] : null,
+        'price' => null,
+      ];
+    }
+    if (!$items) continue;
+    $sections[] = [
+      'slug' => $c['slug'],
+      'name' => $c['name'],
+      'items' => $items,
+      'more' => count($equipment) > 4 ? ['url' => '/shop/equipment/' . $c['slug'], 'total' => count($equipment)] : null,
+    ];
+  }
+  if (!empty($priced[''])) {
+    $sections[] = ['slug' => 'busad', 'name' => 'Бусад', 'items' => $priced[''], 'more' => null];
+  }
+  return $sections;
 }
