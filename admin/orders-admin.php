@@ -58,7 +58,7 @@ try {
     // the buyer's order-status link, and nothing on this screen needs it.
     $orders = $pdo->query(
       'SELECT id, status, buyer_name, buyer_phone, buyer_address, buyer_note,
-              delivery_date, delivery_slot, subtotal, total,
+              fulfillment, delivery_date, delivery_slot, subtotal, delivery_fee, total,
               created_at, paid_at, fulfilled_at
        FROM orders
        ORDER BY created_at DESC, id DESC
@@ -69,7 +69,11 @@ try {
       'SELECT variant_name_snapshot, unit_price_snapshot, quantity, line_total
        FROM order_items WHERE order_id = ? ORDER BY id'
     );
+    $now = fulfillment_now(); // inc/fulfillment.php, loaded by inc/orders.php
     foreach ($orders as &$order) {
+      // "Маргааш" + "10-р сарын 15, Пүрэв" — same words the buyer saw.
+      $order['day_word'] = fulfillment_day_word($order['delivery_date'], $now);
+      $order['date_label'] = fulfillment_date_label($order['delivery_date']);
       $itemStmt->execute([$order['id']]);
       $order['items'] = $itemStmt->fetchAll();
     }

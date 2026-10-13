@@ -140,6 +140,19 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
 .adm-stat--warn .adm-stat__value{ color:#b45309; }
 
 /* ---------- Filter tabs ---------- */
+.sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+.adm-settings__hint{ font-size:.84rem; color:var(--adm-muted); margin:.3rem 0 1rem; max-width:62ch; }
+.adm-settings__row{ display:flex; flex-wrap:wrap; align-items:center; gap:.6rem; }
+.adm-settings__row input{ padding:.55rem .7rem; border:1px solid rgba(0,0,0,.15); border-radius:var(--adm-radius-sm); font:inherit; background:#fff; }
+.adm-settings__row input[type=number]{ width:9rem; }
+.adm-settings__row label{ font-size:.84rem; font-weight:600; }
+.adm-settings__opt{ font-weight:400; color:var(--adm-muted); }
+.adm-settings__unit{ color:var(--adm-muted); }
+.adm-settings__msg{ min-height:1.2em; margin-top:.6rem; font-size:.84rem; font-weight:600; color:var(--green-deep); }
+.adm-settings__msg.is-error{ color:#a3231a; }
+.adm-settings__list{ list-style:none; margin:0 0 1rem; padding:0; display:flex; flex-direction:column; gap:.35rem; max-width:28rem; }
+.adm-settings__list li{ display:flex; justify-content:space-between; align-items:center; padding:.45rem .7rem; background:var(--adm-sunken); border-radius:var(--adm-radius-sm); font-size:.88rem; }
+.adm-settings__empty{ font-size:.84rem; color:var(--adm-muted); margin-bottom:1rem; }
 .adm-tabs{ display:flex; gap:.4rem; margin-left:auto; flex-wrap:wrap; }
 .adm-tab{
   padding:.5rem 1rem; border-radius:999px; border:1px solid var(--adm-line);
@@ -276,6 +289,10 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
         Захиалга <span class="adm-nav__count" id="navCountOrders">0</span>
       </button>
+      <button class="adm-nav__item" data-section="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        Тохиргоо
+      </button>
     </nav>
 
     <div class="adm-side-foot">
@@ -335,6 +352,36 @@ body{ background:var(--adm-bg); font-family:var(--sans); color:var(--adm-ink); }
           <div class="adm-tabs" id="orderTabs"></div>
         </div>
         <div id="ordersTab"></div>
+      </div>
+    </div>
+
+    <!-- ---------- SETTINGS (settings-admin.php) ---------- -->
+    <div id="sectionSettings" style="display:none">
+      <div class="adm-panel adm-settings">
+        <div class="adm-panel__title">Хүргэлтийн төлбөр</div>
+        <p class="adm-settings__hint">Хүргүүлэх сонгосон худалдан авагчийн төлбөрт нэмэгдэж, QPay нэхэмжлэхэд «Хүргэлт (Улаанбаатар)» гэж тусдаа мөрөөр гарна.</p>
+        <div class="adm-settings__row">
+          <label for="feeInput" class="sr-only">Хүргэлтийн төлбөр (₮)</label>
+          <input type="number" id="feeInput" min="0" max="100000" step="500" inputmode="numeric">
+          <span class="adm-settings__unit">₮</span>
+          <button type="button" class="btn adm-btn-dark" id="feeSaveBtn">Хадгалах</button>
+        </div>
+        <p class="adm-settings__msg" id="feeMsg" role="status"></p>
+      </div>
+
+      <div class="adm-panel adm-settings" style="margin-top:1rem">
+        <div class="adm-panel__title">Амралтын өдрүүд</div>
+        <p class="adm-settings__hint">Эдгээр өдөр хүргэлт, очиж авахыг санал болгохгүй (амралтын өдрүүдтэй адил). Цагаан сар, Наадам зэрэг баярыг урьдчилан нэмээрэй.</p>
+        <ul class="adm-settings__list" id="closedList"></ul>
+        <p class="adm-settings__empty" id="closedEmpty">Одоогоор нэмсэн өдөр алга.</p>
+        <div class="adm-settings__row">
+          <label for="closedFrom">Эхлэх</label>
+          <input type="date" id="closedFrom">
+          <label for="closedTo">Дуусах <span class="adm-settings__opt">(нэг өдөр бол хоосон)</span></label>
+          <input type="date" id="closedTo">
+          <button type="button" class="btn adm-btn-dark" id="closedAddBtn">Нэмэх</button>
+        </div>
+        <p class="adm-settings__msg" id="closedMsg" role="status"></p>
       </div>
     </div>
 

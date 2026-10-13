@@ -9,6 +9,7 @@
   const sectionNews   = document.getElementById("sectionNews");
   const sectionProducts = document.getElementById("sectionProducts");
   const sectionOrders = document.getElementById("sectionOrders");
+  const sectionSettings = document.getElementById("sectionSettings");
   const editorScreen  = document.getElementById("editorScreen");
   const passwordInput = document.getElementById("passwordInput");
   const loginBtn      = document.getElementById("loginBtn");
@@ -43,7 +44,7 @@
   let editingId = null;
   let productsCache = [];
   let ordersCache = [];
-  let currentSection = "news";   // news | products | orders (editor overlays news)
+  let currentSection = "news";   // news | products | orders | settings (editor overlays news)
   let productFilter = "all";
   let orderFilter = "all";
   let searchTerm = "";
@@ -337,6 +338,7 @@
     editorScreen.style.display = editing ? "block" : "none";
     sectionProducts.style.display = currentSection === "products" ? "block" : "none";
     sectionOrders.style.display = currentSection === "orders" ? "block" : "none";
+    sectionSettings.style.display = currentSection === "settings" ? "block" : "none";
 
     document.querySelectorAll(".adm-nav__item").forEach((btn) => {
       btn.classList.toggle("is-active", btn.dataset.section === currentSection);
@@ -352,6 +354,8 @@
     // The search box filters the visible table, so it's meaningless while the
     // post editor is open — and its term must not leak between sections.
     adminSearch.parentElement.style.visibility = editing ? "hidden" : "";
+    // Тохиргоо has nothing to search and no top-bar actions.
+    document.querySelector(".adm-topbar").style.display = currentSection === "settings" && !editing ? "none" : "";
     adminSearch.placeholder =
       currentSection === "products" ? "Бүтээгдэхүүн хайх…" :
       currentSection === "orders" ? "Захиалга хайх…" : "Мэдээ хайх…";
@@ -637,7 +641,7 @@
       <div class="adm-table-wrap">
         <table class="adm-table">
           <thead><tr>
-            <th>Захиалга</th><th>Харилцагч</th><th>Хүргэлт</th><th>Цаг</th><th>Нийт дүн</th><th>Төлөв</th><th></th>
+            <th>Захиалга</th><th>Харилцагч</th><th>Авах хэлбэр, өдөр</th><th>Нийт дүн</th><th>Төлөв</th><th></th>
           </tr></thead>
           <tbody>
             ${rows.map((o) => {
@@ -646,21 +650,21 @@
                 <tr data-order-id="${o.id}">
                   <td class="adm-table__id">#${String(o.id).padStart(6, "0")}<span class="adm-table__sub">${escHtml(fmtDate(o.created_at))}</span></td>
                   <td class="adm-table__strong">${escHtml(o.buyer_name)}<span class="adm-table__sub">${escHtml(o.buyer_phone)}</span></td>
-                  <td>${escHtml(fmtDate(o.delivery_date))}</td>
-                  <td>${escHtml(o.delivery_slot)}</td>
+                  <td>${orderWhenCell(o)}</td>
                   <td class="adm-num adm-table__strong">${money(o.total)}</td>
                   <td><span class="adm-status ${cls}">${escHtml(label)}</span></td>
                   <td><div class="adm-actions"><button class="adm-rowbtn see-more-btn">Дэлгэрэнгүй</button></div></td>
                 </tr>
                 <tr class="adm-detail-row" data-detail-for="${o.id}" style="display:none">
-                  <td colspan="7" class="adm-detail">
+                  <td colspan="6" class="adm-detail">
                     <dl>
-                      <dt>Хаяг</dt><dd>${escHtml(o.buyer_address)}</dd>
+                      ${o.buyer_address ? `<dt>Хаяг</dt><dd>${escHtml(o.buyer_address)}</dd>` : ""}
                       ${o.buyer_note ? `<dt>Тэмдэглэл</dt><dd>${escHtml(o.buyer_note)}</dd>` : ""}
                       <dt>Бараа</dt>
                       <dd><ul>${(o.items || []).map((it) =>
                         `<li>${escHtml(it.variant_name_snapshot)} × ${it.quantity} — ${money(it.line_total)}</li>`
                       ).join("")}</ul></dd>
+                      ${Number(o.delivery_fee) > 0 ? `<dt>Хүргэлт</dt><dd>${money(o.delivery_fee)}</dd>` : ""}
                       ${o.paid_at ? `<dt>Төлсөн огноо</dt><dd>${escHtml(fmtDate(o.paid_at))}</dd>` : ""}
                       ${o.fulfilled_at ? `<dt>Хүргэсэн огноо</dt><dd>${escHtml(fmtDate(o.fulfilled_at))}</dd>` : ""}
                     </dl>
@@ -700,6 +704,66 @@
         btn.textContent = open ? "Дэлгэрэнгүй" : "Хураах";
       });
     });
+  }
+
+  /** "🚚 Хүргүүлэх · Маргааш" over "10-р сарын 15, Пүрэв". Orders from before
+   * the 2026-10 checkout have no method of their own and keep their time slot. */
+  function orderWhenCell(o) {
+    const words = ["Өнөөдөр", "Маргааш", "Нөгөөдөр"];
+    const method = o.fulfillment === "pickup" ? "🏢 Очиж авах" : "🚚 Хүргүүлэх";
+    if (o.delivery_slot) {
+      return `${method}<span class="adm-table__sub">${escHtml(o.date_label || fmtDate(o.delivery_date))} · ${escHtml(o.delivery_slot)}</span>`;
+    }
+    const isNear = words.includes(o.day_word) && (o.status === "paid" || o.status === "pending");
+    return `${method}${isNear ? ` · <strong>${escHtml(o.day_word)}</strong>` : ""}<span class="adm-table__sub">${escHtml(o.date_label || "")}</span>`;
+  }
+
+  /* ---------- Тохиргоо: delivery fee and closed days (settings-admin.php) ---------- */
+  function settingsPost(params) {
+    return fetch("/admin/settings-admin.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: toFormBody({ ...params, csrf: sessionStorage.getItem("naf_csrf_token") || "" }),
+    }).then(async (res) => {
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401 || res.status === 403) {
+        sessionStorage.removeItem("naf_admin_auth");
+        sessionStorage.removeItem("naf_csrf_token");
+      }
+      if (!res.ok) throw new Error(data.error || "Алдаа гарлаа — дахин оролдоно уу");
+      return data;
+    });
+  }
+
+  function settingsMsg(id, text, isError) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.classList.toggle("is-error", !!isError);
+  }
+
+  function paintSettings(state) {
+    document.getElementById("feeInput").value = state.delivery_fee;
+    const list = document.getElementById("closedList");
+    list.innerHTML = state.closed_days.length
+      ? state.closed_days.map((d) => `
+          <li><span>${escHtml(d.label)}</span>
+            <button type="button" class="adm-rowbtn" data-date="${escAttr(d.date)}" aria-label="${escAttr(d.label)} — хасах">Хасах</button></li>`).join("")
+      : "";
+    document.getElementById("closedEmpty").style.display = state.closed_days.length ? "none" : "";
+    list.querySelectorAll("button[data-date]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        btn.disabled = true;
+        settingsPost({ action: "remove_closed", date: btn.dataset.date })
+          .then((s) => { paintSettings(s); settingsMsg("closedMsg", "✓ Хассан"); })
+          .catch((e) => { btn.disabled = false; settingsMsg("closedMsg", e.message, true); });
+      });
+    });
+  }
+
+  function renderSettings() {
+    settingsMsg("feeMsg", "");
+    settingsMsg("closedMsg", "");
+    settingsPost({ action: "get" }).then(paintSettings).catch((e) => settingsMsg("feeMsg", e.message, true));
   }
 
   /** "Хүргэсэн" / "Цуцлах" on one order, then reload the list. */
@@ -1132,6 +1196,28 @@
     addProductBtn.addEventListener("click", () => openProductEditor(null));
     refreshOrdersBtn.addEventListener("click", renderOrders);
 
+    document.getElementById("feeSaveBtn").addEventListener("click", (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      settingsPost({ action: "save_fee", fee: document.getElementById("feeInput").value.trim() })
+        .then((s) => { paintSettings(s); settingsMsg("feeMsg", "✓ Хадгалсан"); })
+        .catch((err) => settingsMsg("feeMsg", err.message, true))
+        .finally(() => { btn.disabled = false; });
+    });
+    document.getElementById("closedAddBtn").addEventListener("click", (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      settingsPost({ action: "add_closed", from: document.getElementById("closedFrom").value, to: document.getElementById("closedTo").value })
+        .then((s) => {
+          paintSettings(s);
+          settingsMsg("closedMsg", "✓ Нэмсэн");
+          document.getElementById("closedFrom").value = "";
+          document.getElementById("closedTo").value = "";
+        })
+        .catch((err) => settingsMsg("closedMsg", err.message, true))
+        .finally(() => { btn.disabled = false; });
+    });
+
     // Sidebar navigation. Products and Orders fetch on first visit and then
     // repaint from cache; News is already in memory from loadPosts().
     document.querySelectorAll(".adm-nav__item").forEach((btn) => {
@@ -1142,6 +1228,7 @@
         showScreen(section === "news" ? "dashboard" : section);
         if (section === "products") renderProductsTab();
         else if (section === "orders") renderOrders();
+        else if (section === "settings") renderSettings();
         else renderDashboard();
       });
     });
