@@ -242,3 +242,112 @@ function admin_order_day(array $o, DateTimeImmutable $now): string {
   return fulfillment_day_word($o['delivery_date'], $now) . ' · ' . fulfillment_date_label($o['delivery_date'])
     . ($o['delivery_slot'] ? ', ' . $o['delivery_slot'] : '');
 }
+
+// ---- Үнийн санал (quote requests from the equipment pages) ----------------
+
+/** Quote tabs: key → [label, statuses]. */
+const ADMIN_QUOTE_TABS = [
+  'new'     => ['Шинэ', ['new']],
+  'replied' => ['Хариулсан', ['replied']],
+  'closed'  => ['Хаагдсан', ['closed']],
+  'all'     => ['Бүгд', ['new', 'replied', 'closed']],
+];
+
+/** Status → [label, tag modifier]. */
+function admin_quote_status(string $status): array {
+  $map = ['new' => ['Шинэ', 'warn'], 'replied' => ['Хариулсан', 'ok'], 'closed' => ['Хаагдсан', 'mute']];
+  return $map[$status] ?? [$status, 'mute'];
+}
+
+/** Log action → the history line's verb. */
+const ADMIN_QUOTE_ACTIONS = [
+  'quote_replied'  => 'Хариулсан',
+  'quote_closed'   => 'Хаасан',
+  'quote_reopened' => 'Буцааж нээсэн',
+  'quote_note'     => 'Тэмдэглэл',
+];
+
+/**
+ * Requests for one tab, newest first, each with 'items' and 'history' (oldest
+ * first). Returns ['rows' => …, 'counts' => [tab => n], 'tab' => key].
+ */
+function admin_quotes_list(PDO $pdo, string $tab): array {
+  if (!isset(ADMIN_QUOTE_TABS[$tab])) $tab = 'new';
+  $n = [];
+  foreach ($pdo->query('SELECT status, COUNT(*) AS n FROM inquiries GROUP BY status') as $r) $n[$r['status']] = (int)$r['n'];
+  $counts = [];
+  foreach (ADMIN_QUOTE_TABS as $key => $t) {
+    $counts[$key] = array_sum(array_map(function ($s) use ($n) { return $n[$s] ?? 0; }, $t[1]));
+  }
+
+  $in = "'" . implode("','", ADMIN_QUOTE_TABS[$tab][1]) . "'"; // fixed literals
+  $rows = $pdo->query("SELECT id, status, buyer_name, buyer_phone, buyer_email, buyer_company, message, staff_note, created_at, replied_at
+                       FROM inquiries WHERE status IN ($in) ORDER BY created_at DESC, id DESC LIMIT 200")->fetchAll();
+  if ($rows) {
+    $ids = implode(',', array_map(function ($r) { return (int)$r['id']; }, $rows));
+    $items = [];
+    foreach ($pdo->query("SELECT inquiry_id, product_name_snapshot, sku_snapshot, quantity FROM inquiry_items WHERE inquiry_id IN ($ids) ORDER BY id") as $it) {
+      $items[(int)$it['inquiry_id']][] = $it;
+    }
+    $logs = [];
+    foreach ($pdo->query("SELECT target_id, user_name, action, created_at FROM admin_log WHERE target_type = 'quote' AND target_id IN ($ids) ORDER BY id") as $l) {
+      $logs[(int)$l['target_id']][] = $l;
+    }
+    foreach ($rows as &$r) {
+      $id = (int)$r['id'];
+      $r['items'] = $items[$id] ?? [];
+      $events = [['at' => $r['created_at'], 'text' => 'Хүсэлт ирсэн']];
+      $loggedReply = false;
+      foreach ($logs[$id] ?? [] as $l) {
+        if (!isset(ADMIN_QUOTE_ACTIONS[$l['action']])) continue;
+        if ($l['action'] === 'quote_replied') $loggedReply = true;
+        $events[] = ['at' => $l['created_at'], 'text' => ADMIN_QUOTE_ACTIONS[$l['action']] . ' — ' . $l['user_name']];
+      }
+      if (!$loggedReply && $r['replied_at']) $events[] = ['at' => $r['replied_at'], 'text' => 'Хариулсан'];
+      usort($events, function ($a, $b) { return strcmp($a['at'], $b['at']); });
+      $r['history'] = $events;
+    }
+    unset($r);
+  }
+  return ['rows' => $rows, 'counts' => $counts, 'tab' => $tab];
+}
+
+/**
+ * Хариулсан (new → replied), Хаах (new/replied → closed), Буцааж нээх
+ * (replied/closed → new). A guarded UPDATE, so a second person pressing the
+ * same button gets "Аль хэдийн … — who, when". Returns ['ok', 'message'].
+ */
+function admin_quote_set_status(PDO $pdo, int $id, string $status, array $me): array {
+  $rules = [
+    'replied' => [['new'], 'quote_replied', 'хариулсан', ", replied_at = NOW()"],
+    'closed'  => [['new', 'replied'], 'quote_closed', 'хаасан', ''],
+    'new'     => [['replied', 'closed'], 'quote_reopened', 'буцааж нээсэн', ''],
+  ];
+  if (!isset($rules[$status])) return ['ok' => false, 'message' => 'Тодорхойгүй үйлдэл'];
+  [$from, $action, $word, $extra] = $rules[$status];
+  $in = "'" . implode("','", $from) . "'";
+  $up = $pdo->prepare("UPDATE inquiries SET status = ?$extra WHERE id = ? AND status IN ($in)");
+  $up->execute([$status, $id]);
+  if ($up->rowCount() !== 1) {
+    $st = $pdo->prepare('SELECT status FROM inquiries WHERE id = ?');
+    $st->execute([$id]);
+    $now = $st->fetchColumn();
+    if ($now === false) return ['ok' => false, 'message' => 'Хүсэлт олдсонгүй'];
+    if ($now !== $status) return ['ok' => false, 'message' => 'Энэ хүсэлтийн төлөв өөрчлөгдсөн байна — хуудсыг шинэчилнэ үү.'];
+    $last = $pdo->prepare("SELECT user_name, created_at FROM admin_log WHERE target_type = 'quote' AND target_id = ? AND action = ? ORDER BY id DESC LIMIT 1");
+    $last->execute([$id, $action]);
+    $who = $last->fetch();
+    return ['ok' => false, 'message' => 'Аль хэдийн ' . $word . ($who ? ' — ' . $who['user_name'] . ', ' . admin_when($who['created_at']) : '')];
+  }
+  admin_log($pdo, $me, $action, 'quote', $id);
+  return ['ok' => true, 'message' => 'Хүсэлтийг ' . $word . ' гэж тэмдэглэлээ.'];
+}
+
+/** Saves the staff note (at most 2,000 characters) and logs it. */
+function admin_quote_note(PDO $pdo, int $id, string $note, array $me): void {
+  $note = trim($note);
+  if (function_exists('mb_substr')) $note = mb_substr($note, 0, 2000);
+  $up = $pdo->prepare('UPDATE inquiries SET staff_note = ? WHERE id = ?');
+  $up->execute([$note === '' ? null : $note, $id]);
+  if ($up->rowCount() === 1) admin_log($pdo, $me, 'quote_note', 'quote', $id);
+}

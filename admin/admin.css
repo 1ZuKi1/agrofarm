@@ -261,3 +261,13 @@ a.ad-stat:hover { background: var(--sunk); }
   .ad-wrap { padding-top: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { .ad-side { transition: none !important; } }
+
+/* ---- Үнийн санал ---- */
+.ad-quote { scroll-margin-top: 16px; }
+.ad-quote:target { box-shadow: 0 0 0 3px var(--gold); }
+.ad-quote__msg { margin: 0; padding: 12px 14px; background: var(--sunk); border-radius: var(--radius-sm); white-space: pre-wrap; overflow-wrap: anywhere; font-size: .94rem; }
+.ad-quote__items { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.ad-quote__items li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 12px; border-top: 1px solid var(--line); font-size: .93rem; }
+.ad-quote__items li:first-child { border-top: 0; }
+.ad-quote__note .ad-field { margin-bottom: 8px; }
+.ad-quote__note textarea { width: 100%; }
