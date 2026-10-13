@@ -81,6 +81,9 @@ RewriteRule ^equipment(/.*)?$ /shop/equipment$1 [R=301,L]
 RewriteRule ^shop/equipment/?$ equipment.php [L]
 RewriteRule ^shop/equipment/([a-z0-9-]+)/?$ category.php?cat=$1 [QSA,L]
 RewriteRule ^shop/equipment/([a-z0-9-]+)/([a-z0-9-]+)/?$ product.php?cat=$1&slug=$2 [QSA,L]
+# The checkout page comes before the product rule below, so "checkout" can
+# never be read as a product slug.
+RewriteRule ^shop/checkout/?$ shop-checkout.php [QSA,L]
 RewriteRule ^shop/([a-z0-9-]+)/?$ shop-product.php?slug=$1 [QSA,L]
 
 # ------------------------------------------------------------------

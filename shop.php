@@ -15,6 +15,13 @@
 require __DIR__ . '/inc/shop-lib.php';
 require __DIR__ . '/inc/catalog-lib.php';
 
+// Order links used to be /shop?order=<token> (checkout lived in the basket
+// panel); the checkout has its own page now.
+if (isset($_GET['order']) && preg_match('/^[a-f0-9]{32}$/', (string)$_GET['order'])) {
+  header('Location: /shop/checkout?order=' . $_GET['order'], true, 301);
+  exit;
+}
+
 // Old product links were /shop?product=<slug>, drawn by JavaScript. Each
 // product now has a real address.
 if (isset($_GET['product']) && preg_match('/^[a-z0-9-]+$/', (string)$_GET['product'])) {
