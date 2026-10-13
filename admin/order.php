@@ -85,10 +85,10 @@ admin_page_start($pdo, $me, [
         </form>
         <?php endif; ?>
         <?php if ($canCancel): ?>
-        <form class="ad-inline" method="post" action="/admin/orders/<?= (int)$o['id'] ?>">
+        <form class="ad-inline" method="post" action="/admin/orders/<?= (int)$o['id'] ?>" data-confirm="<?= ce($cancelConfirm) ?>">
           <input type="hidden" name="csrf" value="<?= ce(admin_csrf()) ?>">
           <input type="hidden" name="action" value="cancel">
-          <button type="submit" class="ad-btn ad-btn--danger" data-confirm="<?= ce($cancelConfirm) ?>">Цуцлах</button>
+          <button type="submit" class="ad-btn ad-btn--danger">Цуцлах</button>
         </form>
         <?php endif; ?>
       </div>

@@ -29,9 +29,19 @@
     btn.addEventListener("click", () => setMenu(btn.getAttribute("aria-expanded") !== "true"));
     if (scrim) scrim.addEventListener("click", () => { setMenu(false); btn.focus(); });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && side.classList.contains("is-open")) { setMenu(false); btn.focus(); }
+      if (!side.classList.contains("is-open")) return;
+      if (e.key === "Escape") { setMenu(false); btn.focus(); return; }
+      if (e.key === "Tab") { // keep focus inside the open menu (and its button)
+        const items = [btn, ...side.querySelectorAll("a, button")];
+        const i = items.indexOf(document.activeElement);
+        if (e.shiftKey && i <= 0) { e.preventDefault(); items[items.length - 1].focus(); }
+        else if (!e.shiftKey && (i === items.length - 1 || i === -1)) { e.preventDefault(); items[0].focus(); }
+      }
     });
-    matchMedia("(min-width: 901px)").addEventListener("change", (m) => { if (m.matches) setMenu(false); });
+    const wide = window.matchMedia && matchMedia("(min-width: 901px)");
+    const onWide = (m) => { if (m.matches) setMenu(false); };
+    if (wide && wide.addEventListener) wide.addEventListener("change", onWide);
+    else if (wide && wide.addListener) wide.addListener(onWide); // Safari before 14
   }
 
   // ---- confirm before an action

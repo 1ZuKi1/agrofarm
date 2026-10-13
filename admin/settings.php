@@ -161,7 +161,7 @@ admin_page_start($pdo, $me, [
                 <span class="ad-tag <?= $u['role'] === 'admin' ? 'ad-tag--info' : 'ad-tag--mute' ?>"><?= ce(admin_role_label($u['role'])) ?></span>
                 <?php if (!$active): ?><span class="ad-tag ad-tag--bad">Идэвхгүй</span><?php endif; ?>
                 <?php if ((int)$u['must_change'] === 1 && $active): ?><span class="ad-tag ad-tag--warn">Түр нууц үгтэй</span><?php endif; ?>
-                <?php if ($u['locked_until'] && strtotime($u['locked_until']) > time()): ?><span class="ad-tag ad-tag--bad">Түгжээтэй</span><?php endif; ?>
+                <?php if ($u['locked_until'] && $u['locked_until'] > fulfillment_now()->format('Y-m-d H:i:s')): // stored in UB time ?><span class="ad-tag ad-tag--bad">Түгжээтэй</span><?php endif; ?>
               </td>
               <td class="ad-num"><?= $u['last_login_at'] ? ce(admin_when($u['last_login_at'])) : '<span class="ad-muted">Нэвтрээгүй</span>' ?></td>
               <td><div class="ad-btn-row">

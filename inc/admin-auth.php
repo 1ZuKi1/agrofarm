@@ -31,9 +31,28 @@ const ADMIN_MIN_PASSWORD = 8;
 const ADMIN_SESSION_DAYS = 14;
 const ADMIN_BAD_LOGIN = 'Имэйл эсвэл нууц үг буруу байна';
 
+/**
+ * Staff sessions last 14 days. cPanel (like most hosts) deletes files in the
+ * shared session folder by php.ini's lifetime — usually 24 minutes — whatever
+ * a script sets at runtime, so admin sessions live in their own folder one
+ * level above the site (next to config.php), cleaned by PHP itself with the
+ * 14-day lifetime. If that folder can't be made, the shared one is used.
+ */
+function admin_session_dir(): ?string {
+  $dir = dirname(__DIR__, 2) . '/naf-sessions';
+  if (!is_dir($dir)) @mkdir($dir, 0700, true);
+  return (is_dir($dir) && is_writable($dir)) ? $dir : null;
+}
+
 function admin_session_start(): void {
   if (session_status() === PHP_SESSION_ACTIVE) return;
   $life = ADMIN_SESSION_DAYS * 86400;
+  $dir = admin_session_dir();
+  if ($dir !== null) {
+    ini_set('session.save_path', $dir);
+    ini_set('session.gc_probability', '1');
+    ini_set('session.gc_divisor', '100');
+  }
   ini_set('session.gc_maxlifetime', (string)$life);
   session_set_cookie_params([
     'lifetime' => $life,
@@ -87,7 +106,10 @@ function admin_attempt_login(PDO $pdo, string $email, string $password, DateTime
   $u = $st->fetch();
 
   if (!$u) {
-    // Unknown email: count per session, same message as a wrong password.
+    // Unknown email: same work (a hash check) and the same message as a wrong
+    // password, so the answer and its timing don't tell which emails exist.
+    password_verify($password, '$2y$10$abcdefghijklmnopqrstuuJ1yWkTw2ahAWrQ7Q0uA5Wq6uG1nO1Z2');
+    // Counted per session.
     $s = $_SESSION['admin_unknown_fails'] ?? ['n' => 0, 'until' => 0];
     if ($s['until'] > $now->getTimestamp()) {
       return ['ok' => false, 'error' => admin_lock_message((int)ceil(($s['until'] - $now->getTimestamp()) / 60)), 'locked' => true];
@@ -106,6 +128,23 @@ function admin_attempt_login(PDO $pdo, string $email, string $password, DateTime
     return ['ok' => false, 'error' => admin_lock_message($left), 'locked' => true];
   }
 
+  // Reserve this attempt before checking the password, in one UPDATE, so many
+  // requests sent at once can't get more than ADMIN_MAX_FAILS checks between
+  // them before the lock (a read-then-write counter could be raced).
+  $until = $now->setTimezone(new DateTimeZone(NAF_TZ))->modify('+' . ADMIN_LOCK_MINUTES . ' minutes')->format('Y-m-d H:i:s');
+  $claim = $pdo->prepare('UPDATE admin_users SET failed_logins = failed_logins + 1 WHERE id = ? AND (locked_until IS NULL OR locked_until <= ?)');
+  $claim->execute([$u['id'], $nowS]);
+  $st = $pdo->prepare('SELECT failed_logins, locked_until FROM admin_users WHERE id = ?');
+  $st->execute([$u['id']]);
+  $c = $st->fetch();
+  if ($claim->rowCount() !== 1 || (int)$c['failed_logins'] > ADMIN_MAX_FAILS) {
+    // Locked meanwhile by a parallel request, or over the limit: no check at all.
+    if ($c['locked_until'] === null || $c['locked_until'] <= $nowS) {
+      $pdo->prepare('UPDATE admin_users SET failed_logins = 0, locked_until = ? WHERE id = ?')->execute([$until, $u['id']]);
+    }
+    return ['ok' => false, 'error' => admin_lock_message(ADMIN_LOCK_MINUTES), 'locked' => true];
+  }
+
   if ((int)$u['active'] === 1 && password_verify($password, $u['password_hash'])) {
     $pdo->prepare('UPDATE admin_users SET failed_logins = 0, locked_until = NULL, last_login_at = ? WHERE id = ?')
         ->execute([$nowS, $u['id']]);
@@ -116,13 +155,10 @@ function admin_attempt_login(PDO $pdo, string $email, string $password, DateTime
     return ['ok' => true, 'user' => $u];
   }
 
-  $fails = (int)$u['failed_logins'] + 1;
-  if ($fails >= ADMIN_MAX_FAILS) {
-    $until = $now->setTimezone(new DateTimeZone(NAF_TZ))->modify('+' . ADMIN_LOCK_MINUTES . ' minutes')->format('Y-m-d H:i:s');
+  if ((int)$c['failed_logins'] >= ADMIN_MAX_FAILS) {
     $pdo->prepare('UPDATE admin_users SET failed_logins = 0, locked_until = ? WHERE id = ?')->execute([$until, $u['id']]);
     return ['ok' => false, 'error' => admin_lock_message(ADMIN_LOCK_MINUTES), 'locked' => true];
   }
-  $pdo->prepare('UPDATE admin_users SET failed_logins = ? WHERE id = ?')->execute([$fails, $u['id']]);
   return ['ok' => false, 'error' => ADMIN_BAD_LOGIN, 'locked' => false];
 }
 
@@ -190,6 +226,9 @@ function admin_require(PDO $pdo, string $role = 'staff', bool $json = false): ar
       echo 'Энэ хуудсыг зөвхөн Админ үзнэ.';
     }
     exit;
+  }
+  if ((int)$me['must_change'] === 1 && $json) {
+    admin_json_fail(403, 'Эхлээд түр нууц үгээ солино уу — Миний бүртгэл хуудсанд.');
   }
   if ((int)$me['must_change'] === 1 && !$json) {
     $path = parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);

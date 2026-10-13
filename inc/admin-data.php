@@ -190,7 +190,7 @@ function admin_orders_list(PDO $pdo, string $tab, string $day, string $q, int $p
   $statuses = ADMIN_ORDER_TABS[$tab][1];
   $in = "'" . implode("','", $statuses) . "'"; // fixed literals
   $order = $tab === 'todo' ? 'delivery_date ASC, id ASC' : 'created_at DESC, id DESC';
-  $page = max(1, $page);
+  $page = min(max(1, $page), max(1, (int)ceil($counts[$tab] / ADMIN_ORDERS_PER_PAGE))); // never past the last page
   $st = $pdo->prepare('SELECT ' . ADMIN_ORDER_COLS . " FROM orders WHERE status IN ($in) $filter ORDER BY $order LIMIT "
     . ADMIN_ORDERS_PER_PAGE . ' OFFSET ' . (($page - 1) * ADMIN_ORDERS_PER_PAGE));
   $st->execute($args);

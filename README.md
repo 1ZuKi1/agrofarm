@@ -124,7 +124,10 @@ order, a request, a product or a setting is logged with who did it, and each
 order and request shows its history. A password needs 8 characters; five wrong
 tries lock the account for 15 minutes; a forgotten password is reset by an
 Админ (a temporary one, changed at the next login). Тусламж (/admin/help) is
-the staff guide, in Mongolian.
+the staff guide, in Mongolian. Staff stay logged in for 14 days on a device; their
+sessions are kept in a `naf-sessions` folder next to `config.php` (made
+automatically), because cPanel clears the shared session folder after about
+24 idle minutes.
 
 **First Админ, once, right after deploying with `orders-schema-v6.sql`:**
 
