@@ -97,8 +97,24 @@
     });
   }
 
+  /* ---------- Card "Сагсанд нэмэх" (/shop, one-option items) ----------
+     shop_card() (inc/catalog-lib.php) prints the button with the option's
+     id. One tap = one more in the basket; the basket and the order step
+     already refuse more than the stock. */
+  function initCardButtons() {
+    document.querySelectorAll(".eq-card__add[data-variant-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (window.addToCart) window.addToCart(Number(btn.dataset.variantId), 1);
+        btn.textContent = "Сагсанд нэмэгдлээ ✓";
+        btn.classList.add("is-added");
+        clearTimeout(btn._reset);
+        btn._reset = setTimeout(() => { btn.textContent = "Сагсанд нэмэх"; btn.classList.remove("is-added"); }, 1800);
+      });
+    });
+  }
+
   window.getShopProducts = () => shopProducts;
-  document.addEventListener("DOMContentLoaded", () => { initProductPage(); loadShop(); });
+  document.addEventListener("DOMContentLoaded", () => { initProductPage(); initCardButtons(); loadShop(); });
 
   /* ---------- Cart drawer ----------
      Renders window.getCart() lines against the product data already loaded

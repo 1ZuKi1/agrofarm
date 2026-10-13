@@ -357,6 +357,7 @@ HTML,
       </a>
     </article>
   </div>
+  <p class="products__cta reveal"><a class="btn btn--gold" href="/shop"<?= ta('products.shop-cta') ?>><?= tx('products.shop-cta') ?></a></p>
 </section>
 <!-- ============ RECOGNITION & VOICES ============ -->
 <section class="recognition" id="recognition">

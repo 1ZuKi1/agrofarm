@@ -28,6 +28,12 @@ if (!$cat) {
 }
 
 $items = catalog_products_by_category($pdo, (int)$cat['id']);
+// A category with no equipment is a QPay category (e.g. Бэлэг дурсгал); its
+// items are shown on /shop itself.
+if (!$items) {
+  header('Location: /shop#' . $cat['slug'], true, 302);
+  exit;
+}
 
 catalog_head(
   ce($cat['name']) . ' — Нүүдэлчин Агро Ферм',

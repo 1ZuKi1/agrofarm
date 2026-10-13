@@ -1041,30 +1041,31 @@ input, textarea, select{ font-size:16px !important; }
   padding:2rem 0;
 }
 
-/* Product grid — reuses .prod (homepage Products cards) verbatim via
-   .products__grid so the shop reads as a continuation of that section,
-   not a different template. .shop-grid only supplies the max-width. */
-.shop-grid{ max-width:1240px; }
-/* Cap the track width so a catalogue of one or two products shows normally
-   proportioned cards centred in the row — auto-fit collapses the empty
-   tracks, so an uncapped 1fr would stretch a lone card across all 1240px.
-   Scoped above the 520px breakpoint to leave the mobile swipe-rail
-   (.products__grid, which switches to flex) completely untouched. */
-@media (min-width: 521px){
-  .shop-grid{
-    grid-template-columns:repeat(auto-fit, minmax(270px, 360px));
-    justify-content:center;
-  }
+/* Home: the "Дэлгүүр орох" button under the products grid (index.php). */
+.products__cta{ text-align:center; margin-top:2.6rem; }
+.eq-card__add.is-added{ background:var(--green-deep); }
+
+/* ---------- /shop: heading, category buttons, sections (shop.php) ---------- */
+.shop-page{ padding-top:7.5rem; }
+.shop-head{ max-width:1240px; margin:0 auto 1.6rem; }
+.shop-head h1{ font-size:clamp(2.2rem, 4.4vw, 3.2rem); }
+.shop-head__lead{ max-width:46rem; margin-top:.6rem; color:var(--ink-soft); line-height:1.7; }
+.shop-cats{ max-width:1240px; margin:0 auto 2.6rem; display:flex; flex-wrap:wrap; gap:.5rem; }
+.shop-cats a{ padding:.5rem 1rem; border-radius:999px; border:1.5px solid rgba(44,44,44,.14); background:#fff;
+  color:var(--charcoal); font-size:.88rem; font-weight:600; text-decoration:none; white-space:nowrap;
+  transition:border-color .2s, color .2s; }
+.shop-cats a:hover{ border-color:var(--green); color:var(--green); }
+.shop-cats a:focus-visible{ outline:2px solid var(--green); outline-offset:2px; }
+/* Phones: one scrolling row instead of five wrapped lines of buttons. */
+@media (max-width:600px){
+  .shop-cats{ flex-wrap:nowrap; overflow-x:auto; scroll-snap-type:x proximity; margin-left:calc(-1 * var(--gutter));
+    margin-right:calc(-1 * var(--gutter)); padding:0 var(--gutter) .3rem; scrollbar-width:none; }
+  .shop-cats::-webkit-scrollbar{ display:none; }
+  .shop-cats a{ scroll-snap-align:start; }
 }
-.shop-grid__card-link{ display:block; text-decoration:none; color:inherit; }
-/* The full product description is several paragraphs long — clamped to a
-   3-line teaser so grid cards stay the compact shape the homepage ones are.
-   The whole description is shown on the product detail page. */
-.shop-grid__desc{
-  display:-webkit-box; -webkit-line-clamp:3; line-clamp:3;
-  -webkit-box-orient:vertical; overflow:hidden;
-}
-.shop-grid__price{ font-weight:700; color:var(--green); margin-top:.6rem; }
+.shop-note{ max-width:1240px; margin:0 auto 1.6rem; padding:.9rem 1.1rem; border-radius:14px; background:#fff;
+  color:var(--ink-soft); font-size:.88rem; line-height:1.6; }
+.shop-page [id]{ scroll-margin-top:6.5rem; }
 
 /* Product detail */
 .shop-product{ max-width:1100px; margin:0 auto; padding:0 var(--gutter) 6rem; }
@@ -1486,17 +1487,46 @@ input, textarea, select{ font-size:16px !important; }
   grid-template-columns:repeat(auto-fill,minmax(215px,1fr)); }
 .eq-grid--3{ grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); }
 
-.eq-card{ background:#fff; border-radius:var(--radius); overflow:hidden;
+.eq-card{ display:flex; flex-direction:column; background:#fff; border-radius:var(--radius); overflow:hidden;
   box-shadow:var(--shadow-1); transition:transform .3s var(--ease-out), box-shadow .3s var(--ease-out); }
 .eq-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-2); }
-.eq-card a{ display:block; text-decoration:none; color:inherit; }
+.eq-card__link{ display:block; flex:1; text-decoration:none; color:inherit; }
 .eq-card__media{ aspect-ratio:4/3; background:var(--cream-dark);
   display:flex; align-items:center; justify-content:center; overflow:hidden; }
 .eq-card__media img{ width:100%; height:100%; object-fit:contain; padding:.8rem; }
-.eq-card__noimg{ width:44px; height:44px; border-radius:50%; background:rgba(26,94,42,.14); }
+.eq-card__noimg{ width:46%; aspect-ratio:2/1; background:url("/img/naf_logo_full.svg") center/contain no-repeat; opacity:.3; filter:grayscale(.4); }
 .eq-card__body{ padding:1.1rem 1.2rem 1.4rem; }
 .eq-card__body h3{ font-size:1rem; font-weight:600; line-height:1.35; margin-bottom:.4rem; }
-.eq-card__body p{ font-size:.85rem; color:var(--ink-soft); line-height:1.6; }
+.eq-card__body p{ font-size:.85rem; color:var(--ink-soft); line-height:1.6;
+  display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+/* The card's bottom line — the only place a QPay item and an equipment item
+   differ: a price + basket button, or "Үнийн санал авах". */
+.eq-card__foot{ display:flex; align-items:center; justify-content:space-between; gap:.6rem;
+  min-height:3.4rem; padding:.7rem 1.2rem .9rem; border-top:1px solid rgba(44,44,44,.07); }
+.eq-card__price{ font-weight:700; color:var(--green); font-variant-numeric:tabular-nums; }
+.eq-card__price--quote{ font-weight:600; font-size:.85rem; color:var(--gold-text); }
+.eq-card__price--out{ color:var(--ink-soft); font-weight:600; }
+.eq-card__add, .eq-card__choose{ flex:none; padding:.45rem .85rem; border-radius:999px; font:600 .8rem/1.2 var(--sans);
+  cursor:pointer; text-decoration:none; transition:background .2s, color .2s, border-color .2s; }
+.eq-card__add{ border:0; background:var(--green); color:#fff; }
+.eq-card__add:hover{ background:var(--green-deep); }
+.eq-card__choose{ border:1.5px solid rgba(26,94,42,.35); color:var(--green); background:#fff; }
+.eq-card__choose:hover{ border-color:var(--green); }
+.eq-card__add:focus-visible, .eq-card__choose:focus-visible, .eq-card__link:focus-visible{ outline:2px solid var(--green); outline-offset:3px; }
+/* Phones: two cards per row, like any shop app — one full-width card per row
+   made /shop ten screens long. The bottom line stacks: price, then button. */
+@media (max-width:520px){
+  .eq-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.75rem; }
+  .eq-card{ border-radius:18px; }
+  .eq-card__media img{ padding:.5rem; }
+  .eq-card__body{ padding:.75rem .8rem .6rem; }
+  .eq-card__body h3{ font-size:.9rem; }
+  .eq-card__body p{ font-size:.78rem; line-height:1.5; }
+  .eq-card__foot{ flex-direction:column; align-items:stretch; gap:.45rem; min-height:0; padding:.6rem .8rem .8rem; }
+  .eq-card__price{ font-size:.92rem; }
+  .eq-card__price--quote{ font-size:.78rem; }
+  .eq-card__add, .eq-card__choose{ text-align:center; padding:.55rem .5rem; }
+}
 
 /* ---------- landing sections ---------- */
 .eq-section{ max-width:1240px; margin:0 auto 4rem; }
@@ -1585,15 +1615,6 @@ input, textarea, select{ font-size:16px !important; }
   .eq-detail__top{ grid-template-columns:minmax(0,1fr); gap:1.8rem; }
   .eq-hero{ padding-top:7rem; }
 }
-
-/* ---------- equipment inside /shop ---------- */
-.eq-wrap--inshop{ padding-top:2rem; border-top:1px solid rgba(44,44,44,.08); }
-.eq-shop-head{ max-width:1240px; margin:0 auto 2.6rem; text-align:center; }
-.eq-shop-head h2{ font-family:var(--serif); font-size:clamp(1.8rem,3.4vw,2.6rem);
-  color:var(--charcoal); margin:.4rem 0 .9rem; }
-.eq-shop-head__lead{ max-width:44rem; margin:0 auto; color:var(--ink-soft); line-height:1.75;
-  font-size:.95rem; }
-.eq-section__head h3{ font-family:var(--serif); font-size:1.5rem; color:var(--charcoal); }
 
 /* ---------- quote half of the shared basket drawer ---------- */
 .inq-block{ margin-top:1.6rem; padding-top:1.4rem; border-top:2px solid rgba(26,94,42,.18); }

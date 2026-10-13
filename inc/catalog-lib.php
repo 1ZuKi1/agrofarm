@@ -31,6 +31,20 @@ function catalog_categories(PDO $pdo): array {
   )->fetchAll();
 }
 
+/**
+ * The categories that hold equipment — the equipment sidebar lists only these.
+ * The shared category list also holds QPay categories (Бэлэг дурсгал…), which
+ * live on /shop itself, not under /shop/equipment/.
+ */
+function catalog_equipment_categories(PDO $pdo): array {
+  return $pdo->query(
+    'SELECT c.id, c.slug, c.name FROM categories c
+     WHERE c.active = 1 AND c.parent_id IS NULL
+       AND EXISTS (SELECT 1 FROM equipment_products p WHERE p.category_id = c.id AND p.active = 1)
+     ORDER BY c.sort_order, c.id'
+  )->fetchAll();
+}
+
 function catalog_products_by_category(PDO $pdo, int $categoryId): array {
   $st = $pdo->prepare(
     'SELECT p.id, p.slug, p.sku, p.name, p.intro,
@@ -65,7 +79,7 @@ function catalog_foot(): void {
 
 /** Left-hand category tree. The current category is expanded to its products. */
 function catalog_sidebar(PDO $pdo, ?string $currentCat, ?string $currentProduct): void {
-  $cats = catalog_categories($pdo);
+  $cats = catalog_equipment_categories($pdo);
   echo '<aside class="cat-side"><nav aria-label="Ангилал"><ul class="cat-side__list">';
   foreach ($cats as $c) {
     $isCurrent = ($c['slug'] === $currentCat);
@@ -103,19 +117,55 @@ function catalog_crumbs(array $trail): void {
   echo '</nav>';
 }
 
-/** Product card, shared by the category grid and the related-products strip. */
-function catalog_card(array $p, string $catSlug): void {
-  $img = $p['thumb']
-    ? sprintf('<img src="/%s" alt="%s" loading="lazy" decoding="async">', ce($p['thumb']), ce($p['name']))
+/**
+ * One card, for every item in the shop: QPay products and price-on-request
+ * equipment look the same apart from the bottom line (shop_sections() in
+ * inc/shop-lib.php builds the $item):
+ *
+ *   ['kind' => 'priced'|'quote', 'name', 'text', 'url', 'image' => ?string,
+ *    'price' => shop_price_label()|null]
+ *
+ * The button sits outside the link, so the card never nests one interactive
+ * element inside another. js/shop.js handles .eq-card__add.
+ */
+function shop_card(array $item): void {
+  $img = $item['image']
+    ? sprintf('<img src="%s" alt="" loading="lazy" decoding="async">', ce($item['image']))
     : '<span class="eq-card__noimg" aria-hidden="true"></span>';
+  $foot = '';
+  if ($item['kind'] === 'quote') {
+    $foot = '<span class="eq-card__price eq-card__price--quote">Үнийн санал авах</span>';
+  } else {
+    $price = $item['price'];
+    $foot = '<span class="eq-card__price' . ($price['sold_out'] ? ' eq-card__price--out' : '') . '">' . ce($price['label']) . '</span>';
+    if ($price['add']) {
+      $foot .= sprintf('<button type="button" class="eq-card__add" data-variant-id="%d" aria-label="%s — сагсанд нэмэх">Сагсанд нэмэх</button>',
+        (int)$price['add'], ce($item['name']));
+    } elseif ($price['choose']) {
+      $foot .= sprintf('<a class="eq-card__choose" href="%s" aria-label="%s — сонгох">Сонгох</a>', ce($item['url']), ce($item['name']));
+    }
+  }
   printf(
-    '<article class="eq-card reveal reveal--scale">
-       <a href="/shop/equipment/%s/%s">
+    '<article class="eq-card eq-card--%s reveal reveal--scale">
+       <a class="eq-card__link" href="%s">
          <div class="eq-card__media">%s</div>
          <div class="eq-card__body"><h3>%s</h3><p>%s</p></div>
        </a>
+       <div class="eq-card__foot">%s</div>
      </article>',
-    ce($catSlug), ce($p['slug']), $img, ce($p['name']),
-    ce(mb_strimwidth((string)$p['intro'], 0, 110, '…', 'UTF-8'))
+    $item['kind'] === 'quote' ? 'quote' : 'priced', ce($item['url']), $img, ce($item['name']),
+    ce(mb_strimwidth((string)$item['text'], 0, 110, '…', 'UTF-8')), $foot
   );
+}
+
+/** An equipment card (group pages, product "similar items") — the same card as /shop. */
+function catalog_card(array $p, string $catSlug): void {
+  shop_card([
+    'kind' => 'quote',
+    'name' => $p['name'],
+    'text' => (string)$p['intro'],
+    'url' => '/shop/equipment/' . $catSlug . '/' . $p['slug'],
+    'image' => $p['thumb'] ? '/' . $p['thumb'] : null,
+    'price' => null,
+  ]);
 }

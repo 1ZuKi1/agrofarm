@@ -126,7 +126,7 @@
       subtotal += total;
       return `
         <li class="checkout-summary__line">
-          <span class="checkout-summary__name">${esc(v.product)} — ${esc(v.name_mn)}${v.weight_label ? ` <span class="checkout-summary__muted">(${esc(v.weight_label)})</span>` : ""}</span>
+          <span class="checkout-summary__name">${esc(v.name_mn === v.product ? v.product : `${v.product} — ${v.name_mn}`)}${v.weight_label ? ` <span class="checkout-summary__muted">(${esc(v.weight_label)})</span>` : ""}</span>
           <span class="checkout-summary__qty">${line.quantity} ш</span>
           <span class="checkout-summary__price">${money(total)}</span>
         </li>`;

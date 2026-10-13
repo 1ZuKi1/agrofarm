@@ -18,6 +18,7 @@ require dirname(__DIR__) . '/inc/db.php';
 require dirname(__DIR__) . '/inc/qpay.php';
 require dirname(__DIR__) . '/inc/orders.php';
 require_once dirname(__DIR__) . '/inc/fulfillment.php';
+require_once dirname(__DIR__) . '/inc/shop-lib.php'; // shop_line_name()
 
 // Error messages are shown to the buyer as-is (js/shop.js), so they are in
 // Mongolian like the rest of the shop.
@@ -164,7 +165,7 @@ try {
       'qty' => $qty,
       'line_total' => $lineTotal,
       // What the buyer's bank app shows for this line.
-      'invoice_line' => trim($variant['product_name'] . ' — ' . $variant['name_mn'] . ($variant['weight_label'] ? ' (' . $variant['weight_label'] . ')' : '')),
+      'invoice_line' => shop_line_name($variant['product_name'], $variant['name_mn'], $variant['weight_label']),
     ];
   }
 
