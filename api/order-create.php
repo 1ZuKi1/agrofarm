@@ -97,13 +97,14 @@ try {
   $options = fulfillment_options($pdo, fulfillment_now());
   if (!in_array($deliveryDate, array_column($options[$fulfillment], 'date'), true)) {
     http_response_code(409);
-    echo json_encode(['error' => 'Сонгосон өдөр боломжгүй болсон — өөр өдөр сонгоно уу', 'options' => $options], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Сонгосон өдөр боломжгүй болсон — өөр өдөр сонгоно уу', 'reason' => 'day', 'options' => $options], JSON_UNESCAPED_UNICODE);
     exit;
   }
   $deliveryFee = $fulfillment === 'delivery' ? $options['delivery_fee'] : 0;
 
-  // Free the stock of abandoned orders (cancelling their QR first).
-  orders_expire_stale($pdo);
+  // Free the stock of abandoned orders (cancelling their QR first). At most
+  // one per request: each may wait on QPay, and the buyer is waiting here.
+  orders_expire_stale($pdo, 1);
 
   $variantStmt = $pdo->prepare(
     'SELECT v.id, v.name_mn, v.price, v.stock, v.weight_label, p.name_mn AS product_name
@@ -174,6 +175,16 @@ try {
   }
   $subtotal = $total;           // the goods
   $total = $subtotal + $deliveryFee;
+
+  // The page sends the total it showed the buyer. If the basket changed after
+  // the page drew it (edited in the basket drawer or another tab), or a price
+  // or the delivery fee changed meanwhile, refuse rather than charge an
+  // amount the buyer never saw; the page redraws and they press again.
+  if (isset($input['expected_total']) && (int)$input['expected_total'] !== $total) {
+    http_response_code(409);
+    echo json_encode(['error' => 'Захиалгын дүн өөрчлөгдсөн — шалгаад дахин илгээнэ үү', 'reason' => 'total', 'options' => $options], JSON_UNESCAPED_UNICODE);
+    exit;
+  }
 
   $publicToken = bin2hex(random_bytes(16));
 

@@ -32,7 +32,7 @@ if (!preg_match('/^[a-f0-9]{32}$/', $token)) {
 
 try {
   $pdo = naf_db();
-  orders_expire_stale($pdo);
+  orders_expire_stale($pdo, 1); // one at a time: this runs on every 3-second poll
 
   $stmt = $pdo->prepare(
     'SELECT id, status, qpay_invoice_id, subtotal, delivery_fee, total, fulfillment, delivery_date, delivery_slot, paid_at, qr_image, qr_text, qpay_urls,

@@ -171,7 +171,6 @@
 
     const btn = $("checkoutSubmitBtn");
     btn.disabled = true;
-    const label = btn.textContent;
     btn.textContent = "Түр хүлээнэ үү…";
     try {
       const res = await fetch("/api/order-create.php", {
@@ -185,12 +184,24 @@
           buyer_note: $("checkoutNote").value.trim(),
           fulfillment: m,
           delivery_date: day,
+          // The total this page shows; the server refuses a different one.
+          expected_total: subtotal + fee(),
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 409 && data.options) {
-        // The day is no longer offered (13:00 passed, or midnight): redraw.
         options = data.options;
+        if (data.reason === "total") {
+          // The basket, a price or the fee changed since the page drew it:
+          // redraw from the current basket and live prices; the buyer checks
+          // and presses again.
+          await loadProducts();
+          renderDays(chosenDay());
+          renderSummary(getCart());
+          showError(data.error);
+          return;
+        }
+        // The day is no longer offered (13:00 passed, or midnight): redraw.
         renderDays(null);
         renderTotals();
         showError(data.error || "Сонгосон өдөр боломжгүй болсон — өөр өдөр сонгоно уу", form.querySelector('input[name="delivery_date"]'));
@@ -207,13 +218,29 @@
       showError("Сервертэй холбогдож чадсангүй — дахин оролдоно уу");
     } finally {
       btn.disabled = false;
-      btn.textContent = label;
+      renderTotals(); // the current total — it may have just been redrawn
     }
   });
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && !$("checkoutRoot").hidden) refreshOptions();
   });
+
+  // The basket changed in another tab: redraw the summary so it never shows
+  // a basket other than the one that will be sent. (Edits in this page's own
+  // basket drawer are caught on submit by expected_total.)
+  window.addEventListener("storage", (e) => {
+    if (e.key === "naf_cart" && !$("checkoutRoot").hidden) renderSummary(getCart());
+  });
+
+  async function loadProducts() {
+    try {
+      const res = await fetch("/api/shop-data.php", { cache: "no-store" });
+      products = (await res.json()).products || [];
+    } catch {
+      /* keep the last list */
+    }
+  }
 
   /* ---------------- QR screen ---------------- */
 
@@ -387,12 +414,7 @@
 
     const cart = typeof getCart === "function" ? getCart() : [];
     if (!cart.length) { show("empty"); return; }
-    try {
-      const res = await fetch("/api/shop-data.php");
-      products = (await res.json()).products || [];
-    } catch {
-      products = [];
-    }
+    await loadProducts();
     show("form");
     if (!products.length) {
       $("summaryLines").innerHTML = `<li class="checkout-summary__warn">Сагсаа ачаалж чадсангүй — хуудсаа дахин ачаална уу.</li>`;
