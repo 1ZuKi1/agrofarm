@@ -13,35 +13,18 @@
  * cPanel hosts run PHP by default — no setup needed.
  */
 
-session_set_cookie_params([
-  'httponly' => true,
-  'samesite' => 'Lax',
-  'secure'   => !empty($_SERVER['HTTPS']),
-]);
-session_start();
-header('Content-Type: text/plain; charset=utf-8');
+require_once dirname(__DIR__) . '/inc/admin-auth.php';
 
-// Only accept POST
+// Auth: a logged-in account (inc/admin-auth.php) and this session's CSRF token.
+admin_session_start();
+header('Content-Type: text/plain; charset=utf-8');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   http_response_code(405);
   echo 'Метод зөвшөөрөгдөөгүй';
   exit;
 }
-
-// Must be logged in
-if (empty($_SESSION['naf_admin'])) {
-  http_response_code(401);
-  echo 'Нэвтрэх хугацаа дууссан — дахин нэвтэрнэ үү.';
-  exit;
-}
-
-// CSRF: the token issued at login must accompany every state-changing request.
-$csrf = $_POST['csrf'] ?? '';
-if (empty($_SESSION['naf_csrf_token']) || !hash_equals($_SESSION['naf_csrf_token'], $csrf)) {
-  http_response_code(403);
-  echo 'Аюулгүй байдлын токен буруу эсвэл дутуу байна — дахин нэвтэрнэ үү.';
-  exit;
-}
+$me = admin_require(naf_db(), 'staff', true);
+admin_check_csrf(true);
 
 $action = $_POST['action'] ?? 'publish';
 

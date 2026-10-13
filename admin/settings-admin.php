@@ -19,30 +19,18 @@
 require dirname(__DIR__) . '/inc/db.php';
 require_once dirname(__DIR__) . '/inc/fulfillment.php';
 
-session_set_cookie_params([
-  'httponly' => true,
-  'samesite' => 'Lax',
-  'secure'   => !empty($_SERVER['HTTPS']),
-]);
-session_start();
-header('Content-Type: application/json; charset=utf-8');
+require_once dirname(__DIR__) . '/inc/admin-auth.php';
 
+// Auth: a logged-in account (inc/admin-auth.php) and this session's CSRF token.
+admin_session_start();
+header('Content-Type: application/json; charset=utf-8');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   http_response_code(405);
   echo json_encode(['error' => 'Метод зөвшөөрөгдөөгүй']);
   exit;
 }
-if (empty($_SESSION['naf_admin'])) {
-  http_response_code(401);
-  echo json_encode(['error' => 'Нэвтрэх хугацаа дууссан — дахин нэвтэрнэ үү.']);
-  exit;
-}
-$csrf = $_POST['csrf'] ?? '';
-if (empty($_SESSION['naf_csrf_token']) || !hash_equals($_SESSION['naf_csrf_token'], $csrf)) {
-  http_response_code(403);
-  echo json_encode(['error' => 'Аюулгүй байдлын токен буруу эсвэл дутуу байна — дахин нэвтэрнэ үү.']);
-  exit;
-}
+$me = admin_require(naf_db(), 'admin', true);
+admin_check_csrf(true);
 
 /** 'Y-m-d' → DateTimeImmutable in UB time, or null if not a real date. */
 function settings_admin_date(string $s): ?DateTimeImmutable {
