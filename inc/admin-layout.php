@@ -15,6 +15,7 @@
 
 require_once __DIR__ . '/admin-auth.php';
 require_once __DIR__ . '/layout.php'; // ce(), asset()
+require_once __DIR__ . '/admin-data.php'; // admin_counts() for the menu badges
 
 /** The menu, in order: key, label, address, icon, who sees it. */
 const ADMIN_NAV = [

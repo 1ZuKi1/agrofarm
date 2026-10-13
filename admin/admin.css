@@ -180,10 +180,10 @@ a.ad-stat:hover { background: var(--sunk); }
 .ad-table th, .ad-table td { padding: 11px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
 .ad-table th { font-size: .76rem; font-weight: 650; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; background: var(--sunk); white-space: nowrap; }
 .ad-table tr:last-child td { border-bottom: 0; }
-.ad-table .ad-sub { display: block; font-size: .82rem; color: var(--ink-3); margin-top: 2px; }
+.ad-sub, .ad-table .ad-sub { display: block; font-size: .82rem; color: var(--ink-3); margin-top: 2px; }
 .ad-table a.ad-row-link { color: var(--ink) !important; font-weight: 600; text-decoration: none; }
 .ad-table a.ad-row-link:hover { color: var(--g) !important; text-decoration: underline; }
-.ad-table td.ad-r { text-align: right; white-space: nowrap; }
+.ad-table td.ad-r, .ad-table th.ad-r { text-align: right; white-space: nowrap; }
 /* Phones: each row becomes a small card. */
 @media (max-width: 760px) {
   .ad-table--cards, .ad-table--cards tbody, .ad-table--cards tr, .ad-table--cards td { display: block; }

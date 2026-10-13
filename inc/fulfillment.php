@@ -17,7 +17,7 @@
  *
  * Used by: shop-checkout.php (the day buttons), api/checkout-options.php,
  * api/order-create.php (refuses a day not offered right now),
- * api/order-status.php, inc/orders.php (staff email), admin/orders-admin.php.
+ * api/order-status.php, inc/orders.php (staff email), the /admin/ order pages.
  * This file is the only place these rules live.
  */
 

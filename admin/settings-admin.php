@@ -4,7 +4,7 @@
  * days (Цагаан сар, Наадам… — skipped by the checkout like weekends).
  * Values live in the `settings` table; inc/fulfillment.php reads them.
  *
- * Auth matches orders-admin.php exactly: PHP session + CSRF token issued at
+ * Auth: a logged-in Админ (inc/admin-auth.php) + the CSRF token issued at
  * login. Every action answers with the current values:
  *   {"delivery_fee": 8000, "closed_days": ["2027-07-11", …]}
  *

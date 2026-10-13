@@ -8,8 +8,9 @@
  *   orders_expire_stale()   pending orders past expires_at → expired, after
  *                           cancelling their QPay invoice so the QR stops
  *                           accepting payment (api/order-create.php,
- *                           api/order-status.php,
- *                           admin/orders-admin.php)
+ *                           api/order-status.php, the /admin/ order pages)
+ *   order_fulfill()         paid → fulfilled ("Хүргэсэн"), /admin/ only
+ *   order_cancel()          pending/paid → cancelled ("Цуцлах"), /admin/ only
  *
  * An order holds its stock and delivery slot for 20 minutes. Before this, an
  * expired order's QR kept working: a payment on minute 25 still went through,
@@ -169,4 +170,104 @@ function orders_expire_stale(PDO $pdo, int $limit = 5): void {
       // QPay unreachable — leave pending, retry later
     }
   }
+}
+
+
+// ---- /admin/: Хүргэсэн and Цуцлах ------------------------------------------
+// Both need inc/admin-auth.php (admin_log) as well, which every /admin/ page
+// loads. Each one changes the row with a guarded UPDATE, so two staff pressing
+// the same button at once can't both succeed: the second gets a calm message
+// naming who got there first (from the activity log).
+//
+// Stock: availability is derived from the reservation set
+// ('pending','paid','fulfilled') — see inc/shop-lib.php, api/order-create.php
+// and admin/products-admin.php. Fulfilling keeps the order in that set (the
+// goods are gone); cancelling takes it out, so its stock is available again.
+
+/** "Тест Админ, 10/15 14:20" for the newest log row of one of $actions, or null. */
+function order_last_actor(PDO $pdo, int $id, array $actions): ?string {
+  $in = implode(',', array_fill(0, count($actions), '?'));
+  $st = $pdo->prepare("SELECT user_name, created_at FROM admin_log WHERE target_type = 'order' AND target_id = ? AND action IN ($in) ORDER BY id DESC LIMIT 1");
+  $st->execute(array_merge([$id], $actions));
+  $row = $st->fetch();
+  return $row ? $row['user_name'] . ', ' . date('m/d H:i', strtotime($row['created_at'])) : null;
+}
+
+/** Why an order is no longer in the state the button expected. */
+function order_state_message(PDO $pdo, array $order, string $tried): string {
+  $id = (int)$order['id'];
+  switch ($order['status']) {
+    case 'fulfilled':
+      $who = order_last_actor($pdo, $id, ['order_fulfill'])
+        ?: ($order['fulfilled_at'] ? date('m/d H:i', strtotime($order['fulfilled_at'])) : null);
+      return ($tried === 'cancel' ? 'Цуцлах боломжгүй: аль хэдийн хүргэсэн' : 'Аль хэдийн хүргэсэн') . ($who ? ' — ' . $who : '');
+    case 'cancelled':
+      $who = order_last_actor($pdo, $id, ['order_cancel']);
+      return ($tried === 'cancel' ? 'Аль хэдийн цуцалсан' : 'Энэ захиалга цуцлагдсан') . ($who ? ' — ' . $who : '');
+    case 'expired':
+      return 'Энэ захиалгын 20 минутын хугацаа дууссан — төлбөр төлөгдөөгүй.';
+    case 'pending':
+      return 'Төлбөр хараахан төлөгдөөгүй — зөвхөн төлсөн захиалгыг "Хүргэсэн" болгоно.';
+  }
+  return 'Энэ үйлдлийг хийх боломжгүй.';
+}
+
+/** paid → fulfilled. Returns ['ok' => bool, 'message' => string]. */
+function order_fulfill(PDO $pdo, int $id, array $me): array {
+  $st = $pdo->prepare('SELECT id, status, fulfilled_at FROM orders WHERE id = ?');
+  $st->execute([$id]);
+  $order = $st->fetch();
+  if (!$order) return ['ok' => false, 'message' => 'Захиалга олдсонгүй'];
+
+  $up = $pdo->prepare("UPDATE orders SET status = 'fulfilled', fulfilled_at = NOW() WHERE id = ? AND status = 'paid'");
+  $up->execute([$id]);
+  if ($up->rowCount() !== 1) {
+    $st->execute([$id]); // re-read: someone may have changed it a moment ago
+    return ['ok' => false, 'message' => order_state_message($pdo, $st->fetch() ?: $order, 'fulfill')];
+  }
+  admin_log($pdo, $me, 'order_fulfill', 'order', $id);
+  return ['ok' => true, 'message' => order_number($id) . ' — хүргэсэн гэж тэмдэглэлээ.'];
+}
+
+/**
+ * pending/paid → cancelled. A pending order's QPay invoice is cancelled first,
+ * so its QR stops working; if QPay says it was paid a moment ago, the order is
+ * marked paid instead and the cancel is refused. A PAID order's money is NOT
+ * returned automatically — the message tells staff to refund it in the QPay
+ * merchant portal. Returns ['ok' => bool, 'message' => string, 'was_paid' => bool].
+ */
+function order_cancel(PDO $pdo, int $id, array $me): array {
+  $st = $pdo->prepare('SELECT id, status, qpay_invoice_id, fulfilled_at FROM orders WHERE id = ?');
+  $st->execute([$id]);
+  $order = $st->fetch();
+  if (!$order) return ['ok' => false, 'message' => 'Захиалга олдсонгүй', 'was_paid' => false];
+  if (!in_array($order['status'], ['pending', 'paid'], true)) {
+    return ['ok' => false, 'message' => order_state_message($pdo, $order, 'cancel'), 'was_paid' => false];
+  }
+
+  if ($order['status'] === 'pending' && $order['qpay_invoice_id']) {
+    $result = 'error';
+    try { $result = qpay_cancel_invoice(qpay_token(), $order['qpay_invoice_id']); } catch (\Throwable $e) {}
+    if ($result === 'paid') {
+      order_mark_paid($pdo, $id); // paid a moment ago — record it rather than cancel it unseen
+      return ['ok' => false, 'message' => 'Энэ захиалгын төлбөр яг одоо төлөгдсөн байна — хуудсыг шинэчилнэ үү.', 'was_paid' => false];
+    }
+    if ($result !== 'cancelled') {
+      return ['ok' => false, 'message' => 'QPay-тэй холбогдож нэхэмжлэлийг цуцалж чадсангүй — дахин оролдоно уу.', 'was_paid' => false];
+    }
+  }
+
+  $up = $pdo->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ? AND status = ?");
+  $up->execute([$id, $order['status']]);
+  if ($up->rowCount() !== 1) {
+    $st->execute([$id]);
+    return ['ok' => false, 'message' => order_state_message($pdo, $st->fetch() ?: $order, 'cancel'), 'was_paid' => false];
+  }
+  $wasPaid = $order['status'] === 'paid';
+  admin_log($pdo, $me, 'order_cancel', 'order', $id, $wasPaid ? 'was_paid' : null);
+  return [
+    'ok' => true,
+    'message' => order_number($id) . ' цуцлагдлаа.' . ($wasPaid ? ' Төлбөрийг QPay мерчант порталаас худалдан авагчид буцааж олгоно уу.' : ''),
+    'was_paid' => $wasPaid,
+  ];
 }

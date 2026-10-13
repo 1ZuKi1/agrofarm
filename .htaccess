@@ -31,7 +31,7 @@ RewriteRule ^(inc|lang)(/|$) - [F,L]
 # a POST (checkout, inquiry form) arrives intact.
 # ------------------------------------------------------------------
 RewriteRule ^(shop-data|order-create|order-status|inquiry-create)\.php$ api/$1.php [L]
-RewriteRule ^(login|logout|publish|products-admin|orders-admin)\.php$ admin/$1.php [L]
+RewriteRule ^(login|logout|publish|products-admin)\.php$ admin/$1.php [L]
 RewriteRule ^admin\.js$ admin/admin.js [L]
 RewriteRule ^style\.css$ css/style.css [L]
 RewriteRule ^(script|shop|catalog)\.js$ js/$1.js [L]
