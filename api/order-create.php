@@ -152,7 +152,7 @@ try {
 
     if ($qty > $available) {
       http_response_code(400);
-      echo json_encode(['error' => $variant['product_name'] . ' — ' . $variant['name_mn'] . ': нөөцөд ' . max(0, $available) . ' ширхэг үлдсэн']);
+      echo json_encode(['error' => shop_line_name($variant['product_name'], $variant['name_mn'], null) . ': нөөцөд ' . max(0, $available) . ' ширхэг үлдсэн']);
       exit;
     }
 

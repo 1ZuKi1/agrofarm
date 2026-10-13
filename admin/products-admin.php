@@ -85,18 +85,25 @@ if ($action === 'save_product') {
   $descEn = trim($_POST['description_en'] ?? '') ?: null;
   $active = ($_POST['active'] ?? '1') === '1' ? 1 : 0;
   // Which /shop section the product appears in ('' = none → "Бусад").
+  // Only changed when the form sends the field: an admin.js from before the
+  // category dropdown (cached in a staff browser after a deploy) doesn't, and
+  // must not quietly move every product it saves into "Бусад".
+  $setCategory = array_key_exists('category_id', $_POST);
   $categoryRaw = trim((string)($_POST['category_id'] ?? ''));
   $categoryId = null;
-  if ($categoryRaw !== '') {
-    $catCheck = $pdo->prepare('SELECT id FROM categories WHERE id = ?');
-    $catCheck->execute([(int)$categoryRaw]);
-    $categoryId = $catCheck->fetchColumn();
-    if ($categoryId === false || !ctype_digit($categoryRaw)) {
+  if ($setCategory && $categoryRaw !== '') {
+    $found = false;
+    if (ctype_digit($categoryRaw)) {
+      $catCheck = $pdo->prepare('SELECT id FROM categories WHERE id = ?');
+      $catCheck->execute([(int)$categoryRaw]);
+      $found = $catCheck->fetchColumn();
+    }
+    if ($found === false) {
       http_response_code(400);
       echo json_encode(['error' => 'Ангилал олдсонгүй']);
       exit;
     }
-    $categoryId = (int)$categoryId;
+    $categoryId = (int)$found;
   }
 
   if ($nameMn === '') {
@@ -113,9 +120,9 @@ if ($action === 'save_product') {
   try {
     if ($id !== '') {
       $stmt = $pdo->prepare(
-        'UPDATE products SET slug=?, category_id=?, name_mn=?, name_en=?, description_mn=?, description_en=?, active=? WHERE id=?'
+        'UPDATE products SET slug=?, category_id=IF(?, ?, category_id), name_mn=?, name_en=?, description_mn=?, description_en=?, active=? WHERE id=?'
       );
-      $stmt->execute([$slug, $categoryId, $nameMn, $nameEn, $descMn, $descEn, $active, (int)$id]);
+      $stmt->execute([$slug, $setCategory ? 1 : 0, $categoryId, $nameMn, $nameEn, $descMn, $descEn, $active, (int)$id]);
       echo json_encode(['id' => (int)$id]);
     } else {
       $stmt = $pdo->prepare(
