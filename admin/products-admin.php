@@ -47,7 +47,7 @@ if ($action === 'list') {
   // that hasn't been cancelled/expired — staff need to see both the raw
   // stock count and true availability. Reservation-set literal
   // ('pending','paid','fulfilled') must stay in sync with the same literal
-  // in order-create.php, slots.php, and shop-data.php.
+  // in order-create.php and shop-data.php.
   $reservedStmt = $pdo->prepare(
     "SELECT COALESCE(SUM(oi.quantity),0) FROM order_items oi
      JOIN orders o ON o.id = oi.order_id

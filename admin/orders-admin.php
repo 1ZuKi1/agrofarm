@@ -8,9 +8,9 @@
  *
  * Stock consequence, handled deliberately: availability is derived from the
  * reservation set ('pending','paid','fulfilled') — see order-create.php,
- * slots.php, shop-data.php and products-admin.php. Fulfilling keeps the
+ * shop-data.php and products-admin.php. Fulfilling keeps the
  * order in that set (the goods are gone); cancelling takes it out, so its
- * stock and delivery slot become available again.
+ * stock becomes available again.
  */
 
 require dirname(__DIR__) . '/inc/db.php';

@@ -8,7 +8,7 @@
  *   orders_expire_stale()   pending orders past expires_at → expired, after
  *                           cancelling their QPay invoice so the QR stops
  *                           accepting payment (api/order-create.php,
- *                           api/order-status.php, api/slots.php,
+ *                           api/order-status.php,
  *                           admin/orders-admin.php)
  *
  * An order holds its stock and delivery slot for 20 minutes. Before this, an
@@ -21,6 +21,8 @@
  *
  * Requires inc/db.php and inc/qpay.php to be loaded first.
  */
+
+require_once __DIR__ . '/fulfillment.php'; // day words for the staff email
 
 const NAF_ORDERS_TO = 'info@agrofarm.mn';
 const NAF_ORDERS_FROM = 'no-reply@agrofarm.mn'; // must be on our own domain for SPF
@@ -55,7 +57,7 @@ function order_mark_paid(PDO $pdo, int $orderId): bool {
  */
 function order_notify_paid(PDO $pdo, int $orderId, bool $late = false): void {
   try {
-    $st = $pdo->prepare('SELECT id, buyer_name, buyer_phone, buyer_address, buyer_note, delivery_date, delivery_slot, total FROM orders WHERE id = ?');
+    $st = $pdo->prepare('SELECT id, buyer_name, buyer_phone, buyer_address, buyer_note, fulfillment, delivery_date, delivery_slot, delivery_fee, total FROM orders WHERE id = ?');
     $st->execute([$orderId]);
     $o = $st->fetch();
     if (!$o) return;
@@ -63,6 +65,14 @@ function order_notify_paid(PDO $pdo, int $orderId, bool $late = false): void {
     $it->execute([$orderId]);
 
     $no = order_number((int)$o['id']);
+    $pickup = ($o['fulfillment'] === 'pickup');
+    $word = fulfillment_day_word($o['delivery_date'], fulfillment_now());
+    $shortDate = date('m/d', strtotime($o['delivery_date']));
+    // What staff must do, first: "Хүргэлт Маргааш 10/15" or "Очиж авна Өнөөдөр".
+    // Orders from before the 2026-10 checkout still have a time slot.
+    if ($pickup) $job = 'Очиж авна ' . $word;
+    elseif ($o['delivery_slot']) $job = 'Хүргэлт ' . $shortDate . ' ' . $o['delivery_slot'];
+    else $job = 'Хүргэлт ' . $word . ' ' . $shortDate;
     $lines = ["Шинэ захиалга $no — төлбөр төлөгдсөн", str_repeat('-', 40), ''];
     if ($late) {
       $lines[] = 'АНХААР: энэ захиалгын 20 минутын хугацаа дууссаны дараа төлбөр орсон.';
@@ -71,20 +81,23 @@ function order_notify_paid(PDO $pdo, int $orderId, bool $late = false): void {
     }
     $lines[] = 'Нэр:      ' . $o['buyer_name'];
     $lines[] = 'Утас:     ' . $o['buyer_phone'];
-    $lines[] = 'Хаяг:     ' . $o['buyer_address'];
+    $lines[] = 'Авах хэлбэр: ' . fulfillment_method_label($o['fulfillment']);
+    $lines[] = 'Өдөр:     ' . $word . ' — ' . fulfillment_date_label($o['delivery_date']) . ($o['delivery_slot'] ? ', ' . $o['delivery_slot'] : '');
+    if (!$pickup) $lines[] = 'Хаяг:     ' . $o['buyer_address'];
     if ($o['buyer_note']) $lines[] = 'Тэмдэглэл: ' . $o['buyer_note'];
-    $lines[] = 'Хүргэлт:  ' . $o['delivery_date'] . ', ' . $o['delivery_slot'];
+    if ($pickup) $lines[] = 'Худалдан авагч оффис дээр ирж авна (' . NAF_PICKUP_ADDRESS . ').';
     $lines[] = '';
     $lines[] = 'Бараа:';
     foreach ($it->fetchAll() as $row) {
       $lines[] = sprintf('  %s × %d — %s₮', $row['variant_name_snapshot'], $row['quantity'], number_format((int)$row['line_total']));
     }
+    if ((int)$o['delivery_fee'] > 0) $lines[] = 'Хүргэлт:  ' . number_format((int)$o['delivery_fee']) . '₮';
     $lines[] = '';
     $lines[] = 'Нийт:     ' . number_format((int)$o['total']) . '₮ (QPay-ээр төлсөн)';
     $lines[] = '';
-    $lines[] = 'Хүргэсний дараа админд "Хүргэсэн" гэж тэмдэглэнэ үү: https://agrofarm.mn/admin/';
+    $lines[] = ($pickup ? 'Барааг өгсний' : 'Хүргэсний') . ' дараа админд "Хүргэсэн" гэж тэмдэглэнэ үү: https://agrofarm.mn/admin/';
 
-    $subject = "Шинэ захиалга $no — " . number_format((int)$o['total']) . '₮' . ($late ? ' (хугацаа хэтэрсэн)' : '');
+    $subject = "Шинэ захиалга $no — $job — " . number_format((int)$o['total']) . '₮' . ($late ? ' (хугацаа хэтэрсэн)' : '');
     $sent = @mail(
       NAF_ORDERS_TO,
       '=?UTF-8?B?' . base64_encode($subject) . '?=',

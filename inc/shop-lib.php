@@ -18,7 +18,7 @@ require_once __DIR__ . '/db.php';
  * 'ingredients' and 'available' — stock minus everything reserved by an order
  * that hasn't been cancelled/expired. The reservation-set literal
  * ('pending','paid','fulfilled') must stay in sync with the same literal in
- * order-create.php, slots.php and products-admin.php.
+ * order-create.php and products-admin.php.
  *
  * $slug limits the result to that one product.
  */

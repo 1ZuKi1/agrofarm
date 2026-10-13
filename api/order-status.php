@@ -19,6 +19,7 @@
 require dirname(__DIR__) . '/inc/db.php';
 require dirname(__DIR__) . '/inc/qpay.php';
 require dirname(__DIR__) . '/inc/orders.php';
+require_once dirname(__DIR__) . '/inc/fulfillment.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -34,7 +35,7 @@ try {
   orders_expire_stale($pdo);
 
   $stmt = $pdo->prepare(
-    'SELECT id, status, qpay_invoice_id, total, delivery_date, delivery_slot, paid_at, qr_image, qr_text, qpay_urls,
+    'SELECT id, status, qpay_invoice_id, subtotal, delivery_fee, total, fulfillment, delivery_date, delivery_slot, paid_at, qr_image, qr_text, qpay_urls,
             GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), expires_at)) AS expires_in
      FROM orders WHERE public_token = ?'
   );
@@ -80,6 +81,11 @@ try {
   }
 
   $order['order_no'] = order_number((int)$order['id']);
+  // How the confirmation says the day: "Маргааш" + "10-р сарын 15, Пүрэв".
+  // Old orders (before the 2026-10 checkout) also carry delivery_slot.
+  $order['day_word'] = fulfillment_day_word($order['delivery_date'], fulfillment_now());
+  $order['date_label'] = fulfillment_date_label($order['delivery_date']);
+  foreach (['subtotal', 'delivery_fee', 'total'] as $k) $order[$k] = (int)$order[$k];
   $order['expires_in'] = (int)$order['expires_in'];
   if ($order['status'] === 'pending') {
     $order['banks'] = json_decode((string)$order['qpay_urls'], true) ?: [];

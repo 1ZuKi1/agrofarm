@@ -33,7 +33,7 @@ try {
   // Only treat 'paid'/'fulfilled'/'cancelled' as truly resolved. An 'expired'
   // order with no paid_at can still have actually been paid — it may have
   // been swept to 'expired' by unrelated traffic (see order-status.php,
-  // slots.php, order-create.php's lazy-expiry sweeps) while this webhook was
+  // order-create.php's lazy-expiry sweeps) while this webhook was
   // in flight or delayed. Early-returning for it here would silently and
   // permanently lose a paid order, so it falls through to the re-verify below
   // instead, same as a 'pending' order would.
