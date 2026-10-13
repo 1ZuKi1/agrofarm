@@ -10,19 +10,23 @@
 
 require dirname(__DIR__) . '/inc/db.php';
 require dirname(__DIR__) . '/inc/qpay.php';
+require dirname(__DIR__) . '/inc/orders.php';
+
+// Error messages are shown to the buyer as-is (js/shop.js), so they are in
+// Mongolian like the rest of the shop.
 
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   http_response_code(405);
-  echo json_encode(['error' => 'Method not allowed']);
+  echo json_encode(['error' => 'Зөвшөөрөгдөөгүй хүсэлт']);
   exit;
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
 if (!is_array($input)) {
   http_response_code(400);
-  echo json_encode(['error' => 'Invalid request']);
+  echo json_encode(['error' => 'Хүсэлт буруу байна']);
   exit;
 }
 
@@ -36,26 +40,35 @@ $deliverySlot = trim($input['delivery_slot'] ?? '');
 
 if (!is_array($items) || !count($items)) {
   http_response_code(400);
-  echo json_encode(['error' => 'Cart is empty']);
+  echo json_encode(['error' => 'Сагс хоосон байна']);
   exit;
 }
 if ($buyerName === '' || $buyerPhone === '' || $buyerAddress === '') {
   http_response_code(400);
-  echo json_encode(['error' => 'Name, phone, and address are required']);
+  echo json_encode(['error' => 'Нэр, утас, хаягаа бөглөнө үү']);
+  exit;
+}
+// Mongolian numbers are 8 digits. Spaces, dashes and a +976 prefix are
+// accepted and stripped, so "+976 9911-2233" is stored as "99112233".
+$buyerPhone = preg_replace('/[\s\-().]/', '', $buyerPhone);
+$buyerPhone = preg_replace('/^(\+?976)(?=\d{8}$)/', '', $buyerPhone);
+if (!preg_match('/^\d{8}$/', $buyerPhone)) {
+  http_response_code(400);
+  echo json_encode(['error' => 'Утасны дугаар 8 оронтой байх ёстой']);
   exit;
 }
 
 $validSlots = ['10:00-12:00', '14:00-16:00', '16:00-18:00'];
 if (!in_array($deliverySlot, $validSlots, true)) {
   http_response_code(400);
-  echo json_encode(['error' => 'Invalid delivery slot']);
+  echo json_encode(['error' => 'Хүргэлтийн цагаа сонгоно уу']);
   exit;
 }
 $today = new DateTime('today');
 $dateObj = DateTime::createFromFormat('Y-m-d', $deliveryDate);
 if (!$dateObj || $dateObj < $today) {
   http_response_code(400);
-  echo json_encode(['error' => 'Invalid delivery date']);
+  echo json_encode(['error' => 'Хүргэлтийн огноо буруу байна']);
   exit;
 }
 $deliveryDate = $dateObj->format('Y-m-d');
@@ -68,7 +81,8 @@ $deliveryDate = $dateObj->format('Y-m-d');
 // only ever fires for DB-only failures that had no handler before.
 try {
   $pdo = naf_db();
-  $pdo->exec("UPDATE orders SET status='expired' WHERE status='pending' AND expires_at < NOW()");
+  // Free the stock and slots of abandoned orders (cancelling their QR first).
+  orders_expire_stale($pdo);
 
   // Reservation-set literal ('pending','paid','fulfilled') — must stay in sync
   // with the same literal in slots.php, shop-data.php, and products-admin.php.
@@ -78,11 +92,15 @@ try {
   $slotCountStmt->execute([$deliveryDate, $deliverySlot]);
   if ((int)$slotCountStmt->fetchColumn() >= 5) {
     http_response_code(400);
-    echo json_encode(['error' => 'That delivery slot is now full — please pick another']);
+    echo json_encode(['error' => 'Энэ хүргэлтийн цаг дүүрсэн байна — өөр цаг сонгоно уу']);
     exit;
   }
 
-  $variantStmt = $pdo->prepare('SELECT id, name_mn, price, stock FROM product_variants WHERE id = ? AND active = 1');
+  $variantStmt = $pdo->prepare(
+    'SELECT v.id, v.name_mn, v.price, v.stock, v.weight_label, p.name_mn AS product_name
+     FROM product_variants v JOIN products p ON p.id = v.product_id
+     WHERE v.id = ? AND v.active = 1 AND p.active = 1'
+  );
   // Reservation-set literal ('pending','paid','fulfilled') — must stay in sync
   // with the same literal in slots.php, shop-data.php, and products-admin.php.
   $reservedStmt = $pdo->prepare(
@@ -100,7 +118,7 @@ try {
     $qty = (int)($item['quantity'] ?? 0);
     if ($variantId <= 0 || $qty <= 0) {
       http_response_code(400);
-      echo json_encode(['error' => 'Invalid cart line']);
+      echo json_encode(['error' => 'Сагсанд буруу мөр байна']);
       exit;
     }
     $requestedByVariant[$variantId] = ($requestedByVariant[$variantId] ?? 0) + $qty;
@@ -113,7 +131,7 @@ try {
     $variant = $variantStmt->fetch();
     if (!$variant) {
       http_response_code(400);
-      echo json_encode(['error' => 'A product in your cart is no longer available']);
+      echo json_encode(['error' => 'Сагсан дахь нэг бараа зарагдаж дууссан байна']);
       exit;
     }
 
@@ -123,7 +141,7 @@ try {
 
     if ($qty > $available) {
       http_response_code(400);
-      echo json_encode(['error' => $variant['name_mn'] . ' — only ' . max(0, $available) . ' left in stock']);
+      echo json_encode(['error' => $variant['product_name'] . ' — ' . $variant['name_mn'] . ': нөөцөд ' . max(0, $available) . ' ширхэг үлдсэн']);
       exit;
     }
 
@@ -135,12 +153,14 @@ try {
       'price' => $variant['price'],
       'qty' => $qty,
       'line_total' => $lineTotal,
+      // What the buyer's bank app shows for this line.
+      'invoice_line' => trim($variant['product_name'] . ' — ' . $variant['name_mn'] . ($variant['weight_label'] ? ' (' . $variant['weight_label'] . ')' : '')),
     ];
   }
 
   if ($total <= 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'Invalid order total']);
+    echo json_encode(['error' => 'Захиалгын дүн буруу байна']);
     exit;
   }
 
@@ -149,11 +169,14 @@ try {
   try {
     $qpayToken = qpay_token();
     $callbackUrl = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/qpay-callback.php?order=' . $publicToken;
-    $invoice = qpay_create_invoice($qpayToken, $publicToken, $total, $callbackUrl, 'Nuudelchin Agro Farm order');
+    $invoiceLines = array_map(function ($li) {
+      return ['description' => $li['invoice_line'], 'quantity' => $li['qty'], 'unit_price' => $li['price']];
+    }, $lineItems);
+    $invoice = qpay_create_invoice($qpayToken, $publicToken, $invoiceLines, $callbackUrl, 'Нүүдэлчин Агро Ферм — онлайн захиалга');
     $banks = qpay_bank_links($invoice);
   } catch (Throwable $e) {
     http_response_code(502);
-    echo json_encode(['error' => "Could not start payment — please try again"]);
+    echo json_encode(['error' => 'Төлбөр эхлүүлж чадсангүй — дахин оролдоно уу']);
     exit;
   }
 
@@ -177,18 +200,21 @@ try {
       'INSERT INTO order_items (order_id, variant_id, variant_name_snapshot, unit_price_snapshot, quantity, line_total) VALUES (?, ?, ?, ?, ?, ?)'
     );
     foreach ($lineItems as $li) {
-      $itemStmt->execute([$orderId, $li['variant_id'], $li['name'], $li['price'], $li['qty'], $li['line_total']]);
+      $itemStmt->execute([$orderId, $li['variant_id'], $li['invoice_line'], $li['price'], $li['qty'], $li['line_total']]);
     }
     $pdo->commit();
   } catch (Throwable $e) {
     $pdo->rollBack();
     http_response_code(500);
-    echo json_encode(['error' => 'Could not save your order — please try again']);
+    echo json_encode(['error' => 'Захиалга хадгалж чадсангүй — дахин оролдоно уу']);
     exit;
   }
 
   echo json_encode([
     'token' => $publicToken,
+    'order_no' => order_number($orderId),
+    // Seconds the order (and its QR) stays valid — the QR screen counts down.
+    'expires_in' => 20 * 60,
     'total' => $total,
     'qr_image' => $invoice['qr_image'] ?? null,
     'qr_text' => $invoice['qr_text'] ?? null,
@@ -196,5 +222,5 @@ try {
   ]);
 } catch (\Throwable $e) {
   http_response_code(500);
-  echo json_encode(['error' => 'Internal server error']);
+  echo json_encode(['error' => 'Серверийн алдаа гарлаа — дахин оролдоно уу']);
 }

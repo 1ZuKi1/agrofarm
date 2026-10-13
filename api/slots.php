@@ -4,12 +4,14 @@
  */
 
 require dirname(__DIR__) . '/inc/db.php';
+require dirname(__DIR__) . '/inc/qpay.php';
+require dirname(__DIR__) . '/inc/orders.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
 try {
   $pdo = naf_db();
-  $pdo->exec("UPDATE orders SET status='expired' WHERE status='pending' AND expires_at < NOW()");
+  orders_expire_stale($pdo); // free slots held by abandoned orders (cancels their QR first)
 
   $slotDefs = ['10:00-12:00', '14:00-16:00', '16:00-18:00'];
   $capacity = 5;

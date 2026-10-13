@@ -662,7 +662,13 @@
                         `<li>${escHtml(it.variant_name_snapshot)} × ${it.quantity} — ${money(it.line_total)}</li>`
                       ).join("")}</ul></dd>
                       ${o.paid_at ? `<dt>Төлсөн огноо</dt><dd>${escHtml(fmtDate(o.paid_at))}</dd>` : ""}
+                      ${o.fulfilled_at ? `<dt>Хүргэсэн огноо</dt><dd>${escHtml(fmtDate(o.fulfilled_at))}</dd>` : ""}
                     </dl>
+                    ${(o.status === "paid" || o.status === "pending") ? `
+                      <div class="adm-order-actions">
+                        ${o.status === "paid" ? `<button type="button" class="btn adm-order-fulfill" data-id="${o.id}">Хүргэсэн гэж тэмдэглэх</button>` : ""}
+                        <button type="button" class="btn btn--ghost adm-order-cancel" data-id="${o.id}" data-status="${o.status}">Захиалга цуцлах</button>
+                      </div>` : ""}
                   </td>
                 </tr>
               `;
@@ -671,6 +677,19 @@
         </table>
       </div>
     `;
+
+    ordersTab.querySelectorAll(".adm-order-fulfill").forEach((btn) => {
+      btn.addEventListener("click", () => orderAction("fulfill", btn));
+    });
+    ordersTab.querySelectorAll(".adm-order-cancel").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const no = "#" + String(btn.dataset.id).padStart(6, "0");
+        const msg = btn.dataset.status === "paid"
+          ? `${no} захиалгыг цуцлах уу?\n\nТөлбөр автоматаар буцаагдахгүй — QPay мерчант порталаас худалдан авагчид буцааж олгоно уу.`
+          : `${no} захиалгыг цуцлах уу? Төлбөрийн QR код ажиллахаа болино.`;
+        if (confirm(msg)) orderAction("cancel", btn);
+      });
+    });
 
     ordersTab.querySelectorAll(".see-more-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -681,6 +700,29 @@
         btn.textContent = open ? "Дэлгэрэнгүй" : "Хураах";
       });
     });
+  }
+
+  /** "Хүргэсэн" / "Цуцлах" on one order, then reload the list. */
+  async function orderAction(action, btn) {
+    btn.disabled = true;
+    try {
+      const res = await fetch("/admin/orders-admin.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: toFormBody({ action, id: btn.dataset.id, csrf: sessionStorage.getItem("naf_csrf_token") || "" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401 || res.status === 403) {
+        sessionStorage.removeItem("naf_admin_auth");
+        sessionStorage.removeItem("naf_csrf_token");
+        showScreen("login");
+        return;
+      }
+      if (!res.ok) alert(data.error || "Алдаа гарлаа — дахин оролдоно уу.");
+    } catch {
+      alert("Серверт холбогдож чадсангүй.");
+    }
+    await renderOrders();
   }
 
   /** Serialize a plain object into an application/x-www-form-urlencoded body string. */

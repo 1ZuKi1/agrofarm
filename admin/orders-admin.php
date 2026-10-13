@@ -1,19 +1,21 @@
 <?php
 /**
- * orders-admin.php — read-only admin listing of shop orders.
+ * orders-admin.php — admin listing of shop orders, plus two status changes:
+ * "Хүргэсэн" (paid → fulfilled) and "Цуцлах" (pending/paid → cancelled).
  *
  * Auth matches products-admin.php exactly: PHP session + CSRF token issued
  * at login.
  *
- * Read-only by design. The shop's stock maths derives true availability from
- * the reservation set ('pending','paid','fulfilled') — see order-create.php,
- * slots.php, shop-data.php and products-admin.php — so letting this screen
- * mutate order status would silently move stock numbers on the public site.
- * Status changes belong in their own endpoint with that consequence handled
- * deliberately.
+ * Stock consequence, handled deliberately: availability is derived from the
+ * reservation set ('pending','paid','fulfilled') — see order-create.php,
+ * slots.php, shop-data.php and products-admin.php. Fulfilling keeps the
+ * order in that set (the goods are gone); cancelling takes it out, so its
+ * stock and delivery slot become available again.
  */
 
 require dirname(__DIR__) . '/inc/db.php';
+require dirname(__DIR__) . '/inc/qpay.php';
+require dirname(__DIR__) . '/inc/orders.php';
 
 session_set_cookie_params([
   'httponly' => true,
@@ -48,9 +50,9 @@ try {
   $pdo = naf_db();
 
   if ($action === 'list') {
-    // Same lazy-expiry sweep the public endpoints run, so this list never
-    // shows an abandoned pending order as though it were still live.
-    $pdo->exec("UPDATE orders SET status='expired' WHERE status='pending' AND expires_at < NOW()");
+    // Same expiry sweep the public endpoints run, so this list never shows an
+    // abandoned pending order as though it were still live.
+    orders_expire_stale($pdo);
 
     // public_token is deliberately not selected — it's the bearer secret for
     // the buyer's order-status link, and nothing on this screen needs it.
@@ -74,6 +76,63 @@ try {
     unset($order);
 
     echo json_encode(['orders' => $orders]);
+    exit;
+  }
+
+  // ---- Deliver / cancel ----------------------------------------------------
+  // fulfill: a paid order has been delivered.
+  // cancel:  a pending or paid order is called off. Its stock and delivery
+  //          slot are released (cancelled is outside the reservation set). A
+  //          pending order's QPay invoice is cancelled too, so its QR stops
+  //          working. A PAID order's money is NOT returned automatically —
+  //          admin.js tells the admin to refund it in the QPay merchant portal.
+  if ($action === 'fulfill' || $action === 'cancel') {
+    $id = (int)($_POST['id'] ?? 0);
+    $st = $pdo->prepare('SELECT id, status, qpay_invoice_id FROM orders WHERE id = ?');
+    $st->execute([$id]);
+    $order = $st->fetch();
+    if (!$order) {
+      http_response_code(404);
+      echo json_encode(['error' => 'Захиалга олдсонгүй']);
+      exit;
+    }
+
+    if ($action === 'fulfill') {
+      $up = $pdo->prepare("UPDATE orders SET status='fulfilled', fulfilled_at=NOW() WHERE id=? AND status='paid'");
+      $up->execute([$id]);
+      if ($up->rowCount() !== 1) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Зөвхөн төлбөр төлөгдсөн захиалгыг "Хүргэсэн" болгоно.']);
+        exit;
+      }
+      echo json_encode(['ok' => true]);
+      exit;
+    }
+
+    if ($order['status'] === 'pending' && $order['qpay_invoice_id']) {
+      $result = 'error';
+      try { $result = qpay_cancel_invoice(qpay_token(), $order['qpay_invoice_id']); } catch (\Throwable $e) {}
+      if ($result === 'paid') {
+        // Paid a moment ago — record it rather than cancel a paid order unseen.
+        order_mark_paid($pdo, $id);
+        http_response_code(409);
+        echo json_encode(['error' => 'Энэ захиалгын төлбөр яг одоо төлөгдсөн байна — жагсаалтыг шинэчилнэ үү.']);
+        exit;
+      }
+      if ($result !== 'cancelled') {
+        http_response_code(502);
+        echo json_encode(['error' => 'QPay-тэй холбогдож нэхэмжлэлийг цуцалж чадсангүй — дахин оролдоно уу.']);
+        exit;
+      }
+    }
+    $up = $pdo->prepare("UPDATE orders SET status='cancelled' WHERE id=? AND status IN ('pending','paid')");
+    $up->execute([$id]);
+    if ($up->rowCount() !== 1) {
+      http_response_code(409);
+      echo json_encode(['error' => 'Энэ захиалгыг цуцлах боломжгүй (аль хэдийн хүргэсэн, цуцалсан эсвэл хугацаа нь дууссан).']);
+      exit;
+    }
+    echo json_encode(['ok' => true, 'was_paid' => $order['status'] === 'paid']);
     exit;
   }
 

@@ -11,8 +11,9 @@
  * deviation from OAuth. If QPay ever answers 401, the cache is dropped so the
  * next request re-authenticates.
  *
- * All three functions throw RuntimeException on any failure — callers must
- * catch and translate to a user-facing error, never let this surface raw.
+ * The request functions throw RuntimeException on any failure (except
+ * qpay_cancel_invoice, which returns a status) — callers must catch and
+ * translate to a user-facing error, never let this surface raw.
  *
  * config.php should live ONE DIRECTORY ABOVE public_html (outside the web
  * root) so it can never be served over HTTP, no matter how the server is
@@ -87,7 +88,27 @@ function qpay_fetch_token(): array {
   return $data;
 }
 
-function qpay_create_invoice(string $token, string $senderInvoiceNo, int $amount, string $callbackUrl, string $description): array {
+/**
+ * Creates an itemised invoice: one line per basket line, so the buyer's bank
+ * app lists what they are paying for, and so eBarimt can later carry per-line
+ * product codes (classification_code / tax_product_code go on these lines).
+ * QPay totals the lines itself; the caller checks it matches our total.
+ *
+ * $lines: [['description' => string, 'quantity' => int, 'unit_price' => int], ...]
+ *
+ * No QPay-side expiry is set: its expiry_date is unreliable in testing (the
+ * sandbox stores the creation time whatever is sent). Expired orders cancel
+ * their invoice instead — see orders_expire_stale() in inc/orders.php.
+ */
+function qpay_create_invoice(string $token, string $senderInvoiceNo, array $lines, string $callbackUrl, string $description): array {
+  $qpLines = [];
+  foreach ($lines as $l) {
+    $qpLines[] = [
+      'line_description' => mb_substr((string)$l['description'], 0, 255, 'UTF-8'),
+      'line_quantity' => number_format((float)$l['quantity'], 2, '.', ''),
+      'line_unit_price' => number_format((float)$l['unit_price'], 2, '.', ''),
+    ];
+  }
   $ch = curl_init(NAF_QPAY_BASE_URL . '/v2/invoice');
   curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
@@ -97,10 +118,10 @@ function qpay_create_invoice(string $token, string $senderInvoiceNo, int $amount
       'invoice_code' => NAF_QPAY_INVOICE_CODE,
       'sender_invoice_no' => $senderInvoiceNo,
       'invoice_receiver_code' => 'terminal',
-      'invoice_description' => $description,
-      'amount' => $amount,
+      'invoice_description' => mb_substr($description, 0, 255, 'UTF-8'),
       'callback_url' => $callbackUrl,
-    ]),
+      'lines' => $qpLines,
+    ], JSON_UNESCAPED_UNICODE),
     CURLOPT_TIMEOUT => 15,
   ]);
   $res = curl_exec($ch);
@@ -109,10 +130,37 @@ function qpay_create_invoice(string $token, string $senderInvoiceNo, int $amount
   curl_close($ch);
   if ($res === false) throw new RuntimeException('QPay invoice request failed: ' . $err);
   if ($status === 401) qpay_forget_token();
-  if ($status !== 200) throw new RuntimeException('QPay invoice creation failed: HTTP ' . $status);
+  if ($status !== 200) throw new RuntimeException('QPay invoice creation failed: HTTP ' . $status . ' ' . substr((string)$res, 0, 200));
   $data = json_decode($res, true);
   if (!isset($data['invoice_id'])) throw new RuntimeException('QPay invoice response missing invoice_id');
   return $data;
+}
+
+/**
+ * Cancels an invoice so its QR stops accepting payment.
+ * Returns 'cancelled' (also when it was already cancelled or never existed —
+ * nothing payable either way), 'paid' (too late: the buyer already paid), or
+ * 'error' (QPay unreachable or another problem — try again later).
+ * Short timeout: this runs inside other requests.
+ */
+function qpay_cancel_invoice(string $token, string $invoiceId): string {
+  $ch = curl_init(NAF_QPAY_BASE_URL . '/v2/invoice/' . rawurlencode($invoiceId));
+  curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_CUSTOMREQUEST => 'DELETE',
+    CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $token],
+    CURLOPT_TIMEOUT => 6,
+  ]);
+  $res = curl_exec($ch);
+  $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  curl_close($ch);
+  if ($res === false) return 'error';
+  if ($status === 200) return 'cancelled';
+  if ($status === 401) { qpay_forget_token(); return 'error'; }
+  $key = (string)((json_decode((string)$res, true) ?: [])['error'] ?? '');
+  if ($key === 'INVOICE_ALREADY_CANCELED' || $key === 'INVOICE_NOTFOUND') return 'cancelled';
+  if ($key === 'INVOICE_PAID') return 'paid';
+  return 'error';
 }
 
 /**

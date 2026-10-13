@@ -5,6 +5,11 @@
   let activeVariantId = null;
   let qrPollInterval = null; // active QPay status-poll interval, if any (see stopQrPolling)
   let qrVisibilityHandler = null; // re-check on return from a bank app (see renderQrScreen)
+  let qrCountdown = null; // 1-second countdown timer on the QR screen
+  // The order this browser is paying for right now. The basket is only
+  // emptied once THAT order is paid — if it expires, the basket is still
+  // there to try again (it used to be emptied as soon as the QR appeared).
+  const PENDING_KEY = "naf_pending_order";
 
   // ?order=<token> — the bookmarkable confirmation link. Read once, at
   // module load, so both loadShop() below and the ?order= handler further
@@ -240,6 +245,10 @@
       document.removeEventListener("visibilitychange", qrVisibilityHandler);
       qrVisibilityHandler = null;
     }
+    if (qrCountdown) {
+      clearInterval(qrCountdown);
+      qrCountdown = null;
+    }
   }
 
   // The drawer is `inert` while closed (inc/layout.php), so keyboard focus
@@ -319,7 +328,7 @@
         </div>
         <div class="checkout-form__field">
           <label for="checkoutPhone" data-en="Phone" data-mn="Утас">${escHtmlShop(t("Phone", "Утас"))}</label>
-          <input type="tel" id="checkoutPhone" name="buyer_phone" required>
+          <input type="tel" id="checkoutPhone" name="buyer_phone" inputmode="numeric" autocomplete="tel" placeholder="99112233" required>
         </div>
         <div class="checkout-form__field">
           <label for="checkoutAddress" data-en="Delivery address" data-mn="Хүргэлтийн хаяг">${escHtmlShop(t("Delivery address", "Хүргэлтийн хаяг"))}</label>
@@ -388,6 +397,13 @@
       }
 
       const form = new FormData(e.target);
+      // Same rule as order-create.php: 8 digits; spaces, dashes, +976 allowed.
+      const phone = String(form.get("buyer_phone") || "").replace(/[\s\-().]/g, "").replace(/^\+?976(?=\d{8}$)/, "");
+      if (!/^\d{8}$/.test(phone)) {
+        showCheckoutError("Phone number must be 8 digits", "Утасны дугаар 8 оронтой байх ёстой");
+        document.getElementById("checkoutPhone").focus();
+        return;
+      }
       const submitBtn = document.getElementById("checkoutSubmitBtn");
       submitBtn.disabled = true;
 
@@ -395,7 +411,7 @@
       const body = {
         items: cart.map((line) => ({ variant_id: line.variantId, quantity: line.quantity })),
         buyer_name: form.get("buyer_name"),
-        buyer_phone: form.get("buyer_phone"),
+        buyer_phone: phone,
         buyer_address: form.get("buyer_address"),
         buyer_note: form.get("buyer_note"),
         delivery_date: selectedDate,
@@ -419,7 +435,8 @@
           submitBtn.disabled = false;
           return;
         }
-        setCart([]); // order created — clear the cart
+        // The basket stays until this order is paid (see PENDING_KEY).
+        try { localStorage.setItem(PENDING_KEY, data.token); } catch {}
         if (window.renderQrScreen) window.renderQrScreen(data);
       } catch {
         showCheckoutError("Could not reach the server — please try again", "Сервертэй холбогдож чадсангүй — дахин оролдоно уу");
@@ -477,6 +494,8 @@
     items.innerHTML = `
       <div class="qr-screen${banks.length ? " has-banks" : ""}">
         <p class="qr-screen__total">${orderData.total.toLocaleString()}₮</p>
+        ${orderData.order_no ? `<p class="qr-screen__no">${escHtmlShop(t("Order", "Захиалга"))} ${escHtmlShop(orderData.order_no)}</p>` : ""}
+        <p class="qr-screen__timer" aria-live="off"></p>
         ${banksHtml}
         ${qrImg}
         <p class="qr-screen__waiting" data-en="Waiting for payment…" data-mn="Төлбөр хүлээгдэж байна…">${escHtmlShop(t("Waiting for payment…", "Төлбөр хүлээгдэж байна…"))}</p>
@@ -506,9 +525,53 @@
         renderConfirmation(token, status);
       } else if (status.status === "expired" || status.status === "cancelled") {
         stopQrPolling();
-        document.querySelector(".qr-screen__check")?.remove();
-        setWaiting("This order expired — please try again", "Энэ захиалга хугацаа дууссан — дахин оролдоно уу");
+        showExpired();
       }
+    }
+
+    // The QR is no longer payable: hide everything used to pay and offer to
+    // start again from the basket, which is still intact.
+    function showExpired() {
+      const screen = items.querySelector(".qr-screen");
+      if (!screen || screen.classList.contains("is-expired")) return;
+      screen.classList.add("is-expired");
+      screen.querySelectorAll(".qr-screen__img, .qr-screen__banks, .qr-screen__banks-title, .qr-screen__or, .qr-screen__check, .qr-screen__timer, .qr-screen__link")
+        .forEach((el) => el.remove());
+      setWaiting("Time is up — this QR code no longer works.", "Хугацаа дууссан — энэ QR код ажиллахаа больсон.");
+      const again = document.createElement("button");
+      again.type = "button";
+      again.className = "btn btn--gold qr-screen__again";
+      again.textContent = t("Order again", "Дахин захиалах");
+      again.addEventListener("click", openCartDrawer);
+      screen.appendChild(again);
+    }
+
+    // Countdown to the end of the order's 20 minutes (the server's figure,
+    // so the phone's clock doesn't matter). At zero: one verified check —
+    // the buyer may have paid in the last seconds — then the expired view.
+    // Plain polls keep running until the server reports the final status.
+    const timerEl = items.querySelector(".qr-screen__timer");
+    let secondsLeft = Number.isFinite(Number(orderData.expires_in)) ? Number(orderData.expires_in) : null;
+    function paintTimer() {
+      if (!timerEl || secondsLeft === null) return;
+      const m = Math.floor(secondsLeft / 60);
+      const sec = String(secondsLeft % 60).padStart(2, "0");
+      timerEl.textContent = `${t("Time left", "Үлдсэн хугацаа")}: ${m}:${sec}`;
+      timerEl.classList.toggle("is-low", secondsLeft <= 120);
+    }
+    if (secondsLeft !== null) {
+      paintTimer();
+      qrCountdown = setInterval(() => {
+        secondsLeft = Math.max(0, secondsLeft - 1);
+        paintTimer();
+        if (secondsLeft === 0) {
+          clearInterval(qrCountdown);
+          qrCountdown = null;
+          poll(true).then((status) => {
+            if (status.status !== "paid") showExpired();
+          }).catch(() => showExpired());
+        }
+      }, 1000);
     }
 
     // withCheck=true asks the server to verify with QPay (rate-limited to
@@ -549,6 +612,14 @@
   window.renderQrScreen = renderQrScreen;
 
   function renderConfirmation(token, status) {
+    // Paid: empty the basket — but only if this is the order the basket was
+    // turned into (an old order link opened later must not empty a new basket).
+    try {
+      if (localStorage.getItem(PENDING_KEY) === token) {
+        setCart([]);
+        localStorage.removeItem(PENDING_KEY);
+      }
+    } catch {}
     const heading = document.querySelector(".cart-drawer__head h2");
     heading.dataset.en = "Payment received";
     heading.dataset.mn = "Төлбөр хүлээн авлаа";
@@ -566,6 +637,7 @@
       <div class="order-confirmation">
         <svg class="order-confirmation__check" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
         <p class="order-confirmation__total">${status.total.toLocaleString()}₮</p>
+        ${status.order_no ? `<p class="order-confirmation__no"><span>${escHtmlShop(t("Order number", "Захиалгын дугаар"))}</span>: <strong>${escHtmlShop(status.order_no)}</strong></p>` : ""}
         <p><span data-en="Delivery" data-mn="Хүргэлт">${escHtmlShop(t("Delivery", "Хүргэлт"))}</span>: ${escHtmlShop(status.delivery_date)} · ${escHtmlShop(status.delivery_slot)}</p>
         <p class="order-confirmation__link"><span data-en="Order link" data-mn="Захиалгын холбоос">${escHtmlShop(t("Order link", "Захиалгын холбоос"))}</span>: ${escHtmlShop(orderLink)}</p>
       </div>

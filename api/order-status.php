@@ -7,12 +7,18 @@
  * хориглоно. Зөвхөн Callback URL авсаны дараа шалгана уу."), so the normal
  * path to 'paid' is qpay-callback.php. QPay is asked from here only when the
  * request carries ?check=1 — sent when the buyer taps "Төлбөр шалгах", returns
- * to the tab from their bank app, or opens the ?order= link — and at most once
- * per 10 seconds per order (qpay_checked_at, claimed atomically below).
+ * to the tab from their bank app, opens the ?order= link, or the countdown
+ * reaches zero — and at most once per 10 seconds per order (qpay_checked_at,
+ * claimed atomically below).
+ *
+ * Expiry: orders_expire_stale() cancels an expired order's QPay invoice before
+ * marking it 'expired', and marks it 'paid' instead if QPay says it was paid
+ * — so this order can safely be part of that sweep too.
  */
 
 require dirname(__DIR__) . '/inc/db.php';
 require dirname(__DIR__) . '/inc/qpay.php';
+require dirname(__DIR__) . '/inc/orders.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -25,15 +31,13 @@ if (!preg_match('/^[a-f0-9]{32}$/', $token)) {
 
 try {
   $pdo = naf_db();
-  // Exclude this request's own order from the global sweep: without this, a
-  // sweep call whose expires_at just passed could flip THIS order's row to
-  // 'expired' a moment before the re-verify below runs for it, permanently
-  // hiding a payment that actually went through. (Other traffic can still
-  // sweep this order via slots.php/order-create.php between polls — that's
-  // the case the widened re-verify condition below recovers from.)
-  $pdo->prepare("UPDATE orders SET status='expired' WHERE status='pending' AND expires_at < NOW() AND public_token != ?")->execute([$token]);
+  orders_expire_stale($pdo);
 
-  $stmt = $pdo->prepare('SELECT id, status, qpay_invoice_id, total, delivery_date, delivery_slot, paid_at, qr_image, qr_text, qpay_urls FROM orders WHERE public_token = ?');
+  $stmt = $pdo->prepare(
+    'SELECT id, status, qpay_invoice_id, total, delivery_date, delivery_slot, paid_at, qr_image, qr_text, qpay_urls,
+            GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), expires_at)) AS expires_in
+     FROM orders WHERE public_token = ?'
+  );
   $stmt->execute([$token]);
   $order = $stmt->fetch();
 
@@ -43,18 +47,15 @@ try {
     exit;
   }
 
-  // An order can reach here already 'expired' (via a sweep from unrelated
-  // traffic) despite having actually been paid — recoverable as long as
-  // paid_at was never set. Treat that the same as 'pending' for re-verify
-  // purposes so it isn't permanently lost.
+  // An order that is 'expired' with no paid_at can still turn out paid (the
+  // buyer paid in the last seconds, before its invoice was cancelled) — a
+  // requested check treats it like 'pending'.
   $wasExpiredUnpaid = ($order['status'] === 'expired' && $order['paid_at'] === null);
 
   // A requested check is the fallback for a missed or slow webhook, so — same
   // as qpay-callback.php — re-verify via QPay's own check endpoint rather than
-  // trusting the cached status column. Unlike the webhook, a QPay failure here
-  // must NOT error out: just fall back to the cached (still-pending) status.
-  // The 10-second claim is one conditional UPDATE, so concurrent requests
-  // can't both pass it.
+  // trusting the cached status column. A QPay failure here must NOT error
+  // out: just fall back to the cached status.
   $order['verified'] = false;
   $wantsCheck = (($_GET['check'] ?? '') === '1') && ($order['status'] === 'pending' || $wasExpiredUnpaid);
   if ($wantsCheck) {
@@ -64,21 +65,13 @@ try {
   }
   if ($wantsCheck) {
     try {
-      $qpayToken = qpay_token();
-      $check = qpay_check_payment($qpayToken, $order['qpay_invoice_id']);
+      $check = qpay_check_payment(qpay_token(), $order['qpay_invoice_id']);
       $order['verified'] = true;
-      // count:0 (no payment row on file) is definitely not-paid and leaves
-      // $order['status'] untouched below. A count > 0 alone does NOT prove a
-      // settled full payment — see qpay.php's qpay_paid_amount() docblock:
-      // this amount check was implemented from researched (not
-      // live-verified-against-a-real-payment) QPay response field names, and
-      // MUST be re-confirmed against a real completed sandbox payment before
-      // switching config.php to production QPay credentials.
+      // count:0 is definitely not paid. count > 0 alone does not prove a
+      // settled full payment — qpay_paid_amount() (inc/qpay.php) sums only
+      // PAID rows.
       if (($check['count'] ?? 0) > 0 && qpay_paid_amount($check) >= (float)$order['total']) {
-        $pdo->prepare("UPDATE orders SET status='paid', paid_at=NOW() WHERE id=? AND status IN ('pending','expired')")->execute([$order['id']]);
-        if ($wasExpiredUnpaid) {
-          error_log("order-status.php: recovered order id={$order['id']} token={$token} from expired to paid via re-verify");
-        }
+        order_mark_paid($pdo, (int)$order['id']); // emails the shop if this call flipped it
         $order['status'] = 'paid';
       }
     } catch (Throwable $e) {
@@ -86,10 +79,12 @@ try {
     }
   }
 
+  $order['order_no'] = order_number((int)$order['id']);
+  $order['expires_in'] = (int)$order['expires_in'];
   if ($order['status'] === 'pending') {
     $order['banks'] = json_decode((string)$order['qpay_urls'], true) ?: [];
   } else {
-    unset($order['qr_image'], $order['qr_text']);
+    unset($order['qr_image'], $order['qr_text'], $order['expires_in']);
   }
   unset($order['id'], $order['qpay_invoice_id'], $order['paid_at'], $order['qpay_urls']);
   echo json_encode($order);

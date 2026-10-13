@@ -1162,6 +1162,13 @@ input, textarea, select{ font-size:16px !important; }
 .qr-screen__waiting{ color:var(--ink-soft); animation:qrPulse 1.8s ease-in-out infinite; }
 .qr-screen__link{ font-size:.75rem; color:var(--ink-soft); word-break:break-all; margin-top:1rem; }
 .qr-screen__check{ margin-top:1rem; }
+.qr-screen__no{ font-size:.85rem; color:var(--ink-soft); margin:-.4rem 0 .4rem; letter-spacing:.02em; }
+/* Countdown to the end of the order's 20 minutes; turns red in the last two. */
+.qr-screen__timer{ font-size:.9rem; font-weight:600; color:var(--green); margin-bottom:1rem; font-variant-numeric:tabular-nums; }
+.qr-screen__timer.is-low{ color:#b3261e; }
+.qr-screen.is-expired .qr-screen__waiting{ animation:none; opacity:1; color:var(--charcoal); margin:1rem 0; }
+.qr-screen__again{ margin-top:.4rem; }
+.order-confirmation__no{ margin-bottom:.6rem; }
 .qr-screen__check:disabled{ opacity:.55; cursor:default; }
 /* Bank-app buttons — phones/tablets only (a desktop buyer scans the QR). */
 .qr-screen__banks-title,
