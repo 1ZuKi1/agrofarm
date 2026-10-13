@@ -277,3 +277,25 @@ a.ad-stat:hover { background: var(--sunk); }
 .ad-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 14px; align-items: start; }
 .ad-form-grid .ad-form-actions { grid-column: 1 / -1; }
 #usersTable .ad-tag { margin: 0 4px 4px 0; }
+
+/* ---- Бүтээгдэхүүн, Мэдээ (the editors) ---- */
+.ad-tabs button { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; }
+.ad-tabs button span { color: var(--ink-3); font-weight: 500; }
+.ad-tabs button[aria-pressed="true"] { background: var(--g-deep); border-color: var(--g-deep); color: #fff; }
+.ad-tabs button[aria-pressed="true"] span { color: var(--on-side-2); }
+.ad-table tr.ad-group td { background: var(--sunk); }
+.ad-group__row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ad-cardlabel { display: none; }
+@media (max-width: 760px) { .ad-table--cards .ad-cardlabel { display: inline; color: var(--ink-3); } .ad-table--cards td:empty { display: none; } }
+.ad-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0 14px; }
+.ad-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 600; cursor: pointer; }
+.ad-check input { width: 20px; height: 20px; accent-color: var(--g); }
+.ad-fieldset { margin: 12px 0 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.ad-fieldset legend { padding: 0 6px; font-size: .86rem; font-weight: 650; color: var(--ink-2); }
+.ad-ing-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px 44px; gap: 8px; margin-bottom: 8px; }
+.ad-thumb { display: block; max-width: 180px; margin-top: 10px; border-radius: var(--radius-sm); border: 1px solid var(--line); }
+.ad-modal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(10, 46, 22, .5); }
+.ad-modal__card { width: 100%; max-width: 680px; max-height: calc(100vh - 32px); overflow-y: auto; background: var(--surface); border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0, 0, 0, .25); padding: clamp(18px, 3vw, 26px); }
+.ad-modal__card h2 { margin: 0 0 14px; }
+body.ad-noscroll { overflow: hidden; }
+.ad-modal__card .ad-field, #editorScreen .ad-field, .ad-form-row .ad-field { margin: 0 0 14px; }

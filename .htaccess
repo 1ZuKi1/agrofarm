@@ -32,7 +32,6 @@ RewriteRule ^(inc|lang)(/|$) - [F,L]
 # ------------------------------------------------------------------
 RewriteRule ^(shop-data|order-create|order-status|inquiry-create)\.php$ api/$1.php [L]
 RewriteRule ^(login|logout|publish|products-admin)\.php$ admin/$1.php [L]
-RewriteRule ^admin\.js$ admin/admin.js [L]
 RewriteRule ^style\.css$ css/style.css [L]
 RewriteRule ^(script|shop|catalog)\.js$ js/$1.js [L]
 
@@ -102,13 +101,6 @@ RewriteRule ^shop/([a-z0-9-]+)/?$ shop-product.php?slug=$1 [QSA,L]
   # Cross-origin requests (e.g. a link from another site) still get the
   # bare origin; same-origin navigation keeps the full URL for analytics.
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  # The admin panel is a static page + script with no ?v= version in their
-  # addresses, so a browser could keep yesterday's copy after a deploy and
-  # run an old admin.js against new endpoints. "no-cache" = always ask the
-  # server first (a quick 304 when nothing changed).
-  <FilesMatch "^(admin\.js|index\.html)$">
-    Header set Cache-Control "no-cache"
-  </FilesMatch>
 </IfModule>
 
 # Never list a directory's contents when it has no index file — img/news/

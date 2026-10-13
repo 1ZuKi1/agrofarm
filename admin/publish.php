@@ -94,4 +94,5 @@ if (file_put_contents(dirname(__DIR__) . '/news-data.json', $data) === false) {
   exit;
 }
 
+admin_log(naf_db(), $me, 'news_publish', 'news', null, count($decoded->posts) . ' мэдээ');
 echo 'ok';

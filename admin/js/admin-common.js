@@ -81,5 +81,10 @@
     if (isNaN(d)) return String(value);
     return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
   }
-  window.NAF = { escHtml, escAttr, csrfToken, toFormBody, post, money, fmtDate };
+  /** "img/news/a.png" → "/img/news/a.png" (the admin pages live under /admin/); full URLs unchanged. */
+  function siteUrl(path) {
+    const p = String(path || "");
+    return /^(https?:)?\/\//.test(p) || p.startsWith("/") || p === "" ? p : "/" + p;
+  }
+  window.NAF = { escHtml, escAttr, csrfToken, toFormBody, post, money, fmtDate, siteUrl };
 })();

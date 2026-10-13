@@ -109,13 +109,16 @@ if ($action === 'save_product') {
         'UPDATE products SET slug=?, category_id=IF(?, ?, category_id), name_mn=?, name_en=?, description_mn=?, description_en=?, active=? WHERE id=?'
       );
       $stmt->execute([$slug, $setCategory ? 1 : 0, $categoryId, $nameMn, $nameEn, $descMn, $descEn, $active, (int)$id]);
+      admin_log($pdo, $me, 'product_save', 'product', (int)$id, $nameMn);
       echo json_encode(['id' => (int)$id]);
     } else {
       $stmt = $pdo->prepare(
         'INSERT INTO products (slug, category_id, name_mn, name_en, description_mn, description_en, active) VALUES (?, ?, ?, ?, ?, ?, ?)'
       );
       $stmt->execute([$slug, $categoryId, $nameMn, $nameEn, $descMn, $descEn, $active]);
-      echo json_encode(['id' => (int)$pdo->lastInsertId()]);
+      $newId = (int)$pdo->lastInsertId();
+      admin_log($pdo, $me, 'product_save', 'product', $newId, $nameMn . ' (шинэ)');
+      echo json_encode(['id' => $newId]);
     }
   } catch (PDOException $e) {
     http_response_code(400);
@@ -176,6 +179,7 @@ if ($action === 'save_variant') {
          usage_text_mn=?, image_path=?, active=?, sort_order=? WHERE id=?'
       );
       $stmt->execute([...$fields, (int)$id]);
+      admin_log($pdo, $me, 'variant_save', 'variant', (int)$id, (string)$fields[1]);
       echo json_encode(['id' => (int)$id]);
     } else {
       $stmt = $pdo->prepare(
@@ -185,7 +189,9 @@ if ($action === 'save_variant') {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
       );
       $stmt->execute($fields);
-      echo json_encode(['id' => (int)$pdo->lastInsertId()]);
+      $newId = (int)$pdo->lastInsertId();
+      admin_log($pdo, $me, 'variant_save', 'variant', $newId, $fields[1] . ' (шинэ)');
+      echo json_encode(['id' => $newId]);
     }
   } catch (PDOException $e) {
     http_response_code(400);
