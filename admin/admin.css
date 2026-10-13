@@ -271,3 +271,9 @@ a.ad-stat:hover { background: var(--sunk); }
 .ad-quote__items li:first-child { border-top: 0; }
 .ad-quote__note .ad-field { margin-bottom: 8px; }
 .ad-quote__note textarea { width: 100%; }
+
+/* ---- Тохиргоо ---- */
+.ad [hidden] { display: none !important; }
+.ad-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 14px; align-items: start; }
+.ad-form-grid .ad-form-actions { grid-column: 1 / -1; }
+#usersTable .ad-tag { margin: 0 4px 4px 0; }

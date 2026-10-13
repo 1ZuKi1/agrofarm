@@ -110,7 +110,8 @@ function admin_attempt_login(PDO $pdo, string $email, string $password, DateTime
     $pdo->prepare('UPDATE admin_users SET failed_logins = 0, locked_until = NULL, last_login_at = ? WHERE id = ?')
         ->execute([$nowS, $u['id']]);
     if (password_needs_rehash($u['password_hash'], PASSWORD_DEFAULT)) {
-      $pdo->prepare('UPDATE admin_users SET password_hash = ? WHERE id = ?')->execute([password_hash($password, PASSWORD_DEFAULT), $u['id']]);
+      $u['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
+      $pdo->prepare('UPDATE admin_users SET password_hash = ? WHERE id = ?')->execute([$u['password_hash'], $u['id']]);
     }
     return ['ok' => true, 'user' => $u];
   }
@@ -125,11 +126,22 @@ function admin_attempt_login(PDO $pdo, string $email, string $password, DateTime
   return ['ok' => false, 'error' => ADMIN_BAD_LOGIN, 'locked' => false];
 }
 
-/** Starts the logged-in session (after a successful login or the first-Админ setup). */
+/**
+ * A short fingerprint of the stored password hash, kept in the session. When
+ * the password changes (the person's own change, or an Админ's reset), every
+ * other session of that account no longer matches and is logged out at its
+ * next click — so a reset after a lost phone also closes the phone's session.
+ */
+function admin_password_sig(string $hash): string {
+  return substr(hash('sha256', $hash), 0, 20);
+}
+
+/** Starts the logged-in session (after a successful login or the first-Админ setup). $user needs password_hash. */
 function admin_login_session(array $user): void {
   session_regenerate_id(true);
   unset($_SESSION['naf_admin'], $_SESSION['naf_csrf_token'], $_SESSION['naf_fails'], $_SESSION['naf_lockout_until'], $_SESSION['admin_unknown_fails']);
   $_SESSION['admin_user_id'] = (int)$user['id'];
+  $_SESSION['admin_pw_sig'] = admin_password_sig((string)$user['password_hash']);
   $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
 }
 
@@ -137,13 +149,15 @@ function admin_login_session(array $user): void {
 function admin_current_user(PDO $pdo): ?array {
   $id = (int)($_SESSION['admin_user_id'] ?? 0);
   if ($id <= 0) return null;
-  $st = $pdo->prepare('SELECT id, email, name, role, must_change, active, last_login_at FROM admin_users WHERE id = ?');
+  $st = $pdo->prepare('SELECT id, email, name, role, must_change, active, last_login_at, password_hash FROM admin_users WHERE id = ?');
   $st->execute([$id]);
   $u = $st->fetch();
-  if (!$u || (int)$u['active'] !== 1) {
-    unset($_SESSION['admin_user_id']);
+  $sig = (string)($_SESSION['admin_pw_sig'] ?? '');
+  if (!$u || (int)$u['active'] !== 1 || !hash_equals(admin_password_sig((string)$u['password_hash']), $sig)) {
+    unset($_SESSION['admin_user_id'], $_SESSION['admin_pw_sig']);
     return null;
   }
+  unset($u['password_hash']);
   return $u;
 }
 

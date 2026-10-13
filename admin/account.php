@@ -31,8 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   } elseif (password_verify($new, $hash)) {
     $error = 'Шинэ нууц үг хуучнаасаа өөр байх ёстой';
   } else {
-    $pdo->prepare('UPDATE admin_users SET password_hash = ?, must_change = 0 WHERE id = ?')
-        ->execute([password_hash($new, PASSWORD_DEFAULT), $me['id']]);
+    $newHash = password_hash($new, PASSWORD_DEFAULT);
+    $pdo->prepare('UPDATE admin_users SET password_hash = ?, must_change = 0 WHERE id = ?')->execute([$newHash, $me['id']]);
+    $_SESSION['admin_pw_sig'] = admin_password_sig($newHash); // this session stays; the account's others are logged out
     admin_log($pdo, $me, 'password_change', 'user', (int)$me['id'], null);
     admin_flash('ok', 'Нууц үг шинэчлэгдлээ');
     admin_redirect($forced ? '/admin/' : '/admin/account');
