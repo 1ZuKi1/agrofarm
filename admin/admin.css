@@ -299,3 +299,13 @@ a.ad-stat:hover { background: var(--sunk); }
 .ad-modal__card h2 { margin: 0 0 14px; }
 body.ad-noscroll { overflow: hidden; }
 .ad-modal__card .ad-field, #editorScreen .ad-field, .ad-form-row .ad-field { margin: 0 0 14px; }
+
+/* Product editor: one line per option with its price and stock. */
+.ad-price-rows{ display:grid; gap:8px; }
+.ad-price-row{ display:grid; grid-template-columns:minmax(0, 1fr) 130px 96px; gap:10px; align-items:end;
+  padding:8px 0; border-top:1px solid var(--line); }
+.ad-price-row:first-child{ border-top:0; padding-top:0; }
+.ad-price-row__name{ font-weight:600; align-self:center; overflow-wrap:anywhere; }
+.ad-price-row__field{ display:grid; gap:4px; font-size:.8rem; color:var(--ink-3); }
+.ad-price-row__field input{ width:100%; }
+@media (max-width:520px){ .ad-price-row{ grid-template-columns:1fr 1fr; } .ad-price-row__name{ grid-column:1 / -1; } }

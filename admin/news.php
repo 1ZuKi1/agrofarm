@@ -43,12 +43,12 @@ admin_page_start($pdo, $me, [
   <div class="ad-panel__head"><h2 id="editorTitle">Шинэ мэдээ</h2></div>
   <div class="ad-field" style="max-width:240px"><label for="postDate">Огноо</label><input type="date" id="postDate"></div>
   <div class="ad-form-row">
-    <div class="ad-field"><label for="postTitleMn">Гарчиг (Монгол)</label><input type="text" id="postTitleMn" placeholder="Гарчиг"></div>
-    <div class="ad-field"><label for="postTitleEn">Гарчиг (Англи)</label><input type="text" id="postTitleEn" placeholder="Title"></div>
+    <div class="ad-field"><label for="postTitleMn">Гарчиг</label><input type="text" id="postTitleMn" placeholder="Гарчиг"></div>
+    <div class="ad-field"><label for="postTitleEn">Гарчиг англиар <span class="ad-muted">(заавал биш — нүүр хуудасны англи хувилбарт)</span></label><input type="text" id="postTitleEn" placeholder="Title"></div>
   </div>
   <div class="ad-form-row">
-    <div class="ad-field"><label for="postBodyMn">Агуулга (Монгол)</label><textarea id="postBodyMn" rows="9" placeholder="Мэдээг монголоор бичнэ үү…"></textarea></div>
-    <div class="ad-field"><label for="postBodyEn">Агуулга (Англи)</label><textarea id="postBodyEn" rows="9" placeholder="Write the news article in English…"></textarea></div>
+    <div class="ad-field"><label for="postBodyMn">Агуулга</label><textarea id="postBodyMn" rows="9" placeholder="Мэдээг монголоор бичнэ үү…"></textarea></div>
+    <div class="ad-field"><label for="postBodyEn">Агуулга англиар <span class="ad-muted">(заавал биш)</span></label><textarea id="postBodyEn" rows="9" placeholder="Write the news article in English…"></textarea></div>
   </div>
   <div class="ad-field">
     <label for="postImageFile">Зураг (заавал биш)</label>

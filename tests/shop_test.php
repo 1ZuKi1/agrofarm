@@ -47,8 +47,8 @@ $by = array_column($sections, null, 'slug');
 check(isset($by['beleg-dursgal']) && array_column($by['beleg-dursgal']['items'], 'name') === ['Үнээний баримал', 'Ном'], 'Бэлэг дурсгал holds the statue and the book');
 check(($by['beleg-dursgal']['items'][0]['kind'] ?? '') === 'priced' && $by['beleg-dursgal']['more'] === null, 'gift items are priced, no "see all"');
 check(($by['mal-tejeel-erdes']['items'][0]['name'] ?? '') === 'Эрдэст Долооц', 'Долооц is in Малын тэжээл, эрдэс');
-check(count($by['milking-parts']['items']) === 4 && ($by['milking-parts']['more']['total'] ?? 0) === 21
-  && $by['milking-parts']['more']['url'] === '/shop/equipment/milking-parts', 'equipment group: 4 cards + see all (21)');
+check(count($by['milking-parts']['items']) === 21 && $by['milking-parts']['count'] === 21 && ($by['milking-parts']['more']['total'] ?? 0) === 21
+  && $by['milking-parts']['more']['url'] === '/shop/equipment/milking-parts', 'equipment group: all 21 cards (the row scrolls) + see all');
 check($by['milking-parts']['items'][0]['kind'] === 'quote' && $by['milking-parts']['items'][0]['price'] === null, 'equipment cards are quote cards');
 check(strpos($by['beleg-dursgal']['items'][0]['url'], '/shop/uneenii-barimal') === 0, 'priced card links to /shop/<slug>');
 

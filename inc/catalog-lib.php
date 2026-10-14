@@ -139,7 +139,11 @@ function shop_card(array $item): void {
     $price = $item['price'];
     $foot = '<span class="eq-card__price' . ($price['sold_out'] ? ' eq-card__price--out' : '') . '">' . ce($price['label']) . '</span>';
     if ($price['add']) {
-      $foot .= sprintf('<button type="button" class="eq-card__add" data-variant-id="%d" aria-label="%s — сагсанд нэмэх">Сагсанд нэмэх</button>',
+      // A round basket button; the tick replaces it for a moment after a tap (js/shop.js).
+      $foot .= sprintf('<button type="button" class="eq-card__add" data-variant-id="%d" aria-label="%s — сагсанд нэмэх" title="Сагсанд нэмэх">'
+        . '<svg class="eq-card__cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.5L20.5 8H6.2"/><circle cx="10" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/><path d="M13 9.5v4M11 11.5h4"/></svg>'
+        . '<svg class="eq-card__done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>'
+        . '</button>',
         (int)$price['add'], ce($item['name']));
     } elseif ($price['choose']) {
       $foot .= sprintf('<a class="eq-card__choose" href="%s" aria-label="%s — сонгох">Сонгох</a>', ce($item['url']), ce($item['name']));

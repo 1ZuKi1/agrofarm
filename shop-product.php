@@ -2,10 +2,12 @@
 /**
  * shop-product.php — one priced product, /shop/<slug> (via .htaccess).
  *
- * Every variant is rendered here; the variant buttons only switch which
- * panel is visible (shop.js), so the whole product — price, stock, usage,
- * storage, ingredients — is in the HTML for search engines and for anyone
- * whose JavaScript fails. "Сагслах" adds to the basket through shop.js.
+ * Photo on the left, everything to buy on the right. Every variant is
+ * rendered here; the variant buttons only switch which panels are visible
+ * (its photo and its price box, shop.js), so the whole product — price,
+ * stock, usage, storage, ingredients — is in the HTML for search engines and
+ * for anyone whose JavaScript fails. "Сагсанд нэмэх" adds to the basket
+ * through shop.js.
  */
 
 require __DIR__ . '/inc/shop-lib.php';
@@ -49,61 +51,82 @@ page_start([
       ['Дэлгүүр', '/shop'],
       [$product['name_mn'], null],
     ]); ?>
-    <h1 class="shop-product__title"><?= ce($product['name_mn']) ?></h1>
-
-    <?php if (count($product['variants']) > 1): ?>
-    <p class="shop-product__switcher-label">Төрлөө сонгоно уу</p>
-    <div class="shop-product__switcher">
-      <?php foreach ($product['variants'] as $i => $v): ?>
-        <button type="button" class="variant-pill<?= $i === 0 ? ' is-active' : '' ?>"
-                data-variant-id="<?= (int)$v['id'] ?>"
-                aria-pressed="<?= $i === 0 ? 'true' : 'false' ?>"><?= ce($v['name_mn']) ?></button>
-      <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
-
-    <?php foreach ($product['variants'] as $i => $v):
-      $id = (int)$v['id'];
-      $inStock = $v['available'] > 0;
-    ?>
-    <div class="shop-variant-panel" data-variant-id="<?= $id ?>"<?= $i === 0 ? '' : ' hidden' ?>>
-      <div class="shop-variant<?= $v['image_path'] ? ' shop-variant--with-img' : '' ?>">
-        <?php if ($v['image_path']): ?>
-          <img class="shop-variant__img" src="<?= ce(shop_img($v['image_path'])) ?>" alt="<?= ce($v['name_mn']) ?>">
-        <?php endif; ?>
-        <div class="shop-variant__body">
-          <h2 class="shop-variant__name"><?= ce($v['name_mn']) ?></h2>
-          <p class="shop-variant__price"><?= shop_price((int)$v['price']) ?> <span class="shop-variant__weight"><?= ce($v['weight_label']) ?></span></p>
-          <p class="shop-variant__stock"><?= $inStock ? 'Нөөцөд бий: ' . (int)$v['available'] : 'Дууссан' ?></p>
-          <?php if ($v['benefits_text_mn']): ?>
-            <p class="shop-variant__benefits"><?= ce($v['benefits_text_mn']) ?></p>
-          <?php endif; ?>
-          <div class="shop-variant__qty">
-            <label for="shopQty-<?= $id ?>">Тоо ширхэг</label>
-            <input type="number" id="shopQty-<?= $id ?>" min="1" max="<?= (int)$v['available'] ?>" value="1"<?= $inStock ? '' : ' disabled' ?>>
-            <button type="button" class="btn btn--gold shop-add" data-variant-id="<?= $id ?>"
-                    data-max="<?= (int)$v['available'] ?>"<?= $inStock ? '' : ' disabled' ?>>Сагслах</button>
-          </div>
-          <?php if ($v['usage_text_mn']): ?>
-            <div class="shop-variant__section"><h3>Хэрэглээ</h3><p><?= ce($v['usage_text_mn']) ?></p></div>
-          <?php endif; ?>
-          <?php if ($v['storage_text_mn']): ?>
-            <div class="shop-variant__section"><h3>Хадгалалт</h3><p><?= ce($v['storage_text_mn']) ?></p></div>
-          <?php endif; ?>
-          <?php if ($v['ingredients']): ?>
-            <div class="shop-variant__section">
-              <h3>Найрлага</h3>
-              <div class="ingredient-table">
-                <?php foreach ($v['ingredients'] as $ing): ?>
-                  <div class="ingredient-table__row"><span><?= ce($ing['name']) ?></span><span><?= ce($ing['percentage']) ?></span></div>
-                <?php endforeach; ?>
-              </div>
-            </div>
+    <div class="sp">
+      <div class="sp__media">
+        <?php foreach ($product['variants'] as $i => $v): ?>
+        <div class="shop-variant-panel sp__photo<?= $v['image_path'] ? '' : ' sp__photo--empty' ?>" data-variant-id="<?= (int)$v['id'] ?>"<?= $i === 0 ? '' : ' hidden' ?>>
+          <?php if ($v['image_path']): ?>
+            <img src="<?= ce(shop_img($v['image_path'])) ?>" alt="<?= ce($product['name_mn'] . ' — ' . $v['name_mn']) ?>">
           <?php endif; ?>
         </div>
+        <?php endforeach; ?>
+      </div>
+
+      <div class="sp__info">
+        <h1 class="sp__title"><?= ce($product['name_mn']) ?></h1>
+        <?php if ($product['description_mn']): ?>
+          <p class="sp__desc"><?= ce($product['description_mn']) ?></p>
+        <?php endif; ?>
+
+        <?php if (count($product['variants']) > 1): ?>
+        <p class="sp__label" id="variantLabel">Төрөл</p>
+        <div class="shop-product__switcher" role="group" aria-labelledby="variantLabel">
+          <?php foreach ($product['variants'] as $i => $v): ?>
+            <button type="button" class="variant-pill<?= $i === 0 ? ' is-active' : '' ?>"
+                    data-variant-id="<?= (int)$v['id'] ?>"
+                    aria-pressed="<?= $i === 0 ? 'true' : 'false' ?>"><?= ce($v['name_mn']) ?></button>
+          <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php foreach ($product['variants'] as $i => $v):
+          $id = (int)$v['id'];
+          $inStock = $v['available'] > 0;
+        ?>
+        <div class="shop-variant-panel" data-variant-id="<?= $id ?>"<?= $i === 0 ? '' : ' hidden' ?>>
+          <div class="sp__buy">
+            <p class="sp__price"><?= shop_price((int)$v['price']) ?><?php if ($v['weight_label']): ?><small><?= ce($v['weight_label']) ?></small><?php endif; ?></p>
+            <p class="sp__stock<?= $inStock ? '' : ' sp__stock--out' ?>"><?= $inStock ? 'Нөөцөд бий: ' . (int)$v['available'] . ' ш' : 'Дууссан' ?></p>
+            <div class="sp__row">
+              <div class="sp__qty">
+                <button type="button" aria-label="Нэгээр хасах"<?= $inStock ? '' : ' disabled' ?>>−</button>
+                <input type="number" id="shopQty-<?= $id ?>" min="1" max="<?= max(1, (int)$v['available']) ?>" value="1" aria-label="Тоо ширхэг"<?= $inStock ? '' : ' disabled' ?>>
+                <button type="button" aria-label="Нэгээр нэмэх"<?= $inStock ? '' : ' disabled' ?>>+</button>
+              </div>
+              <button type="button" class="btn btn--gold shop-add" data-variant-id="<?= $id ?>"
+                      data-max="<?= (int)$v['available'] ?>"<?= $inStock ? '' : ' disabled' ?>>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.5L20.5 8H6.2"/><circle cx="10" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg>
+                <span>Сагсанд нэмэх</span></button>
+            </div>
+          </div>
+          <?php
+            $facts = [];
+            if ($v['benefits_text_mn'] && $v['benefits_text_mn'] !== $product['description_mn']) $facts[] = ['Ашиг тус', $v['benefits_text_mn']];
+            if ($v['usage_text_mn']) $facts[] = ['Хэрэглээ', $v['usage_text_mn']];
+            if ($v['storage_text_mn']) $facts[] = ['Хадгалалт', $v['storage_text_mn']];
+            if ($v['standard_code']) $facts[] = ['Стандарт', $v['standard_code']];
+          ?>
+          <?php if ($facts || $v['ingredients']): ?>
+          <div class="sp__facts">
+            <?php foreach ($facts as [$h, $t]): ?>
+              <div class="sp__fact"><h3><?= ce($h) ?></h3><p><?= ce($t) ?></p></div>
+            <?php endforeach; ?>
+            <?php if ($v['ingredients']): ?>
+              <div class="sp__fact">
+                <h3>Найрлага</h3>
+                <div class="ingredient-table">
+                  <?php foreach ($v['ingredients'] as $ing): ?>
+                    <div class="ingredient-table__row"><span><?= ce($ing['name']) ?></span><span><?= ce($ing['percentage']) ?></span></div>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php endif; ?>
+          </div>
+          <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
       </div>
     </div>
-    <?php endforeach; ?>
   </div>
 </section>
 <?php page_end(['shop' => true]); ?>

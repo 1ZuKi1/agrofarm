@@ -26,6 +26,9 @@
   --radius: 24px;
   --radius-lg: 30px;
   --gutter: clamp(1.25rem, 5vw, 6rem);
+  /* Shop pages (/shop, categories, items, checkout): as wide as the header's
+     content on a laptop, capped on very wide screens. */
+  --shop-max: 1440px;
   /* Layered Apple-style surface shadows — depth from light + elevation,
      never from a hard border. */
   --shadow-1: 0 1px 2px rgba(44,44,44,.04), 0 14px 30px -18px rgba(44,44,44,.24);
@@ -1047,28 +1050,13 @@ input, textarea, select{ font-size:16px !important; }
 
 /* ---------- /shop: heading, category buttons, sections (shop.php) ---------- */
 .shop-page{ padding-top:7.5rem; }
-.shop-head{ max-width:1240px; margin:0 auto 1.6rem; }
+.shop-head{ max-width:var(--shop-max); margin:0 auto 1.4rem; }
 .shop-head h1{ font-size:clamp(2.2rem, 4.4vw, 3.2rem); }
 .shop-head__lead{ max-width:46rem; margin-top:.6rem; color:var(--ink-soft); line-height:1.7; }
-.shop-cats{ max-width:1240px; margin:0 auto 2.6rem; display:flex; flex-wrap:wrap; gap:.5rem; }
-.shop-cats a{ padding:.5rem 1rem; border-radius:999px; border:1.5px solid rgba(44,44,44,.14); background:#fff;
-  color:var(--charcoal); font-size:.88rem; font-weight:600; text-decoration:none; white-space:nowrap;
-  transition:border-color .2s, color .2s; }
-.shop-cats a:hover{ border-color:var(--green); color:var(--green); }
-.shop-cats a:focus-visible{ outline:2px solid var(--green); outline-offset:2px; }
-/* Phones: one scrolling row instead of five wrapped lines of buttons. */
-@media (max-width:600px){
-  .shop-cats{ flex-wrap:nowrap; overflow-x:auto; scroll-snap-type:x proximity; margin-left:calc(-1 * var(--gutter));
-    margin-right:calc(-1 * var(--gutter)); padding:0 var(--gutter) .3rem; scrollbar-width:none; }
-  .shop-cats::-webkit-scrollbar{ display:none; }
-  .shop-cats a{ scroll-snap-align:start; }
-}
-.shop-note{ max-width:1240px; margin:0 auto 1.6rem; padding:.9rem 1.1rem; border-radius:14px; background:#fff;
-  color:var(--ink-soft); font-size:.88rem; line-height:1.6; }
 .shop-page [id]{ scroll-margin-top:6.5rem; }
 
 /* Product detail */
-.shop-product{ max-width:1100px; margin:0 auto; padding:0 var(--gutter) 6rem; }
+.shop-product{ max-width:1240px; margin:0 auto; padding:0 0 6rem; }
 .shop-product__back{
   display:inline-block; margin-bottom:1.6rem; font-size:.9rem; font-weight:600;
   color:var(--ink-soft); transition:color .25s;
@@ -1151,17 +1139,17 @@ input, textarea, select{ font-size:16px !important; }
    keyboard and screen readers work; the radio itself is visually hidden and
    its focus ring is drawn on the card. */
 .checkout-page{ padding-top:7.5rem; }
-.checkout-page__head{ max-width:1100px; margin:0 auto 2rem; }
+.checkout-page__head{ max-width:1240px; margin:0 auto 2rem; }
 .checkout-page__head h1{ font-size:clamp(2rem, 4vw, 3rem); margin-top:.6rem; }
 .checkout-page__back{ font-size:.88rem; color:var(--ink-soft); text-decoration:none; }
 .checkout-page__back:hover{ color:var(--green); }
-.checkout-page__fail{ max-width:1100px; margin:0 auto; color:#b3261e; }
+.checkout-page__fail{ max-width:1240px; margin:0 auto; color:#b3261e; }
 
 /* The page shows one of three blocks at a time (js/checkout.js show()); the
    display values below would otherwise override the hidden attribute. */
 .checkout[hidden], .checkout-pay[hidden], .checkout-empty[hidden]{ display:none; }
-.checkout{ max-width:1100px; margin:0 auto; display:grid; gap:1.5rem; grid-template-columns:minmax(0,1fr); align-items:start; }
-@media (min-width:900px){ .checkout{ grid-template-columns:minmax(0,1fr) 360px; gap:2rem; } }
+.checkout{ max-width:1240px; margin:0 auto; display:grid; gap:1.5rem; grid-template-columns:minmax(0,1fr); align-items:start; }
+@media (min-width:900px){ .checkout{ grid-template-columns:minmax(0,1fr) 380px; gap:2.5rem; } }
 
 .checkout__form{ display:flex; flex-direction:column; gap:1.25rem; }
 .checkout-step{ border:0; margin:0; padding:1.5rem; background:#fff; border-radius:var(--radius); box-shadow:var(--shadow-1); min-width:0; }
@@ -1454,15 +1442,15 @@ input, textarea, select{ font-size:16px !important; }
 .eq-404{ font-family:var(--serif); font-size:2.2rem; margin:4rem 0 1.5rem; }
 
 /* ---------- breadcrumbs ---------- */
-.crumbs{ max-width:1240px; margin:0 auto 1.8rem; font-size:.85rem; color:var(--ink-soft); }
+.crumbs{ max-width:var(--shop-max); margin:0 auto 1.8rem; font-size:.85rem; color:var(--ink-soft); }
 .crumbs a{ color:var(--ink-soft); text-decoration:none; }
 .crumbs a:hover{ color:var(--green); }
 .crumbs__sep{ margin:0 .5rem; opacity:.5; }
 .crumbs [aria-current]{ color:var(--charcoal); font-weight:600; }
 
 /* ---------- two-column shell ---------- */
-.eq-layout{ max-width:1240px; margin:0 auto; display:grid; gap:3rem;
-  grid-template-columns:250px minmax(0,1fr); align-items:start; }
+.eq-layout{ max-width:var(--shop-max); margin:0 auto; display:grid; gap:2.5rem;
+  grid-template-columns:260px minmax(0,1fr); align-items:start; }
 
 .cat-side{ position:sticky; top:96px; }
 .cat-side__list, .cat-side__sub{ list-style:none; margin:0; padding:0; }
@@ -1529,7 +1517,7 @@ input, textarea, select{ font-size:16px !important; }
 }
 
 /* ---------- landing sections ---------- */
-.eq-section{ max-width:1240px; margin:0 auto 4rem; }
+.eq-section{ max-width:var(--shop-max); margin:0 auto 3.2rem; }
 .eq-section__head{ display:flex; align-items:baseline; justify-content:space-between;
   gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
 .eq-section__head h2{ font-family:var(--serif); font-size:1.75rem; color:var(--charcoal); }
@@ -1679,3 +1667,141 @@ html[lang="zh"] .green__lede{ max-width:42rem; margin-left:auto; margin-right:au
   @view-transition{ navigation:auto; }
   .nav{ view-transition-name:site-header; }
 }
+
+/* ============ Shop refresh (2026-10-14) ============
+   /shop: one column grid shared by every section, so cards line up from
+   section to section. A big category is one row that scrolls sideways (all
+   its items, arrows on wide screens); a category with one or two items takes
+   only that many columns, so small ones sit side by side instead of leaving
+   the rest of the row empty. */
+.shop-page{ --cols:5; --gap:1.25rem; }
+@media (max-width:1180px){ .shop-page{ --cols:4; } }
+@media (max-width:880px){ .shop-page{ --cols:3; } }
+@media (max-width:600px){ .shop-page{ --cols:2; --gap:.75rem; } }
+
+/* Category buttons: one row of equal tiles (name + how many items); when the
+   row doesn't fit, it scrolls instead of wrapping into an uneven second line. */
+.shop-cats{ max-width:var(--shop-max); margin:0 auto 2.6rem; display:grid; gap:.6rem;
+  grid-template-columns:repeat(var(--n), minmax(150px, 1fr)); overflow-x:auto; scrollbar-width:none;
+  scroll-snap-type:x proximity; padding-bottom:2px; }
+.shop-cats::-webkit-scrollbar{ display:none; }
+.shop-cats a{ display:flex; flex-direction:column; justify-content:center; gap:.2rem; min-height:4.2rem;
+  padding:.7rem 1rem; border-radius:16px; border:1.5px solid rgba(44,44,44,.1); background:#fff;
+  color:var(--charcoal); text-decoration:none; scroll-snap-align:start; transition:border-color .2s, color .2s; }
+.shop-cats strong{ font-size:.9rem; font-weight:600; line-height:1.3; }
+.shop-cats span{ font-size:.8rem; color:var(--ink-soft); }
+.shop-cats a:hover{ border-color:var(--green); color:var(--green); }
+.shop-cats a:focus-visible{ outline:2px solid var(--green); outline-offset:2px; }
+@media (max-width:600px){
+  .shop-cats{ grid-template-columns:repeat(var(--n), 46%); margin-left:calc(-1 * var(--gutter));
+    margin-right:calc(-1 * var(--gutter)); padding:0 var(--gutter) 2px; scroll-padding:0 var(--gutter); }
+}
+
+.shop-sections{ max-width:var(--shop-max); margin:0 auto; display:grid; column-gap:var(--gap); row-gap:3rem;
+  grid-template-columns:repeat(var(--cols), minmax(0, 1fr)); }
+.shop-sections .eq-section{ grid-column:1 / -1; margin:0; min-width:0; }
+/* A category with fewer items than fit in a row takes only its own columns
+   (and its cards are exactly one column wide), so the next small category
+   can sit beside it. data-n = how many items it has. */
+.shop-sections .eq-section[data-n="1"]{ grid-column:span 1; --rowcols:1; }
+.shop-sections .eq-section[data-n="2"]{ grid-column:span 2; --rowcols:2; }
+.shop-sections .eq-section[data-n="3"]{ grid-column:span 3; --rowcols:3; }
+.shop-sections .eq-section[data-n="4"]{ grid-column:span 4; --rowcols:4; }
+@media (max-width:1180px){ .shop-sections .eq-section[data-n="4"]{ grid-column:1 / -1; --rowcols:4; } }
+@media (max-width:880px){ .shop-sections .eq-section[data-n="3"], .shop-sections .eq-section[data-n="4"]{ grid-column:1 / -1; --rowcols:var(--cols); } }
+.eq-section__head{ align-items:center; margin-bottom:1.1rem; }
+.eq-section__title{ display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap; min-width:0; }
+.eq-section__head h2{ font-size:1.6rem; line-height:1.2; }
+.eq-section__count{ font-size:.85rem; color:var(--ink-soft); white-space:nowrap; }
+.eq-section__tools{ display:flex; align-items:center; gap:.5rem; margin-left:auto; }
+.eq-row__btn{ display:grid; place-items:center; width:40px; height:40px; border-radius:50%;
+  border:1.5px solid rgba(44,44,44,.14); background:#fff; color:var(--charcoal); cursor:pointer;
+  transition:border-color .2s, color .2s, opacity .2s; }
+.eq-row__btn:hover:not(:disabled){ border-color:var(--green); color:var(--green); }
+.eq-row__btn:disabled{ opacity:.35; cursor:default; }
+.eq-row__btn:focus-visible{ outline:2px solid var(--green); outline-offset:2px; }
+.eq-row__btn[hidden]{ display:none; }
+.eq-row__btn svg{ width:18px; height:18px; }
+
+/* The row: cards exactly one page column wide; the shadow needs a little room. */
+.eq-row{ display:grid; gap:var(--gap); grid-auto-flow:column;
+  grid-auto-columns:calc((100% - (var(--rowcols, var(--cols)) - 1) * var(--gap)) / var(--rowcols, var(--cols)));
+  overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x mandatory; scroll-behavior:smooth;
+  padding:6px 4px 18px; margin:-6px -4px -18px; scroll-padding-inline:4px;
+  scrollbar-width:thin; scrollbar-color:rgba(26,94,42,.35) transparent; }
+.eq-row > *{ scroll-snap-align:start; }
+.eq-row::-webkit-scrollbar{ height:6px; }
+.eq-row::-webkit-scrollbar-thumb{ background:rgba(26,94,42,.3); border-radius:3px; }
+/* Phones: two cards and a peek of the third, so it's clear the row scrolls. */
+@media (max-width:600px){
+  .eq-row{ grid-auto-columns:44%; margin-left:calc(-1 * var(--gutter)); margin-right:calc(-1 * var(--gutter));
+    padding-left:var(--gutter); padding-right:var(--gutter); scroll-padding:0 var(--gutter); scrollbar-width:none; }
+  .eq-row::-webkit-scrollbar{ display:none; }
+  .eq-row__btn{ display:none; }
+  .shop-sections .eq-section[data-n]{ grid-column:1 / -1; }
+}
+@media (prefers-reduced-motion:reduce){ .eq-row{ scroll-behavior:auto; } }
+
+/* Cards: the basket button is a round icon; the quote line is centred. */
+.eq-card__foot{ min-height:3.6rem; }
+.eq-card--quote .eq-card__foot{ justify-content:center; }
+.eq-card__price--quote{ text-align:center; white-space:nowrap; }
+.eq-card__add{ position:relative; display:grid; place-items:center; width:42px; height:42px; padding:0;
+  border-radius:50%; flex:none; }
+.eq-card__add svg{ width:20px; height:20px; grid-area:1 / 1; transition:opacity .2s, transform .2s; }
+.eq-card__add .eq-card__done{ opacity:0; transform:scale(.6); }
+.eq-card__add.is-added .eq-card__cart{ opacity:0; transform:scale(.6); }
+.eq-card__add.is-added .eq-card__done{ opacity:1; transform:none; }
+.eq-card__price{ font-size:1.02rem; }
+@media (max-width:520px){
+  .eq-card__foot{ flex-direction:row; align-items:center; justify-content:space-between; gap:.4rem; }
+  .eq-card--quote .eq-card__foot{ justify-content:center; }
+  .eq-card__add{ width:38px; height:38px; padding:0; }
+  .eq-card__price{ font-size:.92rem; }
+}
+
+/* Category page: the item grid uses the wider page; the sidebar keeps to the
+   screen height and scrolls on its own, so a long list (21 milking parts)
+   never pushes the other categories off the page. */
+.eq-layout .eq-grid{ grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:1.25rem; }
+@media (min-width:901px){
+  .cat-side{ max-height:calc(100vh - 116px); overflow-y:auto; overscroll-behavior:contain;
+    padding-right:.4rem; scrollbar-width:thin; scrollbar-color:rgba(26,94,42,.3) transparent; }
+}
+.eq-gallery__empty{ display:grid; place-items:center; }
+.eq-gallery__empty::before{ content:""; width:42%; aspect-ratio:2/1; background:url("/img/naf_logo_full.svg") center/contain no-repeat;
+  opacity:.3; filter:grayscale(.4); }
+
+/* Product page (/shop/<slug>): photo on the left, everything to buy on the right. */
+.sp{ display:grid; gap:2.5rem; grid-template-columns:minmax(0, 1fr); align-items:start; }
+@media (min-width:820px){ .sp{ grid-template-columns:minmax(0, 1fr) minmax(0, 1.05fr); gap:3.5rem; } .sp__media{ position:sticky; top:110px; } }
+.sp__photo{ aspect-ratio:1/1; display:grid; place-items:center; background:#fff; border-radius:var(--radius);
+  box-shadow:var(--shadow-1); overflow:hidden; }
+.sp__photo img{ width:100%; height:100%; object-fit:contain; padding:1.5rem; }
+.sp__photo[hidden]{ display:none; }
+.sp__photo--empty{ background:var(--cream-dark); box-shadow:none; }
+.sp__photo--empty::before{ content:""; width:42%; aspect-ratio:2/1; background:url("/img/naf_logo_full.svg") center/contain no-repeat;
+  opacity:.32; filter:grayscale(.4); }
+.sp__title{ font-family:var(--serif); font-size:clamp(2rem, 3.6vw, 2.8rem); line-height:1.1; color:var(--charcoal); margin-bottom:.8rem; }
+.sp__desc{ color:var(--ink-soft); line-height:1.75; max-width:40rem; margin-bottom:1.6rem; }
+.sp__label{ font-size:.85rem; font-weight:600; color:var(--charcoal); margin-bottom:.6rem; }
+.sp .shop-product__switcher{ margin-bottom:1.6rem; }
+.sp__buy{ background:#fff; border-radius:var(--radius); box-shadow:var(--shadow-1); padding:1.4rem 1.5rem; margin-bottom:1.8rem; }
+.sp__price{ font-size:1.9rem; font-weight:700; color:var(--green); font-variant-numeric:tabular-nums; }
+.sp__price small{ font-size:.95rem; font-weight:500; color:var(--ink-soft); margin-left:.4rem; }
+.sp__stock{ font-size:.88rem; color:var(--ink-soft); margin:.2rem 0 1.1rem; }
+.sp__stock--out{ color:#a3231a; font-weight:600; }
+.sp__row{ display:flex; gap:.75rem; align-items:stretch; flex-wrap:wrap; }
+.sp__qty{ display:flex; align-items:center; border:1.5px solid rgba(44,44,44,.16); border-radius:999px; overflow:hidden; background:var(--cream); }
+.sp__qty button{ width:44px; height:48px; border:0; background:none; font-size:1.2rem; cursor:pointer; color:var(--charcoal); }
+.sp__qty button:hover:not(:disabled){ color:var(--green); }
+.sp__qty button:disabled{ opacity:.35; cursor:default; }
+.sp__qty input{ width:3rem; height:48px; border:0; background:none; text-align:center; font:600 1rem var(--sans);
+  -moz-appearance:textfield; appearance:textfield; }
+.sp__qty input::-webkit-outer-spin-button, .sp__qty input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+.sp .shop-add{ flex:1 1 200px; min-height:48px; display:inline-flex; align-items:center; justify-content:center; gap:.55rem; }
+.sp .shop-add svg{ width:20px; height:20px; }
+.sp__facts{ border-top:1px solid rgba(44,44,44,.1); }
+.sp__fact{ padding:1.1rem 0; border-bottom:1px solid rgba(44,44,44,.1); }
+.sp__fact h3{ font-family:var(--sans); font-size:.85rem; font-weight:700; color:var(--charcoal); margin-bottom:.4rem; }
+.sp__fact p{ color:var(--ink-soft); font-size:.95rem; line-height:1.7; }

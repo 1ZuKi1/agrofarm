@@ -153,7 +153,7 @@
                     const [cls, label] = STATUS[variantState(v)];
                     return `
                       <tr>
-                        <td><strong>${escHtml(v.name_mn)}</strong>${v.name_en ? `<span class="ad-sub">${escHtml(v.name_en)}</span>` : ""}</td>
+                        <td><strong>${escHtml(v.name_mn)}</strong></td>
                         <td>${escHtml(v.weight_label || "—")}</td>
                         <td class="ad-r ad-num">${money(v.price)}</td>
                         <td class="ad-r ad-num"><span class="ad-cardlabel">Нөөц </span>${v.stock}</td>
@@ -232,12 +232,8 @@
           <input type="text" id="pf_slug" value="${product ? escAttr(product.slug) : ""}" placeholder="erdest-doloots" required aria-describedby="pf_slug_hint">
           <span class="ad-hint" id="pf_slug_hint">Латин жижиг үсэг, тоо, зураас. agrofarm.mn/shop/<em>slug</em></span></div>
 
-        <div class="ad-form-row">
-          <div class="ad-field"><label for="pf_name_mn">Нэр (Монгол)</label>
-            <input type="text" id="pf_name_mn" value="${product ? escAttr(product.name_mn) : ""}" required></div>
-          <div class="ad-field"><label for="pf_name_en">Нэр (Англи)</label>
-            <input type="text" id="pf_name_en" value="${product ? escAttr(product.name_en || "") : ""}"></div>
-        </div>
+        <div class="ad-field"><label for="pf_name_mn">Нэр</label>
+          <input type="text" id="pf_name_mn" value="${product ? escAttr(product.name_mn) : ""}" required></div>
 
         <div class="ad-field"><label for="pf_category">Ангилал</label>
           <select id="pf_category">
@@ -245,10 +241,24 @@
             ${categoriesCache.map((c) => `<option value="${escAttr(c.id)}"${product && Number(product.category_id) === Number(c.id) ? " selected" : ""}>${escHtml(c.name)}</option>`).join("")}
           </select></div>
 
-        <div class="ad-field"><label for="pf_desc_mn">Тайлбар (Монгол)</label>
+        <div class="ad-field"><label for="pf_desc_mn">Тайлбар</label>
           <textarea id="pf_desc_mn" rows="3">${product ? escHtml(product.description_mn || "") : ""}</textarea></div>
-        <div class="ad-field"><label for="pf_desc_en">Тайлбар (Англи)</label>
-          <textarea id="pf_desc_en" rows="3">${product ? escHtml(product.description_en || "") : ""}</textarea></div>
+
+        ${product && product.variants.length ? `
+        <fieldset class="ad-fieldset" id="pf_prices">
+          <legend>Үнэ, нөөц</legend>
+          <div class="ad-price-rows">
+            ${product.variants.map((v) => `
+              <div class="ad-price-row" data-variant-id="${v.id}">
+                <span class="ad-price-row__name">${escHtml(v.name_mn)}${v.weight_label ? ` <span class="ad-muted ad-small">${escHtml(v.weight_label)}</span>` : ""}</span>
+                <label class="ad-price-row__field"><span>Үнэ (₮)</span>
+                  <input type="number" class="pf-price" min="0" step="1" inputmode="numeric" value="${Number(v.price)}" aria-label="${escAttr(v.name_mn)} — үнэ"></label>
+                <label class="ad-price-row__field"><span>Нөөц</span>
+                  <input type="number" class="pf-stock" min="0" step="1" inputmode="numeric" value="${Number(v.stock)}" aria-label="${escAttr(v.name_mn)} — нөөц"></label>
+              </div>`).join("")}
+          </div>
+          <p class="ad-hint" style="margin:8px 0 0">Бусад мэдээлэл (зураг, найрлага…) — жагсаалтын "Засах" товчоор.</p>
+        </fieldset>` : ""}
 
         <label class="ad-check"><input type="checkbox" id="pf_active" ${!product || Number(product.active) ? "checked" : ""}> Идэвхтэй (дэлгүүрт харагдана)</label>
 
@@ -270,18 +280,33 @@
         action: "save_product",
         slug: document.getElementById("pf_slug").value.trim(),
         name_mn: document.getElementById("pf_name_mn").value.trim(),
-        name_en: document.getElementById("pf_name_en").value.trim(),
         description_mn: document.getElementById("pf_desc_mn").value.trim(),
-        description_en: document.getElementById("pf_desc_en").value.trim(),
         active: document.getElementById("pf_active").checked ? "1" : "0",
         category_id: document.getElementById("pf_category").value,
       };
       if (product) params.id = product.id;
 
       try {
+        // Prices and stock first: a bad number stops the save before anything changes.
+        const priceRows = [...document.querySelectorAll("#pf_prices .ad-price-row")].map((row) => ({
+          id: Number(row.dataset.variantId),
+          price: row.querySelector(".pf-price").value.trim(),
+          stock: row.querySelector(".pf-stock").value.trim(),
+        }));
+        const bad = priceRows.find((r) => !/^\d+$/.test(r.price) || !/^\d+$/.test(r.stock));
+        if (bad) { showError(errEl, "Үнэ, нөөцийг 0 буюу түүнээс их бүхэл тоогоор бичнэ үү"); return; }
+
         const res = await post("/admin/products-admin.php", params);
         const data = await readJson(res);
         if (!res.ok) { showError(errEl, data.error || "Бүтээгдэхүүн хадгалахад алдаа гарлаа"); return; }
+        if (priceRows.length) {
+          const pr = await post("/admin/products-admin.php", {
+            action: "save_prices", product_id: product.id,
+            prices: JSON.stringify(priceRows.map((r) => ({ id: r.id, price: Number(r.price), stock: Number(r.stock) }))),
+          });
+          const pd = await readJson(pr);
+          if (!pr.ok) { showError(errEl, pd.error || "Үнэ хадгалахад алдаа гарлаа"); renderProductsTab(); return; }
+        }
         closeEditor();
         renderProductsTab();
       } catch (err) {
@@ -305,12 +330,8 @@
       <form id="variantForm" class="ad-modal__card" novalidate>
         <h2 id="editorHeading">${variant ? "Төрөл засах" : "Шинэ төрөл"}</h2>
 
-        <div class="ad-form-row">
-          <div class="ad-field"><label for="vf_name_mn">Нэр (Монгол)</label>
-            <input type="text" id="vf_name_mn" value="${variant ? escAttr(variant.name_mn) : ""}" required></div>
-          <div class="ad-field"><label for="vf_name_en">Нэр (Англи)</label>
-            <input type="text" id="vf_name_en" value="${variant ? escAttr(variant.name_en || "") : ""}"></div>
-        </div>
+        <div class="ad-field"><label for="vf_name_mn">Нэр</label>
+          <input type="text" id="vf_name_mn" value="${variant ? escAttr(variant.name_mn) : ""}" required></div>
         <div class="ad-form-row">
           <div class="ad-field"><label for="vf_price">Үнэ (₮)</label>
             <input type="number" id="vf_price" min="0" step="1" inputmode="numeric" value="${variant ? variant.price : ""}" required></div>
@@ -324,11 +345,11 @@
             <input type="text" id="vf_std_code" value="${variant ? escAttr(variant.standard_code || "") : ""}" placeholder="MNS 5511:2005"></div>
         </div>
 
-        <div class="ad-field"><label for="vf_storage">Хадгалалт / хугацаа (Монгол)</label>
+        <div class="ad-field"><label for="vf_storage">Хадгалалт / хугацаа</label>
           <textarea id="vf_storage" rows="2">${variant ? escHtml(variant.storage_text_mn || "") : ""}</textarea></div>
-        <div class="ad-field"><label for="vf_benefits">Ашиг тус (Монгол)</label>
+        <div class="ad-field"><label for="vf_benefits">Ашиг тус</label>
           <textarea id="vf_benefits" rows="2">${variant ? escHtml(variant.benefits_text_mn || "") : ""}</textarea></div>
-        <div class="ad-field"><label for="vf_usage">Хэрэглэх заавар (Монгол)</label>
+        <div class="ad-field"><label for="vf_usage">Хэрэглэх заавар</label>
           <textarea id="vf_usage" rows="2">${variant ? escHtml(variant.usage_text_mn || "") : ""}</textarea></div>
 
         <div class="ad-field"><label for="vf_image">Зураг</label>
@@ -394,7 +415,6 @@
           action: "save_variant",
           product_id: productId,
           name_mn: document.getElementById("vf_name_mn").value.trim(),
-          name_en: document.getElementById("vf_name_en").value.trim(),
           price: priceVal,
           stock: stockVal,
           weight_label: document.getElementById("vf_weight").value.trim(),

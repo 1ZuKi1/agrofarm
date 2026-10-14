@@ -113,11 +113,12 @@ function shop_price_label(array $variants): array {
 /**
  * Everything /shop shows, one section per category that has something in it,
  * in the categories' sort order:
- *   [['slug', 'name', 'items' => [card…], 'more' => null|['url', 'total']], …]
+ *   [['slug', 'name', 'items' => [card…], 'count' => n, 'more' => null|['url', 'total']], …]
  * A card is ['kind' => 'priced'|'quote', 'name', 'text', 'url',
  *            'image' => ?string (root-absolute), 'price' => shop_price_label()|null].
- * In a category, priced items come first (all of them), then equipment
- * (the first 4, with 'more' pointing at the group page when there are more).
+ * In a category, priced items come first, then all of its equipment (/shop
+ * shows a big category as one row that scrolls sideways); 'more' points at
+ * the group page when there are more than 4.
  * Priced items with no category end up in a last section, "Бусад", so nothing
  * for sale is ever unreachable.
  *
@@ -155,7 +156,7 @@ function shop_sections(PDO $pdo): array {
   foreach (catalog_categories($pdo) as $c) {
     $items = $priced[(string)$c['id']] ?? [];
     $equipment = catalog_products_by_category($pdo, (int)$c['id']);
-    foreach (array_slice($equipment, 0, 4) as $e) {
+    foreach ($equipment as $e) { // every item: the section scrolls sideways
       $items[] = [
         'kind' => 'quote',
         'name' => $e['name'],
@@ -171,10 +172,11 @@ function shop_sections(PDO $pdo): array {
       'name' => $c['name'],
       'items' => $items,
       'more' => count($equipment) > 4 ? ['url' => '/shop/equipment/' . $c['slug'], 'total' => count($equipment)] : null,
+      'count' => count($items),
     ];
   }
   if (!empty($priced[''])) {
-    $sections[] = ['slug' => 'busad', 'name' => 'Бусад', 'items' => $priced[''], 'more' => null];
+    $sections[] = ['slug' => 'busad', 'name' => 'Бусад', 'items' => $priced[''], 'more' => null, 'count' => count($priced[''])];
   }
   return $sections;
 }

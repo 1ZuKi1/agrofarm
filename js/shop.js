@@ -65,8 +65,8 @@
 
   /* ---------- Product page (/shop/<slug>) ----------
      shop-product.php renders every variant as a panel; the pills only switch
-     which panel is visible. Each panel has its own quantity box and
-     "Сагслах" button carrying its variant id. */
+     which panel is visible (its photo and its price box). Each panel has its
+     own quantity box and "Сагсанд нэмэх" button carrying its variant id. */
   function initProductPage() {
     const pills = document.querySelectorAll(".shop-product .variant-pill");
     pills.forEach((pill) => {
@@ -90,9 +90,10 @@
         const input = document.getElementById(`shopQty-${id}`);
         const qty = Math.max(1, Math.min(max, Number(input?.value) || 1));
         if (window.addToCart) window.addToCart(id, qty);
-        const label = btn.textContent;
-        btn.textContent = t("Added ✓", "Сагсанд нэмэгдлээ ✓");
-        setTimeout(() => { btn.textContent = label; }, 1800);
+        const text = btn.querySelector("span") || btn;
+        const label = text.textContent;
+        text.textContent = t("Added ✓", "Сагсанд нэмэгдлээ ✓");
+        setTimeout(() => { text.textContent = label; }, 1800);
       });
     });
   }
@@ -103,18 +104,64 @@
      already refuse more than the stock. */
   function initCardButtons() {
     document.querySelectorAll(".eq-card__add[data-variant-id]").forEach((btn) => {
+      const label = btn.getAttribute("aria-label");
       btn.addEventListener("click", () => {
         if (window.addToCart) window.addToCart(Number(btn.dataset.variantId), 1);
-        btn.textContent = "Сагсанд нэмэгдлээ ✓";
+        // The basket icon turns into a tick for a moment; screen readers hear it too.
         btn.classList.add("is-added");
+        btn.setAttribute("aria-label", "Сагсанд нэмэгдлээ");
         clearTimeout(btn._reset);
-        btn._reset = setTimeout(() => { btn.textContent = "Сагсанд нэмэх"; btn.classList.remove("is-added"); }, 1800);
+        btn._reset = setTimeout(() => { btn.classList.remove("is-added"); btn.setAttribute("aria-label", label); }, 1800);
       });
     });
   }
 
+  /* ---------- /shop rows ----------
+     A big category is one row that scrolls sideways (shop.php). The arrows
+     move it by one screen of cards and show only when there is more to see. */
+  function initRows() {
+    document.querySelectorAll(".eq-section").forEach((section) => {
+      const row = section.querySelector("[data-row]");
+      const btns = section.querySelectorAll("[data-row-step]");
+      if (!row || !btns.length) return;
+      const update = () => {
+        const max = row.scrollWidth - row.clientWidth;
+        const scrolls = max > 4;
+        btns.forEach((b) => {
+          b.hidden = !scrolls;
+          b.disabled = Number(b.dataset.rowStep) < 0 ? row.scrollLeft <= 6 : row.scrollLeft >= max - 6;
+        });
+      };
+      btns.forEach((b) => b.addEventListener("click", () => {
+        row.scrollBy({ left: Number(b.dataset.rowStep) * row.clientWidth * 0.9 });
+      }));
+      row.addEventListener("scroll", update, { passive: true });
+      window.addEventListener("resize", update);
+      update();
+    });
+  }
+
+  /* ---------- Product page quantity: − / + around the number ---------- */
+  function initQtySteppers() {
+    document.querySelectorAll(".sp__qty").forEach((box) => {
+      const input = box.querySelector("input");
+      const [minus, plus] = box.querySelectorAll("button");
+      const clamp = () => {
+        const max = Number(input.max) || 1;
+        const v = Math.max(1, Math.min(max, Math.round(Number(input.value) || 1)));
+        input.value = v;
+        minus.disabled = input.disabled || v <= 1;
+        plus.disabled = input.disabled || v >= max;
+      };
+      minus.addEventListener("click", () => { input.value = Number(input.value) - 1; clamp(); });
+      plus.addEventListener("click", () => { input.value = Number(input.value) + 1; clamp(); });
+      input.addEventListener("change", clamp);
+      clamp();
+    });
+  }
+
   window.getShopProducts = () => shopProducts;
-  document.addEventListener("DOMContentLoaded", () => { initProductPage(); initCardButtons(); loadShop(); });
+  document.addEventListener("DOMContentLoaded", () => { initProductPage(); initCardButtons(); initRows(); initQtySteppers(); loadShop(); });
 
   /* ---------- Cart drawer ----------
      Renders window.getCart() lines against the product data already loaded

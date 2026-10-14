@@ -213,8 +213,8 @@
     const titleEn = postTitleEn.value.trim(), titleMn = postTitleMn.value.trim();
     const bodyEn = postBodyEn.value.trim(), bodyMn = postBodyMn.value.trim();
     const image = postImage.value.trim() || undefined;
-    if ((!titleEn || !bodyEn) && (!titleMn || !bodyMn)) {
-      editorError.textContent = "Гарчиг, агуулгыг Монгол эсвэл Англи хэлний аль нэгээр нь бөглөнө үү.";
+    if (!titleMn || !bodyMn) { // Mongolian is required; English is only for the homepage's English view
+      editorError.textContent = "Гарчиг, агуулгаа монголоор бичнэ үү.";
       editorError.hidden = false;
       return;
     }

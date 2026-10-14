@@ -10,7 +10,10 @@
  *                  quote request on its page /shop/equipment/<group>/<item>
  *
  * What goes in which section comes from shop_sections() (inc/shop-lib.php);
- * categories with nothing in them are not shown. Rendered on the server so
+ * categories with nothing in them are not shown. A big category is one row
+ * that scrolls sideways (arrows: js/shop.js); one with fewer items than fit in
+ * a row takes only that many columns (data-n, css), so small categories share
+ * a row. Rendered on the server so
  * search engines see every item.
  */
 
@@ -48,7 +51,6 @@ page_start([
 <section class="shop shop-page">
   <div class="shop-head">
     <h1>Дэлгүүр</h1>
-    <p class="shop-head__lead">Фермийн бүтээгдэхүүн, бэлэг дурсгал, тоног төхөөрөмж — QPay-ээр төлөх эсвэл үнийн санал авах.</p>
   </div>
 
 <?php if ($sections === null): ?>
@@ -56,32 +58,38 @@ page_start([
 <?php elseif (!$sections): ?>
   <p class="shop__empty" style="display:block">Одоогоор бүтээгдэхүүн алга — удахгүй дахин орно уу.</p>
 <?php else: ?>
-  <nav class="shop-cats" aria-label="Ангилал">
+  <nav class="shop-cats" aria-label="Ангилал" style="--n:<?= count($sections) ?>">
     <?php foreach ($sections as $s): ?>
-      <a href="#<?= ce($s['slug']) ?>"><?= ce($s['name']) ?></a>
+      <a href="#<?= ce($s['slug']) ?>"><strong><?= ce($s['name']) ?></strong><span><?= (int)$s['count'] ?> бараа</span></a>
     <?php endforeach; ?>
   </nav>
 
-  <?php
-  $noteShown = false;
-  foreach ($sections as $s):
-    $hasQuote = in_array('quote', array_column($s['items'], 'kind'), true);
-    if ($hasQuote && !$noteShown):
-      $noteShown = true; ?>
-  <p class="shop-note">Тоног төхөөрөмжийн үнийг сайтад харуулахгүй. Хэрэгтэйгээ сагсандаа нэмээд хүсэлт илгээхэд бид үнийн санал, нийлүүлэх хугацааг эргэн мэдэгдэнэ.</p>
-  <?php endif; ?>
-  <section class="eq-section" id="<?= ce($s['slug']) ?>" aria-labelledby="sec-<?= ce($s['slug']) ?>">
+  <div class="shop-sections">
+  <?php foreach ($sections as $s): $n = (int)$s['count']; ?>
+  <section class="eq-section" id="<?= ce($s['slug']) ?>" data-n="<?= $n ?>" aria-labelledby="sec-<?= ce($s['slug']) ?>">
     <div class="eq-section__head">
-      <h2 id="sec-<?= ce($s['slug']) ?>"><?= ce($s['name']) ?></h2>
-      <?php if ($s['more']): ?>
-        <a class="eq-section__more" href="<?= ce($s['more']['url']) ?>">Бүгдийг харах (<?= (int)$s['more']['total'] ?>)</a>
+      <div class="eq-section__title">
+        <h2 id="sec-<?= ce($s['slug']) ?>"><?= ce($s['name']) ?></h2>
+        <?php if ($n > 2): ?><span class="eq-section__count"><?= $n ?> бараа</span><?php endif; ?>
+      </div>
+      <?php if ($n > 2): // arrows appear only when the row really scrolls (js/shop.js) ?>
+      <div class="eq-section__tools">
+        <?php if ($s['more']): ?>
+          <a class="eq-section__more" href="<?= ce($s['more']['url']) ?>">Бүгдийг харах</a>
+        <?php endif; ?>
+        <button type="button" class="eq-row__btn" data-row-step="-1" aria-label="<?= ce($s['name']) ?> — өмнөх бараанууд" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+        <button type="button" class="eq-row__btn" data-row-step="1" aria-label="<?= ce($s['name']) ?> — дараагийн бараанууд" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+      </div>
       <?php endif; ?>
     </div>
-    <div class="eq-grid">
+    <div class="eq-row" data-row tabindex="-1">
       <?php foreach ($s['items'] as $item) shop_card($item); ?>
     </div>
   </section>
   <?php endforeach; ?>
+  </div>
 <?php endif; ?>
 </section>
 

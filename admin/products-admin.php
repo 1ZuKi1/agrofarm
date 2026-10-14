@@ -69,6 +69,13 @@ if ($action === 'save_product') {
   $nameEn = trim($_POST['name_en'] ?? '') ?: null;
   $descMn = trim($_POST['description_mn'] ?? '') ?: null;
   $descEn = trim($_POST['description_en'] ?? '') ?: null;
+  // The editor no longer has English fields (the shop is Mongolian only), so
+  // a save that doesn't send them keeps whatever is stored.
+  if ($id !== '' && !array_key_exists('name_en', $_POST)) {
+    $keep = $pdo->prepare('SELECT name_en, description_en FROM products WHERE id = ?');
+    $keep->execute([(int)$id]);
+    if ($row = $keep->fetch()) { $nameEn = $row['name_en']; $descEn = $row['description_en']; }
+  }
   $active = ($_POST['active'] ?? '1') === '1' ? 1 : 0;
   // Which /shop section the product appears in ('' = none → "Бусад").
   // Only changed when the form sends the field: an admin.js from before the
@@ -134,6 +141,11 @@ if ($action === 'save_variant') {
   $productId = (int)($_POST['product_id'] ?? 0);
   $nameMn = trim($_POST['name_mn'] ?? '');
   $nameEn = trim($_POST['name_en'] ?? '') ?: null;
+  if ($id !== '' && !array_key_exists('name_en', $_POST)) { // no English field in the editor: keep it
+    $keep = $pdo->prepare('SELECT name_en FROM product_variants WHERE id = ?');
+    $keep->execute([(int)$id]);
+    $nameEn = $keep->fetchColumn() ?: null;
+  }
   $price = (int)($_POST['price'] ?? -1);
   $stock = (int)($_POST['stock'] ?? -1);
   $weightLabel = trim($_POST['weight_label'] ?? '') ?: null;
@@ -198,6 +210,52 @@ if ($action === 'save_variant') {
     echo json_encode(['error' => strpos($e->getMessage(), 'foreign key') !== false
       ? 'Төрөл хадгалж чадсангүй — бүтээгдэхүүн байгаа эсэхийг шалгана уу'
       : 'Төрөл хадгалж чадсангүй']);
+  }
+  exit;
+}
+
+// ---- Prices and stock of one product's options, from the product editor ----
+// prices = JSON [{"id": 5, "price": 120000, "stock": 10}, …]; only options of
+// that product, whole numbers ≥ 0. Each change is logged as variant_save.
+if ($action === 'save_prices') {
+  $productId = (int)($_POST['product_id'] ?? 0);
+  $rows = json_decode((string)($_POST['prices'] ?? ''), true);
+  if ($productId <= 0 || !is_array($rows)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Үнийн мэдээлэл буруу байна']);
+    exit;
+  }
+  try {
+    $own = $pdo->prepare('SELECT id, name_mn, price, stock FROM product_variants WHERE product_id = ?');
+    $own->execute([$productId]);
+    $byId = [];
+    foreach ($own->fetchAll() as $v) $byId[(int)$v['id']] = $v;
+    $clean = [];
+    foreach ($rows as $r) {
+      $vid = (int)($r['id'] ?? 0);
+      $price = filter_var($r['price'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+      $stock = filter_var($r['stock'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+      if (!isset($byId[$vid])) { http_response_code(400); echo json_encode(['error' => 'Төрөл олдсонгүй']); exit; }
+      if ($price === false || $stock === false) {
+        http_response_code(400);
+        echo json_encode(['error' => $byId[$vid]['name_mn'] . ': үнэ, нөөц 0 буюу түүнээс их бүхэл тоо байна']);
+        exit;
+      }
+      $clean[$vid] = [$price, $stock];
+    }
+    $up = $pdo->prepare('UPDATE product_variants SET price = ?, stock = ? WHERE id = ? AND product_id = ?');
+    foreach ($clean as $vid => [$price, $stock]) {
+      $old = $byId[$vid];
+      if ((int)$old['price'] === $price && (int)$old['stock'] === $stock) continue;
+      $up->execute([$price, $stock, $vid, $productId]);
+      admin_log($pdo, $me, 'variant_save', 'variant', $vid,
+        $old['name_mn'] . ': үнэ ' . (int)$old['price'] . ' → ' . $price . ', нөөц ' . (int)$old['stock'] . ' → ' . $stock);
+    }
+    echo json_encode(['ok' => true]);
+  } catch (PDOException $e) {
+    error_log('products-admin save_prices: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['error' => 'Серверийн алдаа гарлаа']);
   }
   exit;
 }
