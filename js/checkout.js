@@ -55,6 +55,9 @@
     $("checkoutRoot").hidden = which !== "form";
     $("checkoutPay").hidden = which !== "pay";
     $("checkoutEmpty").hidden = which !== "empty";
+    // The button the buyer just pressed is now hidden; without this, keyboard
+    // focus is lost and a screen reader says nothing about the new screen.
+    if (which === "pay") $("checkoutPay").focus({ preventScroll: true });
   }
 
   /* ---------------- form ---------------- */

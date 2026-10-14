@@ -191,7 +191,10 @@ try {
 
   try {
     $qpayToken = qpay_token();
-    $callbackUrl = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/qpay-callback.php?order=' . $publicToken;
+    // Our own address, never the request's Host header: a forged Host would
+    // otherwise point QPay's payment webhook at someone else's server.
+    $siteUrl = defined('NAF_SITE_URL') ? rtrim(NAF_SITE_URL, '/') : 'https://agrofarm.mn';
+    $callbackUrl = $siteUrl . '/qpay-callback.php?order=' . $publicToken;
     $invoiceLines = array_map(function ($li) {
       return ['description' => $li['invoice_line'], 'quantity' => $li['qty'], 'unit_price' => $li['price']];
     }, $lineItems);
@@ -208,6 +211,32 @@ try {
 
   $pdo->beginTransaction();
   try {
+    // The stock check above and this write are separate steps (QPay is called
+    // in between), so two buyers racing for the last items could both pass
+    // it. Lock the variant rows (id order, so two baskets can't deadlock) and
+    // count again under the lock; the loser's QR is cancelled before any
+    // money can move.
+    $lockIds = array_keys($requestedByVariant);
+    sort($lockIds);
+    $lockStmt = $pdo->prepare('SELECT stock FROM product_variants WHERE id = ? FOR UPDATE');
+    foreach ($lockIds as $vid) $lockStmt->execute([$vid]);
+    $reservedLocked = $pdo->prepare(
+      "SELECT COALESCE(SUM(oi.quantity),0) FROM order_items oi
+       JOIN orders o ON o.id = oi.order_id
+       WHERE oi.variant_id = ? AND o.status IN ('pending','paid','fulfilled') FOR UPDATE"
+    );
+    foreach ($lockIds as $vid) {
+      $lockStmt->execute([$vid]);
+      $reservedLocked->execute([$vid]);
+      if ($requestedByVariant[$vid] > (int)$lockStmt->fetchColumn() - (int)$reservedLocked->fetchColumn()) {
+        $pdo->rollBack();
+        qpay_cancel_invoice($qpayToken, $invoice['invoice_id']);
+        http_response_code(409);
+        echo json_encode(['error' => 'Нөөц дөнгөж сая дууслаа — сагсаа шалгаад дахин оролдоно уу']);
+        exit;
+      }
+    }
+
     // expires_at is computed via MySQL's own NOW() rather than a PHP-computed
     // value, so it's always consistent with the NOW() used by every lazy-
     // expiry sweep, regardless of any PHP/MySQL timezone mismatch.

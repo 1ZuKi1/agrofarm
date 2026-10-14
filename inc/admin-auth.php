@@ -54,6 +54,8 @@ function admin_session_start(): void {
     ini_set('session.gc_divisor', '100');
   }
   ini_set('session.gc_maxlifetime', (string)$life);
+  ini_set('session.use_strict_mode', '1');   // never adopt a session id the browser made up
+  ini_set('session.use_only_cookies', '1');
   session_set_cookie_params([
     'lifetime' => $life,
     'path' => '/',
