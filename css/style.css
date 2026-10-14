@@ -1173,7 +1173,7 @@ input, textarea, select{ font-size:16px !important; }
 .checkout-choice input:checked + .checkout-choice__body .checkout-choice__icon{ background:var(--green); color:#fff; }
 .checkout-choice input:focus-visible + .checkout-choice__body,
 .checkout-day input:focus-visible + .checkout-day__body{ outline:2px solid var(--green); outline-offset:3px; }
-.checkout-map{ display:inline-block; margin-top:.8rem; font-size:.85rem; color:var(--green); }
+.checkout-map{ margin-top:.4rem; font-size:.85rem; color:var(--green); }
 
 .checkout-days{ display:grid; gap:.6rem; grid-template-columns:repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
 .checkout-day__body{ display:flex; flex-direction:column; gap:.1rem; padding:.85rem 1rem; border:1.5px solid rgba(44,44,44,.14); border-radius:14px; background:var(--cream); transition:border-color .2s, background .2s, box-shadow .2s; }
@@ -1197,6 +1197,12 @@ input, textarea, select{ font-size:16px !important; }
 
 .checkout-error{ padding:.8rem 1rem; border-radius:12px; background:#fbe8e6; color:#a3231a; font-weight:600; font-size:.92rem; }
 .checkout-error[hidden]{ display:none; }
+.checkout-field input[aria-invalid="true"], .checkout-field textarea[aria-invalid="true"]{ border-color:#a3231a; }
+/* Small text links get a 44px-tall tap area (WCAG 2.5.5). */
+.checkout-page__back, .checkout-map, .checkout-summary__edit{ display:inline-flex; align-items:center; min-height:44px; }
+.link-text{ word-break:break-all; user-select:all; }
+.link-copy{ display:inline-flex; align-items:center; min-height:44px; padding:0 .9rem; margin-left:.4rem; border:1.5px solid var(--green); border-radius:999px; background:transparent; color:var(--green); font:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
+.link-copy:hover{ background:var(--green); color:#fff; }
 .checkout-submit{ width:100%; padding:1.05rem 1.5rem; font-size:1.02rem; text-align:center; }
 .checkout-submit:disabled{ opacity:.6; cursor:default; transform:none; }
 
@@ -1218,7 +1224,7 @@ input, textarea, select{ font-size:16px !important; }
 .checkout-summary__totals dd{ margin:0; font-variant-numeric:tabular-nums; }
 .checkout-summary__total{ margin-top:.4rem; padding-top:.6rem !important; border-top:1px solid rgba(44,44,44,.12); font-weight:700; font-size:1.05rem !important; }
 .checkout-summary__total dd{ color:var(--green); }
-.checkout-summary__edit{ display:inline-block; margin-top:.9rem; font-size:.85rem; color:var(--green); }
+.checkout-summary__edit{ margin-top:.5rem; font-size:.85rem; color:var(--green); }
 /* Phones: the summary comes first and can be folded; on wide screens it's a
    fixed side panel that can't be folded. */
 @media (max-width:899px){

@@ -60,6 +60,20 @@
     if (which === "pay") $("checkoutPay").focus({ preventScroll: true });
   }
 
+  // "Холбоос хуулах" next to the order link (QR screen and confirmation).
+  $("checkoutPay").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-copy]");
+    if (!b) return;
+    const label = b.textContent;
+    try {
+      await navigator.clipboard.writeText(b.dataset.copy);
+      b.textContent = "Хууллаа ✓";
+    } catch {
+      b.textContent = "Хуулж чадсангүй — холбоосыг гараар сонгоно уу";
+    }
+    setTimeout(() => { b.textContent = label; }, 2500);
+  });
+
   /* ---------------- form ---------------- */
 
   const form = $("checkoutForm");
@@ -109,13 +123,22 @@
     renderTotals();
   }
 
+  function clearInvalid() {
+    form.querySelectorAll("[aria-invalid]").forEach((f) => f.removeAttribute("aria-invalid"));
+  }
   function showError(msg, focusEl) {
+    clearInvalid();
     const el = $("checkoutError");
     el.textContent = msg;
     el.hidden = false;
-    if (focusEl) focusEl.focus();
+    if (focusEl) {
+      // Text fields are marked so a screen reader says which one is wrong;
+      // the radio groups are described by the message alone.
+      if (focusEl.matches("input:not([type=radio]), textarea")) focusEl.setAttribute("aria-invalid", "true");
+      focusEl.focus();
+    }
   }
-  function hideError() { $("checkoutError").hidden = true; }
+  function hideError() { clearInvalid(); $("checkoutError").hidden = true; }
 
   /** Basket lines against live prices. Returns false if the basket can't be shown. */
   function renderSummary(cart) {
@@ -282,7 +305,8 @@
         ${order.qr_image ? `<img class="qr-screen__img" src="data:image/png;base64,${escAttr(order.qr_image)}" alt="QPay QR код">` : ""}
         <p class="qr-screen__waiting" aria-live="polite">Төлбөр хүлээгдэж байна…</p>
         <button type="button" class="btn btn--gold qr-screen__check">Төлбөр шалгах</button>
-        <p class="qr-screen__link">Дараа буцаж ирэх бол: ${esc(orderLink(token))}</p>
+        <p class="qr-screen__link">Дараа буцаж ирэх бол: <span class="link-text">${esc(orderLink(token))}</span>
+          <button type="button" class="link-copy" data-copy="${escAttr(orderLink(token))}">Холбоос хуулах</button></p>
       </div>`;
     pay.querySelectorAll(".qr-bank img").forEach((img) => img.addEventListener("error", () => img.remove()));
     window.scrollTo({ top: 0 });
@@ -380,7 +404,8 @@
         <p class="order-confirmation__total">${money(s.total)}</p>
         ${s.order_no ? `<p class="order-confirmation__no">Захиалгын дугаар: <strong>${esc(s.order_no)}</strong></p>` : ""}
         <div class="order-confirmation__plan">${plan}</div>
-        <p class="order-confirmation__link">Захиалгын холбоос: ${esc(orderLink(token))}</p>
+        <p class="order-confirmation__link">Захиалгын холбоос: <span class="link-text">${esc(orderLink(token))}</span>
+          <button type="button" class="link-copy" data-copy="${escAttr(orderLink(token))}">Холбоос хуулах</button></p>
         <a class="btn order-confirmation__back" href="/shop">Дэлгүүр рүү буцах</a>
       </div>`;
     window.scrollTo({ top: 0 });

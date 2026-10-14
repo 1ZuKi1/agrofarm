@@ -28,6 +28,34 @@ require_once __DIR__ . '/fulfillment.php'; // day words for the staff email
 const NAF_ORDERS_TO = 'info@agrofarm.mn';
 const NAF_ORDERS_FROM = 'no-reply@agrofarm.mn'; // must be on our own domain for SPF
 
+// Per visitor address (REMOTE_ADDR). Many phones share one address on Mongolian
+// mobile networks, so these are generous: a buyer never meets them, a script does.
+const NAF_ORDER_MAX_OPEN_PER_IP = 4;    // unpaid orders open at the same time
+const NAF_ORDER_MAX_PER_HOUR_PER_IP = 20;
+
+/** Whether sql/orders-schema-v7.sql has been run (the limit is skipped until it has). */
+function orders_has_client_ip(PDO $pdo): bool {
+  static $has = null;
+  if ($has === null) $has = (bool)$pdo->query("SHOW COLUMNS FROM orders LIKE 'client_ip'")->fetch();
+  return $has;
+}
+
+/**
+ * True when this address already has too many unpaid orders holding stock, or
+ * made too many orders in the last hour. Without a limit, a script could open
+ * unpaid orders until every item showed "sold out" for 20 minutes at a time.
+ */
+function orders_ip_limited(PDO $pdo, string $ip): bool {
+  $st = $pdo->prepare(
+    "SELECT SUM(status = 'pending' AND expires_at > NOW()) AS open_now,
+            SUM(created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)) AS last_hour
+     FROM orders WHERE client_ip = ?"
+  );
+  $st->execute([$ip]);
+  $r = $st->fetch();
+  return (int)$r['open_now'] >= NAF_ORDER_MAX_OPEN_PER_IP || (int)$r['last_hour'] >= NAF_ORDER_MAX_PER_HOUR_PER_IP;
+}
+
 /** "#000012" — the order number customers and staff both see (admin uses the same format). */
 function order_number(int $id): string {
   return '#' . str_pad((string)$id, 6, '0', STR_PAD_LEFT);

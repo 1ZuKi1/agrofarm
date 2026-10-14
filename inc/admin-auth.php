@@ -8,7 +8,7 @@
  *               minutes; unknown emails are counted per session the same
  *               way, and both get the same message, so nobody can probe
  *               which emails have accounts.
- *   Session     14 days on a device. The account is re-read on every request,
+ *   Session     3 days on a device. The account is re-read on every request,
  *               so deactivating someone logs them out at their next click.
  *   Roles       admin_require($pdo, 'admin') guards Тохиргоо (fee, closed
  *               days, Хэрэглэгчид); everything else needs 'staff' or above.
@@ -28,15 +28,15 @@ require_once __DIR__ . '/fulfillment.php'; // NAF_TZ, fulfillment_now()
 const ADMIN_MAX_FAILS = 5;
 const ADMIN_LOCK_MINUTES = 15;
 const ADMIN_MIN_PASSWORD = 8;
-const ADMIN_SESSION_DAYS = 14;
+const ADMIN_SESSION_DAYS = 3;
 const ADMIN_BAD_LOGIN = 'Имэйл эсвэл нууц үг буруу байна';
 
 /**
- * Staff sessions last 14 days. cPanel (like most hosts) deletes files in the
+ * Staff sessions last 3 days. cPanel (like most hosts) deletes files in the
  * shared session folder by php.ini's lifetime — usually 24 minutes — whatever
  * a script sets at runtime, so admin sessions live in their own folder one
  * level above the site (next to config.php), cleaned by PHP itself with the
- * 14-day lifetime. If that folder can't be made, the shared one is used.
+ * 3-day lifetime. If that folder can't be made, the shared one is used.
  */
 function admin_session_dir(): ?string {
   $dir = dirname(__DIR__, 2) . '/naf-sessions';

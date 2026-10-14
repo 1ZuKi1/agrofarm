@@ -187,6 +187,21 @@ try {
     exit;
   }
 
+  // Per-address limit (see orders_ip_limited). The named lock makes the check
+  // and the insert one step per address, so a burst of parallel requests
+  // cannot all pass the check before any of them is saved. It is released
+  // when this request's database connection closes.
+  $clientIp = substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45);
+  $limitOn = $clientIp !== '' && orders_has_client_ip($pdo);
+  if ($limitOn) {
+    $got = (int)$pdo->query('SELECT GET_LOCK(' . $pdo->quote('naf-order-' . md5($clientIp)) . ', 5)')->fetchColumn();
+    if ($got !== 1 || orders_ip_limited($pdo, $clientIp)) {
+      http_response_code(429);
+      echo json_encode(['error' => 'Түр хүлээгээд дахин оролдоно уу — төлөгдөөгүй захиалга хэт олон байна']);
+      exit;
+    }
+  }
+
   $publicToken = bin2hex(random_bytes(16));
 
   try {
@@ -250,6 +265,7 @@ try {
     );
     $orderStmt->execute([$publicToken, $buyerName, $buyerPhone, $buyerAddress, $buyerNote, $fulfillment, $deliveryDate, $subtotal, $deliveryFee, $total, $invoice['invoice_id'], $invoice['qr_image'] ?? null, $invoice['qr_text'] ?? null, json_encode($banks, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]);
     $orderId = (int)$pdo->lastInsertId();
+    if ($limitOn) $pdo->prepare('UPDATE orders SET client_ip = ? WHERE id = ?')->execute([$clientIp, $orderId]);
 
     $itemStmt = $pdo->prepare(
       'INSERT INTO order_items (order_id, variant_id, variant_name_snapshot, unit_price_snapshot, quantity, line_total) VALUES (?, ?, ?, ?, ?, ?)'
