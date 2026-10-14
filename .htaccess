@@ -13,6 +13,8 @@
 # ------------------------------------------------------------------
 RewriteEngine On
 RewriteCond %{HTTPS} off
+# …except a copy running on your own computer (XAMPP at http://localhost).
+RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
 # The home page is index.php. Named first: the old index.html may still sit
