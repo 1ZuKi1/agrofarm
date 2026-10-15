@@ -24,7 +24,6 @@ catalog_head(
 );
 ?>
 <section class="eq-hero">
-  <p class="kicker">Тоног төхөөрөмж</p>
   <h1>Фермд хэрэгтэй <em>бүхэн</em></h1>
   <p class="eq-hero__lead">
     Бид өөрсдийн таван ферм дээр ашигладаг тоног төхөөрөмж, хэрэгслээ

@@ -134,9 +134,9 @@
           const img = p.variants[0].image_path;
           const media = img
             ? `background-image:linear-gradient(rgba(44,44,44,.15), rgba(44,44,44,.3)), url('${escAttrShop(img)}'); background-size:cover; background-position:center`
-            : `background:linear-gradient(135deg, var(--green), var(--green-deep))`;
+            : `background:var(--green)`;
           return `
-            <article class="prod reveal reveal--scale">
+            <article class="prod">
               <a href="?product=${escAttrShop(p.slug)}" class="shop-grid__card-link" data-slug="${escAttrShop(p.slug)}">
                 <div class="prod__media" style="${media}"></div>
                 <div class="prod__body">
@@ -153,13 +153,6 @@
         }).join('')}
       </div>
     `;
-
-    // .reveal starts at opacity:0 and only becomes visible once script.js's
-    // IntersectionObserver adds .in — but that observer sweeps the DOM once at
-    // load, long before these fetched cards exist. Without handing them over
-    // they stay permanently invisible while still being clickable. Same
-    // handoff news.html does for its fetched posts.
-    root.querySelectorAll(".reveal").forEach((el) => window.observeReveal?.(el));
 
     root.querySelectorAll(".shop-grid__card-link").forEach((link) => {
       link.addEventListener("click", (e) => {

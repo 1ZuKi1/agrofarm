@@ -75,13 +75,11 @@ function catalog_head(string $title, string $desc, string $canonicalPath): void 
 <meta property="og:url" content="$c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
-<div class="progress-bar" id="progressBar" aria-hidden="true"></div>
-<div class="grain" aria-hidden="true"></div>
 
 <header class="nav nav--solid" id="nav">
   <a href="/#hero" class="nav__brand" aria-label="Nuudelchin Agro Farm — Home">
@@ -132,7 +130,7 @@ function catalog_foot(): void {
 
 <footer class="footer">
   <p>© <span id="year"></span> Nuudelchin Agro Farm LLC · Нүүдэлчин Агро Ферм ХХК · agrofarm.mn</p>
-  <p data-en="Independent Mongolian dairy company — est. 2015." data-mn="Бие даасан Монгол сүүний компани — 2015 оноос.">Бие даасан Монгол сүүний компани — 2015 оноос.</p>
+  <p data-en="Independent Mongolian dairy company, est. 2015." data-mn="Бие даасан Монгол сүүний компани — 2015 оноос.">Бие даасан Монгол сүүний компани — 2015 оноос.</p>
 </footer>
 
 <script src="/script.js"></script>
@@ -188,7 +186,7 @@ function catalog_card(array $p, string $catSlug): void {
     ? sprintf('<img src="/%s" alt="%s" loading="lazy" decoding="async">', ce($p['thumb']), ce($p['name']))
     : '<span class="eq-card__noimg" aria-hidden="true"></span>';
   printf(
-    '<article class="eq-card reveal reveal--scale">
+    '<article class="eq-card">
        <a href="/equipment/%s/%s">
          <div class="eq-card__media">%s</div>
          <div class="eq-card__body"><h3>%s</h3><p>%s</p></div>

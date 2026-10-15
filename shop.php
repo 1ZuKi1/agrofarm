@@ -36,16 +36,10 @@ try {
 <link rel="canonical" href="https://agrofarm.mn/shop">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-
-<!-- Scroll progress bar -->
-<div class="progress-bar" id="progressBar" aria-hidden="true"></div>
-
-<!-- Grain overlay -->
-<div class="grain" aria-hidden="true"></div>
 
 <!-- ============ NAVIGATION ============ -->
 <header class="nav nav--solid" id="nav">
@@ -95,8 +89,7 @@ try {
 <!-- ============ SHOP ============ -->
 <section class="shop">
   <div class="shop__head">
-    <p class="kicker reveal" data-en="Shop" data-mn="Дэлгүүр">Shop</p>
-    <h1 class="reveal" data-en="Everything we <em>sell</em>" data-mn="Бидний <em>нийлүүлдэг</em> бүхэн">Everything we <em>sell</em></h1>
+    <h1 data-en="Everything we <em>sell</em>" data-mn="Бидний <em>нийлүүлдэг</em> бүхэн">Everything we <em>sell</em></h1>
   </div>
   <div id="shopRoot">
     <p class="shop__empty" id="shopLoading" data-en="Loading…" data-mn="Ачааллаж байна…">Loading…</p>
@@ -107,7 +100,6 @@ try {
 <!-- ============ EQUIPMENT ============ -->
 <section class="eq-wrap eq-wrap--inshop" id="equipment">
   <div class="eq-shop-head">
-    <p class="kicker" data-en="Equipment" data-mn="Тоног төхөөрөмж">Equipment</p>
     <h2 data-en="Farm equipment and tools" data-mn="Фермийн тоног төхөөрөмж, хэрэгсэл">Фермийн тоног төхөөрөмж, хэрэгсэл</h2>
     <p class="eq-shop-head__lead" data-en="No prices online — add what you need to your basket and we'll send you a quote and a delivery time." data-mn="Тоног төхөөрөмжийн үнийг сайтад харуулахгүй. Хэрэгтэйгээ сагсандаа нэмээд хүсэлт илгээхэд бид үнийн санал, нийлүүлэх хугацааг эргэн мэдэгдэнэ.">Тоног төхөөрөмжийн үнийг сайтад харуулахгүй. Хэрэгтэйгээ сагсандаа нэмээд хүсэлт илгээхэд бид үнийн санал, нийлүүлэх хугацааг эргэн мэдэгдэнэ.</p>
   </div>
@@ -133,7 +125,7 @@ try {
 <!-- ============ FOOTER ============ -->
 <footer class="footer">
   <p>© <span id="year"></span> Nuudelchin Agro Farm LLC · Нүүдэлчин Агро Ферм ХХК · agrofarm.mn</p>
-  <p data-en="Independent Mongolian dairy company — est. 2015." data-mn="Бие даасан Монгол сүүний компани — 2015 оноос.">Independent Mongolian dairy company — est. 2015.</p>
+  <p data-en="Independent Mongolian dairy company, est. 2015." data-mn="Бие даасан Монгол сүүний компани — 2015 оноос.">Independent Mongolian dairy company, est. 2015.</p>
 </footer>
 
 <script src="/script.js"></script>
