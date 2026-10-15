@@ -186,7 +186,7 @@ section{ position:relative; }
   /* One neutral shade behind the words only, so the photo itself stays clear */
   background:linear-gradient(90deg, rgba(12,20,15,.8) 0%, rgba(12,20,15,.55) 38%, rgba(12,20,15,.12) 70%);
 }
-.hero__inner{ position:relative; z-index:2; padding:clamp(7rem, 15vh, 11rem) var(--gutter) 6.5rem; max-width:1120px; }
+.hero__inner{ position:relative; z-index:2; padding:clamp(7rem, 15vh, 11rem) var(--gutter) 6.5rem; max-width:1200px; }
 .hero__kicker{
   font-size:1rem; font-weight:500;
   color:var(--gold-soft); margin-bottom:1.8rem;
@@ -688,6 +688,8 @@ input, textarea, select{ font-size:16px !important; }
   /* Words run the full width on phones, so the shade rises from the bottom */
   .hero__veil{ background:linear-gradient(to top, rgba(12,20,15,.86) 0%, rgba(12,20,15,.55) 55%, rgba(12,20,15,.25) 100%); }
   .hero__title{ font-size:clamp(2.6rem, 12vw, 4.1rem); letter-spacing:-.018em; }
+  /* Mongolian's longest line («айл бүрийн ширээнд.») needs a touch less on phones to stay on one line */
+  html[lang="mn"] .hero__title{ font-size:clamp(2.4rem, 10.5vw, 4.1rem); }
   .hero__slogan{ font-size:1rem; }
   .hero__lede{ font-size:.98rem; line-height:1.65; }
 
