@@ -150,7 +150,7 @@ function shop_card(array $item): void {
     }
   }
   printf(
-    '<article class="eq-card eq-card--%s reveal reveal--scale">
+    '<article class="eq-card eq-card--%s">
        <a class="eq-card__link" href="%s">
          <div class="eq-card__media">%s</div>
          <div class="eq-card__body"><h3>%s</h3><p>%s</p></div>

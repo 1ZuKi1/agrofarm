@@ -86,8 +86,8 @@ function layout_extra($x): void {
  *   active      NAF_NAV key of the current section ('shop', 'news') — marked
  *               is-current and aria-current="page"
  *   head        extra HTML for <head> (page-only <style>, preloads)
- *   body_start  extra HTML before the header (home: the cursor glow)
- *   after_nav   extra HTML between the header and <main> (home: section dots)
+ *   body_start  extra HTML before the header
+ *   after_nav   extra HTML between the header and <main>
  * The three extras take an HTML string or a function that prints it (use a
  * function when the HTML calls ta()/tx()).
  */
@@ -112,12 +112,12 @@ function page_start(array $o): void {
   echo "<meta property=\"og:title\" content=\"$title\">\n";
   if ($desc !== '') echo "<meta property=\"og:description\" content=\"$desc\">\n";
   if ($canon !== '') echo "<meta property=\"og:url\" content=\"$canon\">\n";
-  // Cormorant Garamond (serif headlines) + Inter (body) — full Latin and
+  // Cormorant Garamond (serif headlines) + Fira Sans (body) — full Latin and
   // Mongolian Cyrillic incl. ө/ү.
   echo <<<HTML
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 HTML;
   echo "<link rel=\"stylesheet\" href=\"$css\">\n";
@@ -127,9 +127,8 @@ HTML;
   // First thing a keyboard or screen-reader user reaches: jump past the menu.
   [$attrs, $text] = chrome_text($multi, 'a11y.skip');
   echo "<a class=\"skip-link\" href=\"#main\"$attrs>$text</a>\n";
-  echo "<div class=\"progress-bar\" id=\"progressBar\" aria-hidden=\"true\"></div>\n";
   layout_extra($o['body_start'] ?? '');
-  echo "<div class=\"grain\" aria-hidden=\"true\"></div>\n\n";
+  echo "\n";
 
   // ---- header ----
   $navClass = $home ? 'nav' : 'nav nav--solid';

@@ -255,6 +255,24 @@
     return `${location.origin}/shop/checkout?order=${token}`;
   }
 
+  /** The order link as a link plus a copy button, instead of 70 characters of raw address. */
+  function orderLinkHtml(token) {
+    const url = orderLink(token);
+    const copy = navigator.clipboard ? ` <button type="button" class="checkout-copy" data-copy="${escAttr(url)}">Хуулах</button>` : "";
+    return `<a href="${escAttr(url)}">Захиалгын холбоос</a>${copy}`;
+  }
+  const HELP_HTML = `<p class="checkout-help">Асуух зүйл байвал: <a href="tel:+97670000789">7000-0789</a></p>`;
+
+  // "Хуулах" next to an order link, on the QR screen and the confirmation.
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".checkout-copy");
+    if (!btn) return;
+    navigator.clipboard.writeText(btn.dataset.copy).then(() => {
+      btn.textContent = "Хуулсан ✓";
+      setTimeout(() => { btn.textContent = "Хуулах"; }, 1800);
+    }).catch(() => {});
+  });
+
   function renderQrScreen(order) {
     stopQr();
     show("pay");
@@ -279,7 +297,8 @@
         ${order.qr_image ? `<img class="qr-screen__img" src="data:image/png;base64,${escAttr(order.qr_image)}" alt="QPay QR код">` : ""}
         <p class="qr-screen__waiting" aria-live="polite">Төлбөр хүлээгдэж байна…</p>
         <button type="button" class="btn btn--gold qr-screen__check">Төлбөр шалгах</button>
-        <p class="qr-screen__link">Дараа буцаж ирэх бол: ${esc(orderLink(token))}</p>
+        <p class="qr-screen__link">Дараа буцаж ирэх бол: ${orderLinkHtml(token)}</p>
+        ${HELP_HTML}
       </div>`;
     pay.querySelectorAll(".qr-bank img").forEach((img) => img.addEventListener("error", () => img.remove()));
     window.scrollTo({ top: 0 });
@@ -377,7 +396,8 @@
         <p class="order-confirmation__total">${money(s.total)}</p>
         ${s.order_no ? `<p class="order-confirmation__no">Захиалгын дугаар: <strong>${esc(s.order_no)}</strong></p>` : ""}
         <div class="order-confirmation__plan">${plan}</div>
-        <p class="order-confirmation__link">Захиалгын холбоос: ${esc(orderLink(token))}</p>
+        <p class="order-confirmation__link">Дараа харах бол: ${orderLinkHtml(token)}</p>
+        ${HELP_HTML}
         <a class="btn order-confirmation__back" href="/shop">Дэлгүүр рүү буцах</a>
       </div>`;
     window.scrollTo({ top: 0 });

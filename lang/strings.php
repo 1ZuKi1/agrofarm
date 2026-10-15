@@ -79,61 +79,9 @@ return [
 
   // ---- Footer (every page) ----
   'footer.tagline' => [
-    'en' => 'Independent Mongolian dairy company — est. 2015.',
+    'en' => 'Independent Mongolian dairy company, est. 2015.',
     'mn' => 'Бие даасан Монгол сүүний компани — 2015 оноос.',
     'zh' => '蒙古国独立乳业公司 · 创立于 2015',
-  ],
-
-  // ---- Home — Section dots (right edge, desktop) ----
-  'dots.home' => [
-    'en' => 'Home',
-    'mn' => 'Нүүр',
-    'zh' => '首页',
-  ],
-  'dots.about' => [
-    'en' => 'About',
-    'mn' => 'Тухай',
-    'zh' => '关于',
-  ],
-  'dots.journey' => [
-    'en' => 'Journey',
-    'mn' => 'Замнал',
-    'zh' => '历程',
-  ],
-  'dots.green-energy' => [
-    'en' => 'Green energy',
-    'mn' => 'Ногоон эрчим хүч',
-    'zh' => '绿色能源',
-  ],
-  'dots.farms' => [
-    'en' => 'Farms',
-    'mn' => 'Фермүүд',
-    'zh' => '牧场',
-  ],
-  'dots.services' => [
-    'en' => 'Services',
-    'mn' => 'Үйлчилгээ',
-    'zh' => '服务',
-  ],
-  'dots.products' => [
-    'en' => 'Products',
-    'mn' => 'Бүтээгдэхүүн',
-    'zh' => '产品',
-  ],
-  'dots.recognition' => [
-    'en' => 'Recognition',
-    'mn' => 'Хүлээн зөвшөөрөлт',
-    'zh' => '荣誉',
-  ],
-  'dots.news' => [
-    'en' => 'News',
-    'mn' => 'Мэдээ',
-    'zh' => '新闻',
-  ],
-  'dots.contact' => [
-    'en' => 'Contact',
-    'mn' => 'Холбоо',
-    'zh' => '联系',
   ],
 
   // ---- Home — Hero ----
@@ -158,7 +106,7 @@ return [
     'zh' => '每一杯都是好奶',
   ],
   'hero.mongolias-pioneer-of-cluster' => [
-    'en' => 'Mongolia\'s pioneer of cluster dairy farming — 1,620 cows across four cluster farms in Töv province, supplying healthy, safe, high-quality milk to the nation.',
+    'en' => 'Mongolia\'s pioneer of cluster dairy farming: 1,620 cows across four cluster farms in Töv province, supplying healthy, safe, high-quality milk to the nation.',
     'mn' => 'Монголын кластер сүүний фермийн анхдагч — Төв аймгийн дөрвөн кластер фермд 1,620 үнээ маллаж, эрүүл, аюулгүй, өндөр чанартай сүүг үндэсний үйлдвэрлэлд нийлүүлж байна.',
     'zh' => '蒙古国集群化奶牛养殖的开创者。Töv 省四座集群牧场，1,620 头奶牛，把健康、安全、优质的牛奶送到全国。',
   ],
@@ -212,7 +160,7 @@ return [
     'zh' => '游牧千年，<em>现代牧业</em>',
   ],
   'about.nuudelchin-agro-farm-llc' => [
-    'en' => 'Nuudelchin Agro Farm LLC is an independent national company founded in 2015 to modernize Mongolia\'s dairy sector and grow domestic supply by developing cluster household farming. In 2017 we opened Mongolia\'s first 400-cow cluster dairy farm, uniting 10 herder families under one sustainable system. Since then we have built three more clusters — in Argalant, Bayankhangai and Bayan soums of Töv province — imported over 450 Montbéliarde cattle from France, and are building a 600-cow green farm complex in Ugtaaltsaidam, due to enter operation in 2027. We are now working to power our farms with green energy, turning cattle manure into energy and organic fertiliser.',
+    'en' => 'Nuudelchin Agro Farm LLC is an independent national company founded in 2015 to modernize Mongolia\'s dairy sector and grow domestic supply by developing cluster household farming. In 2017 we opened Mongolia\'s first 400-cow cluster dairy farm, uniting 10 herder families under one sustainable system. Since then we have built three more clusters in Argalant, Bayankhangai and Bayan soums of Töv province, imported over 450 Montbéliarde cattle from France, and are building a 600-cow green farm complex in Ugtaaltsaidam, due to enter operation in 2027. We are now working to power our farms with green energy, turning cattle manure into energy and organic fertiliser.',
     'mn' => 'Нүүдэлчин Агро Ферм ХХК нь 2015 оноос Монголын сүүний салбарыг шинэчлэх, дотоодын нийлүүлэлтийг нэмэгдүүлэх кластер өрхийн фермийн аж ахуйг хөгжүүлэх зорилготойгоор байгуулагдсан үндэсний бие даасан компани юм. Бид 2017 онд Монголын анхны 400 үнээний кластер сүүний фермийг нээж, 10 малчин өрхийг нэг тогтвортой системд нэгтгэсэн. Түүнээс хойш Төв аймгийн Аргалант, Баянхангай, Баян сумдад гурван кластерыг амжилттай хэрэгжүүлж, Францаас 450 гаруй Монбелиард үхэр импортолж, Төв аймгийн Угтаалцайдам суманд 600 үнээний цогцолбор кластерын ногоон фермийг барьж, 2027 онд ашиглалтад оруулахаар ажиллаж байна. Цаашид фермийн аж ахуйгаа байгальд ээлтэй ногоон эрчим хүчээр хангаж, малын бууц шивхийг эрчим хүч, органик бордоо болгох чиглэлд ажиллаж байна.',
     'zh' => 'Nuudelchin Agro Farm LLC 创立于 2015 年，是蒙古国的独立民族企业，以集群化家庭牧场推动本国乳业升级、提升国内供应。2017 年建成蒙古国第一座 400 头规模的集群奶牛场，把 10 户牧民家庭纳入同一套可持续体系。此后在 Töv 省的 Argalant、Bayankhangai、Bayan 三地陆续建成集群牧场，自法国引进 450 余头蒙贝利亚德牛；Ugtaaltsaidam 600 头规模的绿色牧场综合体正在建设，计划 2027 年投产。下一步，是让牧场用上绿色能源，把牛粪转化为能源和有机肥。',
   ],
@@ -222,7 +170,7 @@ return [
     'zh' => '使命',
   ],
   'about.to-develop-farming-intensive' => [
-    'en' => 'To develop farming, intensive livestock husbandry and crop production, bring their resources together, and — working closely with professional institutions — be the national company that provides complete farm services.',
+    'en' => 'To develop farming, intensive livestock husbandry and crop production, bring their resources together and, working closely with professional institutions, be the national company that provides complete farm services.',
     'mn' => 'Фермийн аж ахуй, эрчимжсэн мал аж ахуй, газар тариаланг хөгжүүлж, тэдгээрийн нөөцийг нэгтгэн, мэргэжлийн байгууллагуудтай нягт хамтран ажиллаж, фермийн цогц үйлчилгээ үзүүлэгч үндэсний компани байх.',
     'zh' => '发展农场经营、集约化畜牧与种植，整合三者资源，携手专业机构，做能提供牧场全链条服务的民族企业。',
   ],
@@ -232,7 +180,7 @@ return [
     'zh' => '愿景',
   ],
   'about.a-solution-for-rural' => [
-    'en' => 'A solution for rural development — building intensive farming at home.',
+    'en' => 'A solution for rural development: building intensive farming at home.',
     'mn' => 'Хөдөөгийн хөгжлийн шийдэл — эх орондоо эрчимжсэн аж ахуйг хөгжүүлнэ.',
     'zh' => '乡村发展的答案：在自己的土地上，办集约化牧业。',
   ],
@@ -241,33 +189,8 @@ return [
     'mn' => 'Эрүүл, аюулгүй, өндөр чанартай түүхий эд үйлдвэрлэн нийтийн эрүүл мэндийг хамгаалж, Монголын сүүний салбарыг олон улсын түвшинд хүргэх.',
     'zh' => '生产健康、安全、优质的原料奶，守护公众健康，把蒙古国乳业带上国际水准。',
   ],
-  'about.healthy-food-production' => [
-    'en' => 'Healthy food production',
-    'mn' => 'Эрүүл хүнсний үйлдвэрлэл',
-    'zh' => '健康食品',
-  ],
-  'about.reliability-trust' => [
-    'en' => 'Reliability & trust',
-    'mn' => 'Найдвартай түншлэл',
-    'zh' => '诚信可靠',
-  ],
-  'about.learning-organization' => [
-    'en' => 'Learning organization',
-    'mn' => 'Суралцагч байгууллага',
-    'zh' => '学习成长',
-  ],
-  'about.safe-operations' => [
-    'en' => 'Safe operations',
-    'mn' => 'Аюулгүй ажиллагаа',
-    'zh' => '安全生产',
-  ],
-  'about.collaboration-value-chain' => [
-    'en' => 'Collaboration & value chain',
-    'mn' => 'Хамтын ажиллагаа, үнэ цэнийн сүлжээ',
-    'zh' => '价值共创',
-  ],
   'about.first-cluster-farm-opening' => [
-    'en' => 'First cluster farm opening — Bayandelger, Töv province, 2017',
+    'en' => 'Opening of the first cluster farm in Bayandelger, Töv province, 2017',
     'mn' => 'Анхны кластер фермийн нээлт — Баяндэлгэр, Төв аймаг, 2017',
     'zh' => '2017 年，首座集群牧场在 Töv 省 Bayandelger 开业',
   ],
@@ -278,11 +201,6 @@ return [
   ],
 
   // ---- Home — Journey (timeline) ----
-  'journey.milestones' => [
-    'en' => 'Milestones',
-    'mn' => 'Түүхэн замнал',
-    'zh' => '发展历程',
-  ],
   'journey.a-journey-measured-in' => [
     'en' => 'A journey measured<br><em>in herds, not years.</em>',
     'mn' => 'Он жилээр бус,<br><em>сүргээр хэмжигдэх замнал.</em>',
@@ -299,7 +217,7 @@ return [
     'zh' => '法国血统',
   ],
   'journey.montbeliarde-heifers-imported' => [
-    'en' => 'Montbéliarde heifers imported from France by air and land transport — the groundwork for everything that followed.',
+    'en' => 'Montbéliarde heifers imported from France by air and land transport, the groundwork for everything that followed.',
     'mn' => 'Франциас Монбельярд үүлдрийн өсвөр үнээг агаарын болон газрын тээврээр импортлов — цаашдын бүхий л ажлын суурь тавигдав.',
     'zh' => '自法国空运、陆运引进蒙贝利亚德育成牛，为日后的一切打下底子。',
   ],
@@ -329,7 +247,7 @@ return [
     'zh' => '首座集群牧场',
   ],
   'journey.mongolias-first-400-cow' => [
-    'en' => 'Mongolia\'s first 400-cow cluster dairy farm opens in Bayandelger soum, Töv province — 10 herder families, 40 cows each.',
+    'en' => 'Mongolia\'s first 400-cow cluster dairy farm opens in Bayandelger soum, Töv province: 10 herder families, 40 cows each.',
     'mn' => 'Төв аймгийн Баяндэлгэр суманд Монголын анхны 400 үнээний кластер сүүний ферм нээгдэв — 10 малчин өрх, тус бүр 40 үнээ.',
     'zh' => '蒙古国第一座 400 头规模的集群奶牛场在 Töv 省 Bayandelger 苏木开业：10 户牧民家庭，每户 40 头。',
   ],
@@ -339,7 +257,7 @@ return [
     'zh' => '畜群壮大',
   ],
   'journey.france-mongolia-animal-husbandry' => [
-    'en' => 'France–Mongolia animal husbandry cooperation seminar; further Montbéliarde imports bring the total to 450+. Second cluster farm — 480 cows in Argalant soum.',
+    'en' => 'France–Mongolia animal husbandry cooperation seminar; further Montbéliarde imports bring the total to 450+. Second cluster farm: 480 cows in Argalant soum.',
     'mn' => 'Франц–Монголын мал аж ахуйн хамтын ажиллагааны семинар; нэмэлт импортоор Монбельярд үнээ 450+ болов. Хоёр дахь кластер ферм — Аргалант суманд 480 үнээ.',
     'zh' => '法国—蒙古国畜牧合作研讨会举行；追加引进后，蒙贝利亚德牛存栏突破 450 头。第二座集群牧场落地 Argalant 苏木，480 头。',
   ],
@@ -369,7 +287,7 @@ return [
     'zh' => '第四座集群，首批荷斯坦',
   ],
   'journey.the-500-cow-bayan' => [
-    'en' => 'The 500-cow Bayan cluster — our largest to date — joins the group, and 400 Holstein cattle are imported from China, a first for Mongolia.',
+    'en' => 'The 500-cow Bayan cluster, our largest to date, joins the group, and 400 Holstein cattle are imported from China, a first for Mongolia.',
     'mn' => '500 үнээний Баян кластер — өнөөг хүртэлх хамгийн том нь — нэгдэж, Хятадаас 400 Холштейн үхэр импортлов. Энэ нь Монголд анх удаа.',
     'zh' => '500 头规模的 Bayan 集群加入，成为迄今最大的一座；同年自中国引进 400 头荷斯坦牛，这在蒙古国尚属首次。',
   ],
@@ -379,7 +297,7 @@ return [
     'zh' => '绿色综合体投产',
   ],
   'journey.the-600-cow-green' => [
-    'en' => 'The 600-cow green farm complex in Ugtaaltsaidam soum enters operation — the largest project in the company\'s history, and the first designed around renewable energy from the outset.',
+    'en' => 'The 600-cow green farm complex in Ugtaaltsaidam soum enters operation. It is the largest project in the company\'s history, and the first designed around renewable energy from the outset.',
     'mn' => 'Угтаалцайдам суманд 600 үнээний цогцолбор кластерын ногоон ферм ашиглалтад орно — компанийн түүхэн дэх хамгийн том төсөл бөгөөд сэргээгдэх эрчим хүчийг анхнаас нь тооцож төлөвлөсөн анхны ферм.',
     'zh' => 'Ugtaaltsaidam 600 头规模的绿色牧场综合体投产：公司史上最大的项目，也是第一座从设计之初就围绕可再生能源规划的牧场。',
   ],
@@ -401,7 +319,7 @@ return [
     'zh' => '从圈舍粪污，<em>到清洁能源</em>',
   ],
   'green.the-next-step-is' => [
-    'en' => 'The next step is to power the farms with renewable energy. Cattle manure is being turned into energy and organic fertiliser — returning nutrients to the fodder fields they came from, and leaving the steppe as we found it.',
+    'en' => 'The next step is to power the farms with renewable energy. Cattle manure is being turned into energy and organic fertiliser, returning nutrients to the fodder fields they came from and leaving the steppe as we found it.',
     'mn' => 'Дараагийн алхам бол фермүүдээ сэргээгдэх эрчим хүчээр хангах явдал. Малын бууц шивхийг эрчим хүч, органик бордоо болгож, тэжээлийн талбайд нь шимийг нь буцааж, тал нутгаа байсан хэвээр нь үлдээхийн төлөө ажиллаж байна.',
     'zh' => '下一步，是让牧场用上可再生能源。牛粪转化为能源和有机肥，养分回到出产它的饲草料地，草原还是原来的草原。',
   ],
@@ -421,7 +339,7 @@ return [
     'zh' => '有机肥',
   ],
   'green.cattle-slurry-is-processed' => [
-    'en' => 'Cattle slurry is processed into organic fertiliser — a green project to protect and restore the fodder fields and the degraded pasture around them.',
+    'en' => 'Cattle slurry is processed into organic fertiliser, a green project to protect and restore the fodder fields and the degraded pasture around them.',
     'mn' => 'Үхрийн шивхийг боловсруулан органик бордоо үйлдвэрлэж, тэжээлийн талбай, доройтсон бэлчээрийг хамгаалах, сэргээх ногоон төсөл хэрэгжүүлнэ.',
     'zh' => '牛粪浆制成有机肥，用来保护和修复饲草料地，以及周边退化的草场。',
   ],
@@ -431,7 +349,7 @@ return [
     'zh' => '有机牧场',
   ],
   'green.at-ugtaaltsaidam-fodder-fertiliser' => [
-    'en' => 'At Ugtaaltsaidam, fodder, fertiliser and crop growing run on eco-friendly, circular, zero-waste technology — developing into a certified organic farm producing organic milk and dairy products.',
+    'en' => 'At Ugtaaltsaidam, fodder, fertiliser and crop growing run on eco-friendly, circular, zero-waste technology. The farm is developing into a certified organic farm producing organic milk and dairy products.',
     'mn' => 'Угтаалцайдам төсөлд тэжээл, бордоо, тариаланд байгальд ээлтэй, дахин ашиглагдах, хаягдалгүй технологи нэвтрүүлж, органик баталгаажуулалтад хамрагдсан органик сүү, сүүн бүтээгдэхүүн үйлдвэрлэх онцлог төсөл болон хөгжинө.',
     'zh' => '在 Ugtaaltsaidam，饲草料、肥料与种植全部采用环保、循环、零废弃的技术，目标是通过有机认证，产出有机牛奶与乳制品。',
   ],
@@ -477,18 +395,13 @@ return [
     'mn' => '2025 онд байгуулагдсан · Хамгийн том кластер',
     'zh' => '2025 年建成 · 规模最大的集群',
   ],
-  'farms.our-farms-t-v' => [
-    'en' => 'Our farms — Töv province',
-    'mn' => 'Манай фермүүд — Төв аймаг',
-    'zh' => '我们的牧场 · Töv 省',
-  ],
   'farms.four-clusters-one-steppe' => [
     'en' => 'Four clusters,<br><em>one steppe.</em>',
     'mn' => 'Дөрвөн кластер,<br><em>нэг тал нутаг.</em>',
     'zh' => '四座集群，<em>一片草原</em>',
   ],
   'farms.each-cluster-farm-unites' => [
-    'en' => 'Each cluster farm unites 10 herder households around shared infrastructure, veterinary care, and a guaranteed milk market. Every family works 10 hectares of its own land — 2 with housing and green landscaping, 8 for pasture and fodder — and together the clusters supply 4–5 million litres of milk to domestic dairy factories every year.',
+    'en' => 'Each cluster farm unites 10 herder households around shared infrastructure, veterinary care, and a guaranteed milk market. Every family works 10 hectares of its own land (2 with housing and green landscaping, 8 for pasture and fodder), and together the clusters supply 4–5 million litres of milk to domestic dairy factories every year.',
     'mn' => 'Кластер ферм бүр 10 малчин өрхийг дундын дэд бүтэц, мал эмнэлгийн үйлчилгээ, баталгаат сүүний зах зээлээр нэгтгэдэг. Өрх бүр өөрийн 10 га газартай — 2 га-д ногоон байгууламж бүхий орон сууц, 8 га-г бэлчээр, тэжээлийн тариалалтад ашигладаг. Кластерууд жил бүр 4–5 сая литр сүүг дотоодын сүүний үйлдвэрүүдэд нийлүүлдэг.',
     'zh' => '每座集群牧场把 10 户牧民家庭聚在一起，共用基础设施、兽医服务和有保障的收奶渠道。每户经营自有的 10 公顷土地：2 公顷是住房和绿化，8 公顷是草场与饲草料。四座集群每年向国内乳企供应 400–500 万升牛奶。',
   ],
@@ -497,23 +410,18 @@ return [
     'mn' => 'Төслийн зураглал',
     'zh' => '项目效果图',
   ],
-  'farms.flagship-project' => [
-    'en' => 'Flagship project',
-    'mn' => 'Тэргүүлэх төсөл',
-    'zh' => '旗舰项目',
-  ],
   'farms.ugtaaltsaidam' => [
     'en' => 'Ugtaaltsaidam',
     'mn' => 'Угтаалцайдам',
     'zh' => 'Ugtaaltsaidam',
   ],
   'farms.a-600-cow-green' => [
-    'en' => 'A 600-cow green cluster farm complex rising in Ugtaaltsaidam soum, working towards entering operation in 2027 — a project that solves renewable energy, organic fertiliser, a shared milking parlour and fodder cultivation together, in one design.',
+    'en' => 'A 600-cow green cluster farm complex rising in Ugtaaltsaidam soum, working towards entering operation in 2027. The project solves renewable energy, organic fertiliser, a shared milking parlour and fodder cultivation together, in one design.',
     'mn' => 'Угтаалцайдам суманд 600 үнээний цогцолбор кластерын ногоон фермийг 2027 онд ашиглалтад оруулахаар ажиллаж байна. Сэргээгдэх эрчим хүч, органик бордоо, нэгдсэн саалтуур, тэжээлийн тариалалтыг цогцоор нь шийдсэн онцлог төсөл.',
     'zh' => '600 头规模的绿色集群牧场综合体正在 Ugtaaltsaidam 苏木建设，力争 2027 年投产。可再生能源、有机肥、共用挤奶厅、饲草料种植，一套设计一并解决。',
   ],
   'farms.the-project-opens-the' => [
-    'en' => 'The project opens the opportunity to own 20, 40 or 100 cows and become a full participant — let us build this cluster farm complex together.',
+    'en' => 'The project opens the opportunity to own 20, 40 or 100 cows and become a full participant. Let us build this cluster farm complex together.',
     'mn' => 'Тус төсөлд 20 үнээ, 40 үнээ, 100 үнээ эзэмшин төслийн оролцогч болох бүрэн боломжтой — цогцолбор кластерын фермийг хамтдаа бүтээцгээе.',
     'zh' => '持有 20 头、40 头或 100 头奶牛，即可成为项目的正式参与者。这座集群牧场，我们一起建。',
   ],
@@ -544,10 +452,10 @@ return [
   ],
 
   // ---- Home — Services ----
-  'services.from-blueprint-to-bottling' => [
-    'en' => 'From blueprint<br><em>to bottling.</em>',
-    'mn' => 'Зураг төслөөс<br><em>савлагаа хүртэл.</em>',
-    'zh' => '从一纸蓝图，<em>到一瓶好奶</em>',
+  'services.we-build-and-run' => [
+    'en' => 'We build and run<br><em>dairy farms.</em>',
+    'mn' => 'Сүүний фермийг<br><em>барьж, ажиллуулна.</em>',
+    'zh' => '建设与运营，<em>奶牛牧场</em>',
   ],
   'services.farm-construction' => [
     'en' => 'Farm Construction',
@@ -642,7 +550,7 @@ return [
     'zh' => '种畜',
   ],
   'products.montbeliarde-breed-from' => [
-    'en' => 'Montbéliarde breed from France — 8,520 kg annual milk yield, 3.50% protein, 3.95% fat. Holstein cattle from China, and high-yield pregnant heifers for farm expansion.',
+    'en' => 'Montbéliarde breed from France: 8,520 kg annual milk yield, 3.50% protein, 3.95% fat. Holstein cattle from China, and high-yield pregnant heifers for farm expansion.',
     'mn' => 'Францын Монбельярд үүлдэр — жилд 8,520 кг сүү, уураг 3.50%, тослог 3.95%. Хятадаас импортолсон Холштейн үхэр, өндөр ашиг шимт хээлтэй өсвөр үнээ.',
     'zh' => '法国蒙贝利亚德牛：年产奶 8,520 公斤，蛋白 3.50%，乳脂 3.95%。另有自中国引进的荷斯坦牛，以及适合扩群的高产妊娠青年母牛。',
   ],
@@ -652,9 +560,9 @@ return [
     'zh' => '进入商店',
   ],
   'products.erdest-doloots' => [
-    'en' => 'Эрдэст Долооц',
+    'en' => 'Mineral Lick Block',
     'mn' => 'Эрдэст Долооц',
-    'zh' => 'Эрдэст Долооц',
+    'zh' => '矿物质舔砖',
   ],
   'products.mineral-lick-block-for' => [
     'en' => 'Mineral lick block for livestock.',
@@ -663,23 +571,18 @@ return [
   ],
 
   // ---- Home — Recognition ----
-  'recognition.recognition' => [
-    'en' => 'Recognition',
-    'mn' => 'Хүлээн зөвшөөрөлт',
-    'zh' => '荣誉与认可',
-  ],
   'recognition.a-national-movement-a' => [
     'en' => 'A national movement,<br><em>a presidential visit.</em>',
     'mn' => 'Үндэсний хөдөлгөөн,<br><em>Ерөнхийлөгчийн айлчлал.</em>',
     'zh' => '一场国家运动，<em>一次总统到访</em>',
   ],
   'recognition.on-december-10-2024' => [
-    'en' => 'On December 10, 2024, His Excellency <strong>Khurelsukh Ukhnaa</strong>, President of Mongolia, visited Nuudelchin Agro Farm\'s operations within the framework of the <em>"Food Supply and Security"</em> National Movement — briefed on our achievements, milk production, and plans for future expansion.',
+    'en' => 'On December 10, 2024, His Excellency <strong>Khurelsukh Ukhnaa</strong>, President of Mongolia, visited Nuudelchin Agro Farm\'s operations within the framework of the <em>"Food Supply and Security"</em> National Movement, and was briefed on our achievements, milk production, and plans for future expansion.',
     'mn' => '2024 оны 12 дугаар сарын 10-нд Монгол Улсын Ерөнхийлөгч <strong>У.Хүрэлсүх</strong> «Хүнсний хангамж, аюулгүй байдал» үндэсний хөдөлгөөний хүрээнд Нүүдэлчин Агро Фермийн үйл ажиллагаатай танилцаж, компанийн амжилт, сүүний үйлдвэрлэл, өргөтгөлийн төлөвлөгөөний талаар мэдээлэл авав.',
     'zh' => '2024 年 12 月 10 日，蒙古国总统<strong>乌·呼日勒苏赫</strong>在<em>“食品供应与安全”</em>国家运动框架下到访 Nuudelchin Agro Farm，听取公司成绩、牛奶生产和后续扩建计划。',
   ],
   'recognition.the-presidential-delegation-touring' => [
-    'en' => 'The presidential delegation touring the farm — 10 December 2024',
+    'en' => 'The presidential delegation touring the farm, 10 December 2024',
     'mn' => 'Ерөнхийлөгчийн айлчлалын үеэр фермийн үйл ажиллагаатай танилцав — 2024 оны 12 дугаар сарын 10',
     'zh' => '总统一行考察牧场 · 2024 年 12 月 10 日',
   ],
@@ -704,7 +607,7 @@ return [
     'zh' => '一位牧民的故事',
   ],
   'recognition.the-family-of-b' => [
-    'en' => 'The family of <strong>B. Orgil</strong> has farmed with us since 2024 — 18 cows, an average of 18 liters of milk sold per day. Orgil notes that the Government\'s milk incentive of MNT 1,000 per liter greatly supports farmers.',
+    'en' => 'The family of <strong>B. Orgil</strong> has farmed with us since 2024, with 18 cows and an average of 18 liters of milk sold per day. Orgil notes that the Government\'s milk incentive of MNT 1,000 per liter greatly supports farmers.',
     'mn' => '<strong>Б.Оргилын</strong> гэр бүл 2024 оноос манайтай хамтран фермерийн үйл ажиллагаа эрхэлж байна — 18 үнээтэй, өдөрт дунджаар 18 литр сүү борлуулдаг. Засгийн газрын литр тутамд 1,000 төгрөгийн сүүний урамшуулал фермерүүдэд ихээхэн дэмжлэг болдгийг Оргил онцолжээ.',
     'zh' => '<strong>奥尔吉勒</strong>一家从 2024 年起加入我们的牧场，养 18 头奶牛，平均每天卖出 18 升奶。他说，政府每升 1,000 图格里克的补贴，对农场主是实打实的帮助。',
   ],
@@ -770,20 +673,10 @@ return [
   ],
 
   // ---- Home — News ----
-  'news.updates' => [
-    'en' => 'Updates',
-    'mn' => 'Мэдээлэл',
-    'zh' => '动态',
-  ],
   'news.news-updates' => [
     'en' => 'News & <em>Updates</em>',
     'mn' => 'Мэдээ & <em>Мэдээлэл</em>',
     'zh' => '新闻与<em>动态</em>',
-  ],
-  'news.latest-from-facebook' => [
-    'en' => 'Latest from Facebook',
-    'mn' => 'Фэйсбүүкээс',
-    'zh' => '来自 Facebook',
   ],
   'news.see-all-news' => [
     'en' => 'See all news →',
@@ -792,18 +685,13 @@ return [
   ],
 
   // ---- Home — Contact ----
-  'contact.contact' => [
-    'en' => 'Contact',
-    'mn' => 'Холбоо барих',
-    'zh' => '联系我们',
-  ],
   'contact.lets-build-the-next' => [
     'en' => 'Let\'s build the next<br><em>cluster together.</em>',
     'mn' => 'Дараагийн кластерыг<br><em>хамтдаа байгуулъя.</em>',
     'zh' => '共建<em>下一座集群</em>',
   ],
   'contact.rural-development-solution' => [
-    'en' => '«Хөдөөгийн хөгжлийн шийдэл» — Rural development solution.',
+    'en' => '«Хөдөөгийн хөгжлийн шийдэл»: a rural development solution.',
     'mn' => '«Хөдөөгийн хөгжлийн шийдэл»',
     'zh' => '“乡村发展的答案”',
   ],

@@ -207,7 +207,7 @@
     if (footer) footer.style.display = "";
 
     // Resolve each line against the currently loaded product data.
-    const allVariants = shopProducts.flatMap((p) => p.variants);
+    const allVariants = shopProducts.flatMap((p) => p.variants.map((v) => ({ ...v, product: p })));
     let total = 0;
 
     items.innerHTML = cart.map((line) => {
@@ -220,21 +220,28 @@
           <div class="cart-drawer__item cart-drawer__item--unavailable" data-variant-id="${escAttrShop(line.variantId)}">
             <div class="cart-drawer__item-name" data-en="No longer available" data-mn="Дууссан">${escHtmlShop(t("No longer available", "Дууссан"))}</div>
             <div class="cart-drawer__item-row">
-              <button type="button" class="cart-drawer__remove" data-variant-id="${escAttrShop(line.variantId)}" aria-label="Remove">✕</button>
+              <button type="button" class="cart-drawer__remove" data-variant-id="${escAttrShop(line.variantId)}" aria-label="Хасах">✕</button>
             </div>
           </div>
         `;
       }
       const lineTotal = variant.price * line.quantity;
       total += lineTotal;
-      const displayName = variantDisplayName(variant);
+      // "Эрдэст Долооц — Содтой (5кг)", as on the checkout page: the option
+      // name alone ("Содтой") doesn't say what the line is.
+      const productName = t(variant.product.name_en || variant.product.name_mn, variant.product.name_mn);
+      const displayName = variant.name_mn === variant.product.name_mn ? productName : `${productName} — ${variantDisplayName(variant)}`;
       return `
         <div class="cart-drawer__item" data-variant-id="${variant.id}">
-          <div class="cart-drawer__item-name" data-en="${escAttrShop(variant.name_en || variant.name_mn)}" data-mn="${escAttrShop(variant.name_mn)}">${escHtmlShop(displayName)}</div>
+          <div class="cart-drawer__item-name">${escHtmlShop(displayName)}${variant.weight_label ? ` <span class="cart-drawer__muted">(${escHtmlShop(variant.weight_label)})</span>` : ""}</div>
           <div class="cart-drawer__item-row">
-            <input type="number" class="cart-drawer__qty" min="1" max="${variant.available}" step="1" value="${line.quantity}" data-variant-id="${escAttrShop(variant.id)}">
-            <span>${lineTotal.toLocaleString()}₮</span>
-            <button type="button" class="cart-drawer__remove" data-variant-id="${escAttrShop(variant.id)}" aria-label="Remove">✕</button>
+            <div class="sp__qty">
+              <button type="button" data-step="-1" aria-label="Нэгээр хасах"${line.quantity <= 1 ? " disabled" : ""}>−</button>
+              <input type="number" class="cart-drawer__qty" min="1" max="${variant.available}" step="1" value="${line.quantity}" data-variant-id="${escAttrShop(variant.id)}" aria-label="Тоо ширхэг">
+              <button type="button" data-step="1" aria-label="Нэгээр нэмэх"${line.quantity >= variant.available ? " disabled" : ""}>+</button>
+            </div>
+            <span class="cart-drawer__line-total">${lineTotal.toLocaleString()}₮</span>
+            <button type="button" class="cart-drawer__remove" data-variant-id="${escAttrShop(variant.id)}" aria-label="Хасах">✕</button>
           </div>
         </div>
       `;
@@ -245,10 +252,17 @@
     items.querySelectorAll(".cart-drawer__qty").forEach((input) => {
       input.addEventListener("change", () => {
         const id = Number(input.dataset.variantId);
-        const qty = Math.max(1, Number(input.value) || 1);
+        const qty = Math.max(1, Math.min(Number(input.max) || Infinity, Math.round(Number(input.value) || 1)));
         const cart = getCart();
         const line = cart.find((l) => Number(l.variantId) === id);
         if (line) { line.quantity = qty; setCart(cart); renderCartDrawer(); }
+      });
+    });
+    items.querySelectorAll(".cart-drawer__item [data-step]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const input = btn.parentElement.querySelector("input");
+        input.value = Number(input.value) + Number(btn.dataset.step);
+        input.dispatchEvent(new Event("change"));
       });
     });
     items.querySelectorAll(".cart-drawer__remove").forEach((btn) => {
