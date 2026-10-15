@@ -29,8 +29,7 @@ HTML,
 <!-- ============ NEWS ARCHIVE ============ -->
 <section class="news-archive">
   <div class="news-archive__head">
-    <p class="kicker reveal">Мэдээлэл</p>
-    <h1 class="reveal">Мэдээ &amp; <em>Мэдээлэл</em></h1>
+    <h1>Мэдээ &amp; <em>Мэдээлэл</em></h1>
   </div>
   <div class="news-archive__list" id="newsArchiveList">
     <p class="news-archive__empty" id="archiveEmpty">Мэдээ байхгүй байна.</p>
@@ -41,11 +40,10 @@ HTML,
 <!-- ============ FACEBOOK FEED ============ -->
 <section class="fb-feed">
   <div class="fb-feed__head">
-    <p class="kicker reveal">Фэйсбүүк</p>
-    <h2 class="reveal">Манай <em>Фэйсбүүк</em></h2>
-    <p class="fb-feed__note reveal">Албан ёсны Фэйсбүүк хуудаснаас шууд орж ирэх шинэ мэдээлэл.</p>
+    <h2>Манай <em>Фэйсбүүк</em></h2>
+    <p class="fb-feed__note">Албан ёсны Фэйсбүүк хуудаснаас шууд орж ирэх шинэ мэдээлэл.</p>
   </div>
-  <div class="fb-feed__embed reveal">
+  <div class="fb-feed__embed">
     <div class="sk-ww-facebook-page-posts" data-embed-id="25699003"></div>
   </div>
 </section>
@@ -77,11 +75,7 @@ HTML,
     const wrapper = document.createElement("div");
     wrapper.innerHTML = html;
     const el = wrapper.firstElementChild;
-    if (el) {
-      el.classList.add("reveal");
-      list.appendChild(el);
-      observeReveal(el);
-    }
+    if (el) list.appendChild(el);
   });
 })();
 </script>

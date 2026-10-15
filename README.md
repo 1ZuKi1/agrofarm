@@ -7,16 +7,16 @@
 - **URL**: [agrofarm.mn](https://agrofarm.mn)
 - **Type**: Static site — plain HTML, CSS, and vanilla JavaScript
 - **Languages**: English (default) + Mongolian (Монгол), toggled via the **MN / EN** button
-- **Design**: Premium editorial aesthetic — Cormorant Garamond serif + Inter sans-serif, gold-accent palette on a warm cream background
+- **Design**: Editorial aesthetic — Cormorant Garamond serif + Fira Sans sans-serif, gold-accent palette on a warm cream background; flat surfaces, no decorative motion
 
 ## Sections
 
 | Section | Description |
 |---|---|
-| **Hero** | Full-viewport parallax scene with a staggered headline reveal |
-| **Stats** | Animated counters — 1,120 cows, 9M liters of milk, 30 herder households |
+| **Hero** | Full-viewport farm photo with the headline and two calls to action |
+| **Stats** | Key numbers — 1,620 cows, 4–5M litres of milk a year, 40 herder households |
 | **About** | Mission, vision, values, and the founding story |
-| **Journey** | Alternating timeline (2013 → 2030) threaded on a self-drawing gold spine |
+| **Journey** | Alternating timeline (2013 → 2030) threaded on a gold spine |
 | **Farms** | Four cluster farm cards (Bayandelger, Argalant, Bayankhangai, Ugtaaltsaidam) |
 | **Services** | Six service cards — construction, consulting, training, feed, processing, value chain |
 | **Products** | Three editorial product cards — equipment, raw milk, breeding livestock |
@@ -170,5 +170,5 @@ All modern browsers (Chrome, Firefox, Safari, Edge). Responsive down to 320px-wi
 
 ## Design Credits
 
-- **Typefaces**: [Cormorant Garamond](https://fonts.google.com/specimen/Cormorant+Garamond) (headlines) + [Inter](https://fonts.google.com/specimen/Inter) (body)
+- **Typefaces**: [Cormorant Garamond](https://fonts.google.com/specimen/Cormorant+Garamond) (headlines) + [Fira Sans](https://fonts.google.com/specimen/Fira+Sans) (body)
 - **Color palette**: Forest green (`#1a5e2a`) + warm cream (`#fbf6ed`) + charcoal (`#2c2c2c`) + metallic gold (`#d4a54a`)
