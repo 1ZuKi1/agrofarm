@@ -2,5 +2,20 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/agrofhui/public_html/
-    - /bin/cp -f .htaccess admin.html admin.js index.html login.php logout.php news.html shop.html shop.js publish.php script.js style.css db.php products-admin.php shop-data.php qpay.php slots.php order-create.php order-status.php qpay-callback.php orders-admin.php catalog-lib.php equipment.php category.php product.php inquiry-create.php catalog.js shop.php $DEPLOYPATH
+    # Pages and the QPay callback live in the site root (every *.php there is a
+    # page — adding one needs no change here). Everything else is a folder.
+    - /bin/cp -f .htaccess *.php $DEPLOYPATH
+    - /bin/cp -Rf inc lang admin api css js $DEPLOYPATH
     - /bin/cp -f img/*.* $DEPLOYPATH/img/
+    # Old copies of files that moved (2026-10 restructure). Copying never
+    # deletes, and these must not linger as a second, stale version.
+    # .htaccess already sends their addresses to the new files.
+    - /bin/rm -f $DEPLOYPATH/index.html $DEPLOYPATH/news.html $DEPLOYPATH/shop.html $DEPLOYPATH/admin.html $DEPLOYPATH/admin.js
+    - /bin/rm -f $DEPLOYPATH/login.php $DEPLOYPATH/logout.php $DEPLOYPATH/publish.php $DEPLOYPATH/products-admin.php $DEPLOYPATH/orders-admin.php
+    - /bin/rm -f $DEPLOYPATH/db.php $DEPLOYPATH/qpay.php $DEPLOYPATH/catalog-lib.php
+    - /bin/rm -f $DEPLOYPATH/shop-data.php $DEPLOYPATH/order-create.php $DEPLOYPATH/order-status.php $DEPLOYPATH/slots.php $DEPLOYPATH/inquiry-create.php
+    - /bin/rm -f $DEPLOYPATH/style.css $DEPLOYPATH/script.js $DEPLOYPATH/shop.js $DEPLOYPATH/catalog.js
+    # The delivery time slots became days (2026-10 checkout); its endpoint is gone.
+    - /bin/rm -f $DEPLOYPATH/api/slots.php
+    # The one-page admin became separate pages (2026-10 admin); its old files go.
+    - /bin/rm -f $DEPLOYPATH/admin/index.html $DEPLOYPATH/admin/admin.js $DEPLOYPATH/admin/orders-admin.php $DEPLOYPATH/admin/settings-admin.php

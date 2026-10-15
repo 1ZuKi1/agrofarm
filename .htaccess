@@ -13,45 +13,82 @@
 # ------------------------------------------------------------------
 RewriteEngine On
 RewriteCond %{HTTPS} off
+# …except a copy running on your own computer (XAMPP at http://localhost).
+RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:[0-9]+)?$ [NC]
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
+# The home page is index.php. Named first: the old index.html may still sit
+# in public_html from earlier deploys, and must never win (the same goes for
+# the old admin/index.html — /admin/ is admin/index.php now).
+DirectoryIndex index.php index.html
+
+# inc/ (page shell, shared PHP, DB/QPay clients) and lang/ (translations)
+# are included by pages, never requested directly.
+RewriteRule ^(inc|lang)(/|$) - [F,L]
+
 # ------------------------------------------------------------------
-# Clean URLs — agrofarm.mn/admin instead of agrofarm.mn/admin.html
+# Files that moved into folders (2026-10 tidy-up). Their old addresses keep
+# working — a page cached in someone's browser, a half-finished checkout,
+# or an old bookmark still reaches the right file. Internal rewrites, so
+# a POST (checkout, inquiry form) arrives intact.
+# ------------------------------------------------------------------
+RewriteRule ^(shop-data|order-create|order-status|inquiry-create)\.php$ api/$1.php [L]
+RewriteRule ^(login|logout|publish|products-admin)\.php$ admin/$1.php [L]
+RewriteRule ^style\.css$ css/style.css [L]
+RewriteRule ^(script|shop|catalog)\.js$ js/$1.js [L]
+
+# ------------------------------------------------------------------
+# Clean URLs — agrofarm.mn/news instead of agrofarm.mn/news.php
 # ------------------------------------------------------------------
 
-# 1) If someone requests the .html file directly, send a permanent
-#    redirect to the clean URL, so each page has one canonical address
-#    (better for bookmarks, sharing links, and search engines).
-RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+# 1) Old or direct file addresses get a permanent redirect to the clean one,
+#    so each page has one canonical address (bookmarks, shared links, search
+#    engines). The query string rides along — /shop.html?order=… links in
+#    customers' hands still open their order.
+RewriteCond %{THE_REQUEST} \s/+index\.(html|php)[\s?] [NC]
 RewriteRule ^ /? [R=301,L]
 
-RewriteCond %{THE_REQUEST} \s/+(admin|news|shop)\.html[\s?] [NC]
+RewriteCond %{THE_REQUEST} \s/+(news|shop)\.html[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
-# A trailing slash (/admin/) must also collapse to the one canonical address
-# — every page's CSS/JS/image tags and admin.js's fetch() calls use relative
-# paths, so leaving the address bar on /admin/ instead of /admin would
-# resolve them one directory too deep and break the page.
-RewriteCond %{THE_REQUEST} \s/+(admin|news|shop)/[\s?] [NC]
+# The admin panel is the admin/ folder; its address is /admin/ (Apache adds
+# the slash to /admin itself, because admin/ is a real folder).
+RewriteCond %{THE_REQUEST} \s/+(admin\.html|admin/index\.html)[\s?] [NC]
+RewriteRule ^ /admin/ [R=301,L]
+# Its pages have clean addresses: /admin/orders, /admin/orders/12, /admin/help…
+RewriteRule ^admin/(orders|quotes|products|news|settings|account|help|login|logout)/?$ admin/$1.php [QSA,L]
+RewriteRule ^admin/orders/([0-9]+)/?$ admin/order.php?id=$1 [QSA,L]
+
+RewriteCond %{THE_REQUEST} \s/+(news|shop)\.php[\s?] [NC]
 RewriteRule ^ /%1 [R=301,L]
 
-# 2) Internally serve the matching .html file when the clean URL is
-#    requested. The address bar keeps showing the clean URL.
-RewriteRule ^admin/?$ admin.html [L]
-RewriteRule ^news/?$ news.html [L]
+# A trailing slash (/news/, /shop/) collapses to the one canonical address.
+RewriteCond %{THE_REQUEST} \s/+(news|shop)/[\s?] [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# 2) Serve the page behind each clean URL. The address bar keeps the clean URL.
+RewriteRule ^news/?$ news.php [L]
 RewriteRule ^shop/?$ shop.php [L]
 
 # ------------------------------------------------------------------
-# Equipment catalogue — server-rendered, so each page has a real URL:
-#   /equipment                      catalogue index
-#   /equipment/<category>           one category
-#   /equipment/<category>/<product> one product
-# Slugs are lowercase latin + digits + hyphen; anything else falls
-# through to a normal 404 rather than reaching PHP.
+# Shop — one address scheme for everything we sell:
+#   /shop                                    storefront
+#   /shop/<product>                          a priced product
+#   /shop/equipment                          equipment catalogue
+#   /shop/equipment/<category>               one category
+#   /shop/equipment/<category>/<product>     one equipment product
+# The catalogue used to live at /equipment/…; those addresses redirect.
+# Slugs are lowercase latin + digits + hyphen; anything else falls through
+# to a normal 404 rather than reaching PHP.
 # ------------------------------------------------------------------
-RewriteRule ^equipment/?$ equipment.php [L]
-RewriteRule ^equipment/([a-z0-9-]+)/?$ category.php?cat=$1 [QSA,L]
-RewriteRule ^equipment/([a-z0-9-]+)/([a-z0-9-]+)/?$ product.php?cat=$1&slug=$2 [QSA,L]
+RewriteRule ^equipment(/.*)?$ /shop/equipment$1 [R=301,L]
+RewriteRule ^shop/equipment/?$ equipment.php [L]
+RewriteRule ^shop/equipment/([a-z0-9-]+)/?$ category.php?cat=$1 [QSA,L]
+RewriteRule ^shop/equipment/([a-z0-9-]+)/([a-z0-9-]+)/?$ product.php?cat=$1&slug=$2 [QSA,L]
+# The checkout page comes before the product rule below, so "checkout" can
+# never be read as a product slug.
+RewriteRule ^shop/checkout/?$ shop-checkout.php [QSA,L]
+RewriteRule ^shop/([a-z0-9-]+)/?$ shop-product.php?slug=$1 [QSA,L]
 
 # ------------------------------------------------------------------
 # Security headers

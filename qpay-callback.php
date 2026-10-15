@@ -7,8 +7,9 @@
  * order-status.php's polling is the fallback if this is ever missed.
  */
 
-require __DIR__ . '/db.php';
-require __DIR__ . '/qpay.php';
+require __DIR__ . '/inc/db.php';
+require __DIR__ . '/inc/qpay.php';
+require __DIR__ . '/inc/orders.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -32,7 +33,7 @@ try {
   // Only treat 'paid'/'fulfilled'/'cancelled' as truly resolved. An 'expired'
   // order with no paid_at can still have actually been paid — it may have
   // been swept to 'expired' by unrelated traffic (see order-status.php,
-  // slots.php, order-create.php's lazy-expiry sweeps) while this webhook was
+  // order-create.php's lazy-expiry sweeps) while this webhook was
   // in flight or delayed. Early-returning for it here would silently and
   // permanently lose a paid order, so it falls through to the re-verify below
   // instead, same as a 'pending' order would.
@@ -59,7 +60,8 @@ try {
   // re-confirmed against a real completed sandbox payment before switching
   // config.php to production QPay credentials.
   if (($check['count'] ?? 0) > 0 && qpay_paid_amount($check) >= (float)$order['total']) {
-    $pdo->prepare("UPDATE orders SET status='paid', paid_at=NOW() WHERE id=? AND status IN ('pending','expired')")->execute([$order['id']]);
+    // Emails the shop (once — only the request that flips the row sends it).
+    order_mark_paid($pdo, (int)$order['id']);
     if ($wasExpiredUnpaid) {
       error_log("qpay-callback.php: recovered order id={$order['id']} token={$token} from expired to paid via webhook re-verify");
     }
