@@ -120,15 +120,14 @@ CREATE TABLE IF NOT EXISTS inquiry_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------
--- The five top-level categories. Sub-categories and products are loaded from
+-- The four top-level categories. Sub-categories and products are loaded from
 -- the reviewed spreadsheet, not hardcoded here.
 -- ---------------------------------------------------------------------------
 INSERT INTO categories (slug, name, parent_id, sort_order) VALUES
   ('milking-parts',   'Саалтуурын эд анги',              NULL, 1),
   ('calf-feeding',    'Тугал, хургыг тэжээх хэрэгсэл',   NULL, 2),
   ('marking',         'Тэмдэглэгээний хэрэгсэл',         NULL, 3),
-  ('cooling-washing', 'Хөргөлт, цэвэрлэгээний хэрэгсэл', NULL, 4),
-  ('poultry',         'Шувууны тэжээгч',                 NULL, 5)
+  ('cooling-washing', 'Хөргөлт, цэвэрлэгээний хэрэгсэл', NULL, 4)
 -- Row alias instead of VALUES(col): VALUES(col) inside ON DUPLICATE KEY UPDATE
 -- is deprecated as of MySQL 8.0.20 and warns on every run. Needs MySQL 8.0.19+
 -- (MariaDB does not support this form).
