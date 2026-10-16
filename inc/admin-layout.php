@@ -83,6 +83,7 @@ function admin_nav_counts(PDO $pdo): array {
 function admin_head(string $title, string $extra = ''): void {
   header('Cache-Control: no-store');
   header('Content-Type: text/html; charset=utf-8');
+  naf_send_csp('strict');
   echo '<!DOCTYPE html><html lang="mn"><head><meta charset="utf-8">'
     . '<meta name="viewport" content="width=device-width, initial-scale=1">'
     . '<meta name="robots" content="noindex, nofollow">'

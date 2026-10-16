@@ -55,7 +55,24 @@
     $("checkoutRoot").hidden = which !== "form";
     $("checkoutPay").hidden = which !== "pay";
     $("checkoutEmpty").hidden = which !== "empty";
+    // The button the buyer just pressed is now hidden; without this, keyboard
+    // focus is lost and a screen reader says nothing about the new screen.
+    if (which === "pay") $("checkoutPay").focus({ preventScroll: true });
   }
+
+  // "Хуулах" next to the order link (QR screen and confirmation).
+  $("checkoutPay").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-copy]");
+    if (!b) return;
+    const label = b.textContent;
+    try {
+      await navigator.clipboard.writeText(b.dataset.copy);
+      b.textContent = "Хууллаа ✓";
+    } catch {
+      b.textContent = "Хуулж чадсангүй — холбоосыг гараар сонгоно уу";
+    }
+    setTimeout(() => { b.textContent = label; }, 2500);
+  });
 
   /* ---------------- form ---------------- */
 
@@ -106,13 +123,22 @@
     renderTotals();
   }
 
+  function clearInvalid() {
+    form.querySelectorAll("[aria-invalid]").forEach((f) => f.removeAttribute("aria-invalid"));
+  }
   function showError(msg, focusEl) {
+    clearInvalid();
     const el = $("checkoutError");
     el.textContent = msg;
     el.hidden = false;
-    if (focusEl) focusEl.focus();
+    if (focusEl) {
+      // Text fields are marked so a screen reader says which one is wrong;
+      // the radio groups are described by the message alone.
+      if (focusEl.matches("input:not([type=radio]), textarea")) focusEl.setAttribute("aria-invalid", "true");
+      focusEl.focus();
+    }
   }
-  function hideError() { $("checkoutError").hidden = true; }
+  function hideError() { clearInvalid(); $("checkoutError").hidden = true; }
 
   /** Basket lines against live prices. Returns false if the basket can't be shown. */
   function renderSummary(cart) {
@@ -258,20 +284,10 @@
   /** The order link as a link plus a copy button, instead of 70 characters of raw address. */
   function orderLinkHtml(token) {
     const url = orderLink(token);
-    const copy = navigator.clipboard ? ` <button type="button" class="checkout-copy" data-copy="${escAttr(url)}">Хуулах</button>` : "";
+    const copy = navigator.clipboard ? ` <button type="button" class="link-copy" data-copy="${escAttr(url)}">Хуулах</button>` : "";
     return `<a href="${escAttr(url)}">Захиалгын холбоос</a>${copy}`;
   }
   const HELP_HTML = `<p class="checkout-help">Асуух зүйл байвал: <a href="tel:+97670000789">7000-0789</a></p>`;
-
-  // "Хуулах" next to an order link, on the QR screen and the confirmation.
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".checkout-copy");
-    if (!btn) return;
-    navigator.clipboard.writeText(btn.dataset.copy).then(() => {
-      btn.textContent = "Хуулсан ✓";
-      setTimeout(() => { btn.textContent = "Хуулах"; }, 1800);
-    }).catch(() => {});
-  });
 
   function renderQrScreen(order) {
     stopQr();

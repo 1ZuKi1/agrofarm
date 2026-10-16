@@ -103,6 +103,11 @@ RewriteRule ^shop/([a-z0-9-]+)/?$ shop-product.php?slug=$1 [QSA,L]
   # Cross-origin requests (e.g. a link from another site) still get the
   # bare origin; same-origin navigation keeps the full URL for analytics.
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # Browsers remember to use HTTPS only for this site (6 months). Sent by
+  # Apache only on HTTPS responses; no includeSubDomains, no preload.
+  Header always set Strict-Transport-Security "max-age=15552000" "expr=%{HTTPS} == 'on'"
+  # The site never needs the camera, microphone or location.
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 </IfModule>
 
 # Never list a directory's contents when it has no index file — img/news/

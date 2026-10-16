@@ -11,6 +11,7 @@ page_start([
   'title' => 'Мэдээ — Нүүдэлчин Агро Ферм',
   'desc' => 'Нүүдэлчин Агро Ферм ХХК-ийн мэдээ, мэдээлэл.',
   'canonical' => '/news',
+  'csp' => 'basic', // embeds the Facebook feed
   'active' => 'news',
   'head' => <<<'HTML'
 <style>

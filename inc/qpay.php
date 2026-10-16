@@ -38,7 +38,9 @@ function qpay_forget_token(): void {
 
 function qpay_token(): string {
   $path = qpay_token_cache_path();
+  $oldMask = umask(0077); // the token is a password: created owner-only, never briefly world-readable
   $fh = @fopen($path, 'c+');
+  umask($oldMask);
   if ($fh) flock($fh, LOCK_EX); // one request refreshes; concurrent ones wait and reuse
   try {
     if ($fh) {
