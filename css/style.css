@@ -1627,3 +1627,84 @@ overflow:hidden; }
 .sp__fact{ padding:1.1rem 0; border-bottom:1px solid rgba(44,44,44,.1); }
 .sp__fact h3{ font-family:var(--sans); font-size:.85rem; font-weight:700; color:var(--charcoal); margin-bottom:.4rem; }
 .sp__fact p{ color:var(--ink-soft); font-size:.95rem; line-height:1.7; }
+
+/* ==========================================================================
+   SHOP ON PHONES AND TABLETS (2026-10)
+   On a phone the catalogue's sidebar came first: every category and every
+   item of the open one, two screens of links before a single product. The
+   rules below put the product first and keep everything reachable:
+   - the sidebar becomes one row of category buttons that scrolls sideways
+     (the open category's item list goes: the items are right below);
+   - item grids are two cards per row;
+   - spec tables become one block per model, every value labelled;
+   - photos take less height, so the name and the main button show at once;
+   - every tap target is at least 44px.
+   ========================================================================== */
+.eq-section__more{ display:inline-flex; align-items:center; min-height:44px; }
+.eq-row__btn{ width:44px; height:44px; }
+
+@media (max-width:900px){
+  .cat-side{ margin:0 calc(-1 * var(--gutter)); }
+  .cat-side__list{ display:flex; gap:.5rem; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none;
+    padding:0 var(--gutter) 2px; scroll-padding:0 var(--gutter); scroll-snap-type:x proximity; }
+  .cat-side__list::-webkit-scrollbar{ display:none; }
+  .cat-side__item{ flex:none; scroll-snap-align:start; }
+  .cat-side__item > a{ display:flex; align-items:center; min-height:44px; padding:0 1rem; white-space:nowrap;
+    background:#fff; border:1.5px solid rgba(44,44,44,.12); font-size:.9rem; }
+  .cat-side__item.is-open > a{ border-color:var(--green); }
+  .cat-side__sub{ display:none; }
+  .eq-layout{ gap:1.4rem; }
+  .eq-wrap{ padding-top:6.5rem; }
+  .crumbs{ margin-bottom:1rem; }
+}
+
+@media (max-width:600px){
+  /* Two cards per row. ".eq-layout .eq-grid" above set one auto-fill track of
+     at least 200px, which on a phone meant one huge card per row. */
+  .eq-layout .eq-grid, .eq-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.75rem; }
+  .eq-main__count{ margin-bottom:1.2rem; }
+
+  /* Photos: 4:3 instead of square, so the name and button are on the first screen. */
+  .eq-gallery__main, .eq-gallery__empty, .sp__photo{ aspect-ratio:4/3; }
+  .eq-gallery__main{ padding:1rem; }
+  .eq-gallery__thumb{ width:56px; height:56px; }
+  .eq-detail__top{ gap:1.2rem; margin-bottom:2.4rem; }
+  .eq-detail__actions{ flex-direction:column; align-items:stretch; gap:.4rem; }
+  .eq-detail__actions .btn{ width:100%; justify-content:center; }
+  .eq-detail__ask{ display:flex; align-items:center; justify-content:center; min-height:44px; }
+
+  /* Spec table: one block per model. The code heads the block, the name is
+     the title, every other value carries its column name (data-label). */
+  .eq-table-wrap{ overflow:visible; background:none; }
+  .eq-table{ min-width:0; display:block; font-size:.92rem; }
+  .eq-table thead{ display:none; }
+  .eq-table tbody{ display:grid; gap:.6rem; }
+  .eq-table tr{ display:block; padding:.85rem 1rem; background:#fff; border-radius:var(--radius); }
+  .eq-table tbody tr:nth-child(even){ background:#fff; }
+  .eq-table td{ display:flex; gap:.6rem; justify-content:space-between; padding:.18rem 0; border:0; text-align:right; }
+  .eq-table td::before{ content:attr(data-label); color:var(--ink-soft); text-align:left; flex:none; max-width:45%; }
+  .eq-table td:first-child{ display:block; padding:0 0 .1rem; font-size:.8rem; color:var(--ink-soft); text-align:left; font-variant-numeric:tabular-nums; }
+  .eq-table td:first-child::before{ content:none; }
+  .eq-table td:nth-child(2){ display:block; padding:0 0 .35rem; font-weight:600; color:var(--charcoal); text-align:left; }
+  .eq-table td:nth-child(2)::before{ content:none; }
+  .eq-table td:empty, .eq-table td.is-blank{ display:none; }
+  .eq-inquiry{ padding:1.4rem 1.2rem; }
+  .eq-form button{ width:100%; }
+}
+
+/* Tablets (portrait): photo and details side by side, as on a computer —
+   a full-width square photo pushed the button below the first screen. */
+@media (min-width:601px) and (max-width:900px){
+  .eq-detail__top{ grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:1.6rem; }
+  .sp{ grid-template-columns:minmax(0, 1fr) minmax(0, 1.05fr); gap:1.6rem; }
+  .sp__media{ position:sticky; top:96px; }
+}
+
+/* Checkout on phones: the folded order summary opens with a full-size tap. */
+@media (max-width:899px){ .checkout-summary__toggle{ min-height:44px; align-items:center; } }
+
+/* Touch screens: card buttons at full finger size. */
+@media (pointer:coarse){
+  .eq-card__add{ width:44px; height:44px; }
+  .eq-card__choose{ min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+}

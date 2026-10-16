@@ -2,12 +2,14 @@
 /**
  * shop-product.php — one priced product, /shop/<slug> (via .htaccess).
  *
- * Photo on the left, everything to buy on the right. Every variant is
+ * Photo on the left, everything to buy on the right: name, options, price
+ * and "Сагсанд нэмэх" first, then the description and the details, so on a
+ * phone the price and the button are on the first screen. Every variant is
  * rendered here; the variant buttons only switch which panels are visible
- * (its photo and its price box, shop.js), so the whole product — price,
- * stock, usage, storage, ingredients — is in the HTML for search engines and
- * for anyone whose JavaScript fails. "Сагсанд нэмэх" adds to the basket
- * through shop.js.
+ * (its photo, its price box and its details, shop.js), so the whole product —
+ * price, stock, usage, storage, ingredients — is in the HTML for search
+ * engines and for anyone whose JavaScript fails. "Сагсанд нэмэх" adds to the
+ * basket through shop.js.
  */
 
 require __DIR__ . '/inc/shop-lib.php';
@@ -64,9 +66,6 @@ page_start([
 
       <div class="sp__info">
         <h1 class="sp__title"><?= ce($product['name_mn']) ?></h1>
-        <?php if ($product['description_mn']): ?>
-          <p class="sp__desc"><?= ce($product['description_mn']) ?></p>
-        <?php endif; ?>
 
         <?php if (count($product['variants']) > 1): ?>
         <p class="sp__label" id="variantLabel">Төрөл</p>
@@ -99,6 +98,15 @@ page_start([
                 <span>Сагсанд нэмэх</span></button>
             </div>
           </div>
+        </div>
+        <?php endforeach; ?>
+
+        <?php if ($product['description_mn']): ?>
+          <p class="sp__desc"><?= ce($product['description_mn']) ?></p>
+        <?php endif; ?>
+
+        <?php foreach ($product['variants'] as $i => $v): ?>
+        <div class="shop-variant-panel" data-variant-id="<?= (int)$v['id'] ?>"<?= $i === 0 ? '' : ' hidden' ?>>
           <?php
             $facts = [];
             if ($v['benefits_text_mn'] && $v['benefits_text_mn'] !== $product['description_mn']) $facts[] = ['Ашиг тус', $v['benefits_text_mn']];

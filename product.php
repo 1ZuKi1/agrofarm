@@ -132,8 +132,11 @@ catalog_head(
             </tr></thead>
             <tbody>
               <?php foreach ($rows as $row): ?>
-                <tr><?php foreach ($columns as $i => $_): ?>
-                  <td><?= ce((string)($row[$i] ?? '')) ?></td>
+                <tr><?php foreach ($columns as $i => $col):
+                  // data-label: on phones each row is a block and every value
+                  // carries its column name; an empty "—" cell is left out there.
+                  $cell = trim((string)($row[$i] ?? '')); ?>
+                  <td data-label="<?= ce((string)$col) ?>"<?= ($cell === '' || $cell === '—') ? ' class="is-blank"' : '' ?>><?= ce($cell) ?></td>
                 <?php endforeach; ?></tr>
               <?php endforeach; ?>
             </tbody>
@@ -166,10 +169,10 @@ catalog_head(
             <label>Хаяг<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
           </div>
           <div class="eq-form__grid">
-            <label>Нэр <span>*</span><input type="text" name="name" required maxlength="255"></label>
-            <label>Утас <span>*</span><input type="tel" name="phone" required maxlength="50"></label>
-            <label>И-мэйл<input type="email" name="email" maxlength="255"></label>
-            <label>Байгууллага<input type="text" name="company" maxlength="255"></label>
+            <label>Нэр <span>*</span><input type="text" name="name" required maxlength="255" autocomplete="name"></label>
+            <label>Утас <span>*</span><input type="tel" name="phone" required maxlength="50" autocomplete="tel" inputmode="tel"></label>
+            <label>И-мэйл<input type="email" name="email" maxlength="255" autocomplete="email"></label>
+            <label>Байгууллага<input type="text" name="company" maxlength="255" autocomplete="organization"></label>
           </div>
           <label class="eq-form__msg">Нэмэлт мэдээлэл
             <textarea name="message" rows="4" maxlength="2000"

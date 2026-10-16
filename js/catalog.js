@@ -58,9 +58,9 @@
         <div class="eq-form__hp" aria-hidden="true">
           <label>Хаяг<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
         </div>
-        <label>Нэр <span>*</span><input type="text" name="name" required maxlength="255"></label>
-        <label>Утас <span>*</span><input type="tel" name="phone" required maxlength="50"></label>
-        <label>И-мэйл<input type="email" name="email" maxlength="255"></label>
+        <label>Нэр <span>*</span><input type="text" name="name" required maxlength="255" autocomplete="name"></label>
+        <label>Утас <span>*</span><input type="tel" name="phone" required maxlength="50" autocomplete="tel" inputmode="tel"></label>
+        <label>И-мэйл<input type="email" name="email" maxlength="255" autocomplete="email"></label>
         <label>Нэмэлт мэдээлэл<textarea name="message" rows="3" maxlength="2000"></textarea></label>
         <button type="submit" class="btn btn--gold">Үнийн санал хүсэх (${items.length})</button>
       </form>`;
@@ -102,6 +102,15 @@
       setTimeout(() => { addBtn.textContent = label; }, 1800);
       if (window.openCartDrawer) window.openCartDrawer();
     });
+  }
+
+  /* ---------- category row (phones, tablets) ----------
+     Below 900px the sidebar is one sideways row of categories (css): bring
+     the open one into view, so the visitor sees where they are. */
+  const openCat = document.querySelector(".cat-side__item.is-open");
+  const catRow = openCat && openCat.parentElement;
+  if (catRow && catRow.scrollWidth > catRow.clientWidth) {
+    catRow.scrollLeft = openCat.offsetLeft - catRow.offsetLeft - 16;
   }
 
   /* ---------- gallery ---------- */
