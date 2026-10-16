@@ -117,16 +117,15 @@ HTML,
 
 <!-- ============ JOURNEY / TIMELINE ============ -->
 <section class="journey" id="journey">
+  <!-- The timeline runs left to right. script.js pins this block while the
+       page scrolls and moves the row along; without it the row scrolls sideways. -->
+  <div class="journey__pin">
   <div class="journey__head">
     <h2<?= ta('journey.a-journey-measured-in') ?>><?= tx('journey.a-journey-measured-in') ?></h2>
   </div>
 
   <div class="timeline" id="timeline">
-    <!-- Gold spine: SVG path whose stroke draws in as you scroll (stroke-dashoffset linked to scroll progress in JS) -->
-    <svg class="timeline__spine" viewBox="0 0 60 1600" preserveAspectRatio="none" aria-hidden="true">
-      <path id="spinePath" d="M30 0 C 10 100, 50 200, 30 300 C 10 400, 50 500, 30 600 C 10 700, 50 800, 30 900 C 10 1000, 50 1100, 30 1200 C 10 1300, 50 1400, 30 1600" fill="none" stroke="var(--gold)" stroke-width="2"/>
-    </svg>
-
+    <div class="timeline__track">
     <article class="tl"><span class="tl__year">2013–14</span><div class="tl__card"><span class="tl__tag"<?= ta('journey.before-the-company') ?>><?= tx('journey.before-the-company') ?></span><h3<?= ta('journey.french-bloodlines') ?>><?= tx('journey.french-bloodlines') ?></h3><p<?= ta('journey.montbeliarde-heifers-imported') ?>><?= tx('journey.montbeliarde-heifers-imported') ?></p></div></article>
     <article class="tl"><span class="tl__year">2015</span><div class="tl__card tl__card--major"><h3<?= ta('journey.the-company-is-founded') ?>><?= tx('journey.the-company-is-founded') ?></h3><p<?= ta('journey.nuudelchin-agro-farm-llc') ?>><?= tx('journey.nuudelchin-agro-farm-llc') ?></p></div></article>
     <article class="tl"><span class="tl__year">2016</span><div class="tl__card"><h3<?= ta('journey.on-the-national-stage') ?>><?= tx('journey.on-the-national-stage') ?></h3><p<?= ta('journey.director-j-battugs-speaks') ?>><?= tx('journey.director-j-battugs-speaks') ?></p></div></article>
@@ -137,6 +136,8 @@ HTML,
     <article class="tl"><span class="tl__year">2025</span><div class="tl__card tl__card--major"><h3<?= ta('journey.fourth-cluster-first-holsteins') ?>><?= tx('journey.fourth-cluster-first-holsteins') ?></h3><p<?= ta('journey.the-500-cow-bayan') ?>><?= tx('journey.the-500-cow-bayan') ?></p></div></article>
     <article class="tl"><span class="tl__year">2027</span><div class="tl__card"><h3<?= ta('journey.the-green-complex-opens') ?>><?= tx('journey.the-green-complex-opens') ?></h3><p<?= ta('journey.the-600-cow-green') ?>><?= tx('journey.the-600-cow-green') ?></p></div></article>
     <article class="tl"><span class="tl__year">2030</span><div class="tl__card tl__card--future"><h3<?= ta('journey.the-select-herd') ?>><?= tx('journey.the-select-herd') ?></h3><p<?= ta('journey.target-import-1-000') ?>><?= tx('journey.target-import-1-000') ?></p></div></article>
+    </div>
+  </div>
   </div>
 </section>
 

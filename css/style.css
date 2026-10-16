@@ -284,37 +284,49 @@ main:focus{ outline:none; box-shadow:none; }
 .about__badge-num{ font-family:var(--serif); font-size:2.3rem; font-weight:700; color:var(--gold-text); }
 
 /* ==========================================================================
-   JOURNEY — alternating timeline threaded on a gold spine
+   JOURNEY — one row, left to right, on a gold line. With JavaScript and
+   motion allowed, script.js pins the block (.is-pinned) and scrolling down
+   moves the row along; otherwise the row scrolls sideways on its own.
    ========================================================================== */
-.journey{
-  padding:clamp(5.5rem, 11vw, 8.5rem) var(--gutter) clamp(6rem, 12vw, 9rem);
-  background:var(--cream-dark);
+.journey{ background:var(--cream-dark); }
+.journey__pin{ padding:clamp(5.5rem, 11vw, 8.5rem) 0 clamp(5rem, 10vw, 7.5rem); overflow:hidden; }
+.journey__head{ text-align:center; max-width:calc(960px + 2 * var(--gutter)); margin:0 auto 3.2rem; padding:0 var(--gutter); }
+.timeline{
+  overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x proximity; scrollbar-width:thin;
+  padding:0 var(--gutter) 1.2rem; scroll-padding-inline:var(--gutter);
 }
-.journey__head{ text-align:center; max-width:640px; margin:0 auto 4.5rem; }
-.timeline{ position:relative; max-width:900px; margin:0 auto; }
-/* The spine SVG stretches the full height of the list. */
-.timeline__spine{
-  position:absolute; left:50%; top:0; height:100%; width:60px;
-  transform:translateX(-50%); overflow:visible;
-}
-.tl{ display:flex; align-items:center; margin-bottom:3.2rem; position:relative; }
-.tl:nth-child(even){ flex-direction:row; }      /* card right */
-.tl:nth-child(odd){ flex-direction:row-reverse; } /* card left */
+.timeline__track{ display:flex; width:max-content; }
+.tl{ flex:0 0 clamp(260px, 25vw, 340px); display:flex; flex-direction:column; padding-right:1.6rem; scroll-snap-align:start; }
+.tl:last-child{ padding-right:0; }
+/* The year sits on the line; its bottom border runs on under the gap to the
+   next card, so the line is unbroken from 2013 to 2030. */
 .tl__year{
-  flex:0 0 50%; text-align:center;
-  font-family:var(--serif); font-weight:700;
-  font-size:clamp(1.85rem, 3.4vw, 2.75rem); color:var(--gold-text);
+  position:relative; display:block; margin:0 -1.6rem 1.4rem 0; padding-bottom:1rem;
+  border-bottom:2px solid rgba(212,165,74,.55);
+  font-family:var(--serif); font-weight:700; line-height:1;
+  font-size:clamp(1.85rem, 3vw, 2.6rem); color:var(--gold-text);
 }
-.tl__card{
-  flex:0 0 50%; background:#fff; border-radius:var(--radius);
-  padding:1.7rem 1.9rem;
-}
-.tl__card h3{ font-size:1.35rem; color:var(--green); margin-bottom:.4rem; }
+.tl:last-child .tl__year{ margin-right:0; }
+.tl__year::after{ content:""; position:absolute; left:0; bottom:-7px; width:12px; height:12px; border-radius:50%; background:var(--gold); }
+.tl__card{ flex:1; background:#fff; border-radius:var(--radius); padding:1.5rem 1.6rem; }
+.tl__card h3{ font-size:1.3rem; color:var(--green); margin-bottom:.4rem; }
 .tl__card p{ font-size:.92rem; color:var(--ink-soft); }
 .tl__card--major{ border-top:4px solid var(--gold); }
 .tl__card--future{ background:var(--green-deep); border:none; }
 .tl__card--future h3{ color:var(--gold-soft); }
 .tl__card--future p{ color:rgba(251,246,237,.85); }
+/* Pinned: the section is as tall as the sideways distance (script.js sets
+   its height); this block stays on screen while the row moves left. */
+.journey.is-pinned .journey__pin{
+  position:sticky; top:0; height:100vh; height:100svh;
+  display:flex; flex-direction:column; justify-content:center; padding:5.5rem 0 2rem;
+}
+.journey.is-pinned .timeline{ overflow:visible; scroll-snap-type:none; padding-bottom:0; }
+.journey.is-pinned .journey__head{ margin-bottom:clamp(1.6rem, 4vh, 3.2rem); }
+@media (max-width:600px){
+  .tl{ flex-basis:min(300px, 80vw); }
+  .journey.is-pinned .journey__pin{ padding:4.6rem 0 1rem; }
+}
 
 /* ==========================================================================
    FARMS — dark green band
@@ -646,17 +658,6 @@ main:focus{ outline:none; box-shadow:none; }
   .menu-open{ color:var(--charcoal) !important; }
 
   .about__mv, .quotes, .contact__grid{ grid-template-columns:1fr; }
-  .timeline__spine{ left:14px; transform:none; }
-  /* ".timeline .tl" (2 classes) matches the desktop nth-child rules'
-     specificity (class + pseudo-class) for EVERY card regardless of parity,
-     so it reliably wins as the later rule. Plain ".tl" alone was one class —
-     it lost to ".tl:nth-child(even)" for half the cards, because the spine
-     SVG is the first child in .timeline and shifts each card's real
-     nth-child parity by one. Those cards silently stayed in 50%-wide row
-     layout on mobile, blowing the page width out to 3x the viewport. */
-  .timeline .tl{ flex-direction:column; align-items:flex-start; padding-left:3rem; }
-  .tl__year, .tl__card{ flex-basis:auto; text-align:left; }
-  .tl__year{ margin-bottom:.5rem; }
   .mobilebar{ display:grid; transform:translateY(120%); transition:transform .35s cubic-bezier(.22,1,.36,1); }
   .mobilebar.mobilebar--show{ transform:translateY(0); }
   /* FAB sits above the sticky action bar (bar height + safe area) */
@@ -708,7 +709,7 @@ input, textarea, select{ font-size:16px !important; }
 
   /* Section headings + vertical rhythm: desktop air reads as empty on phones */
   h2{ font-size:clamp(2.2rem, 8.6vw, 3.2rem); }
-  .about, .journey, .farms, .services, .products, .news{ padding-top:4.5rem; padding-bottom:4.5rem; }
+  .about, .journey__pin, .farms, .services, .products, .news{ padding-top:4.5rem; padding-bottom:4.5rem; }
   .recognition{ padding-top:4.5rem; padding-bottom:4.5rem; }
   .contact{ padding-top:4.5rem; }
   .journey__head, .services__head, .products__head{ margin-bottom:2.6rem; }
@@ -730,9 +731,6 @@ input, textarea, select{ font-size:16px !important; }
   .about__badge-num{ font-size:1.7rem; }
   .about__media figcaption{ margin-top:1.8rem; }
 
-  /* Timeline: narrow the wiggling spine so it can't run under the cards */
-  .timeline__spine{ left:0; width:26px; }
-  .tl{ padding-left:2.5rem; margin-bottom:2.2rem; }
   .tl__card{ padding:1.3rem 1.4rem; }
 
   /* Cards: reduce desktop padding so content leads */
@@ -1111,7 +1109,7 @@ input, textarea, select{ font-size:16px !important; }
 /* --- Timeline: "before the company" tag --- */
 .tl__tag{
   display:inline-block; margin-bottom:.7rem;
-  font-size:.66rem; letter-spacing:.18em; text-transform:uppercase; font-weight:600;
+  font-size:.8rem; font-weight:600;
   color:var(--gold-text); background:rgba(212,165,74,.14);
   border-radius:var(--radius); padding:.24rem .75rem;
 }

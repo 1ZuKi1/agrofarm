@@ -2,7 +2,8 @@
    NUUDELCHIN AGRO FARM — interaction layer
    Everything runs off two cheap primitives:
      1. IntersectionObserver  → scroll-spy for the header links
-     2. rAF-throttled scroll  → nav state, back-to-top button, mobile action bar
+     2. rAF-throttled scroll  → nav state, back-to-top button, mobile action bar,
+                                 the sideways timeline
    No libraries.
    ========================================================================== */
 
@@ -149,9 +150,45 @@
     document.querySelectorAll("main > section[id]").forEach((section) => spyObserver.observe(section));
   }
 
+  /* ---------- Timeline: left to right as the page scrolls ----------
+     The section is made as tall as the row is wide; its inner block is
+     sticky, so it stays on screen while scrolling down moves the row left.
+     Off when the visitor asks for reduced motion, or when the block would not
+     fit the screen: the row then simply scrolls sideways (css/style.css). */
+  const journey = document.getElementById("journey");
+  const journeyPin = journey && journey.querySelector(".journey__pin");
+  const journeyRow = journey && journey.querySelector(".timeline");
+  const journeyTrack = journey && journey.querySelector(".timeline__track");
+  let journeyDistance = 0;
+  const moveJourney = () => {
+    if (!journeyDistance) return;
+    const p = Math.min(1, Math.max(0, -journey.getBoundingClientRect().top / journeyDistance));
+    journeyTrack.style.transform = `translate3d(${-Math.round(p * journeyDistance)}px, 0, 0)`;
+  };
+  const measureJourney = () => {
+    journey.classList.add("is-pinned");
+    journeyTrack.style.transform = "";
+    const pad = parseFloat(getComputedStyle(journeyRow).paddingLeft) || 0;
+    journeyDistance = Math.max(0, journeyTrack.offsetWidth + 2 * pad - journeyRow.clientWidth);
+    if (!journeyDistance || journeyPin.scrollHeight > journeyPin.clientHeight + 1) {
+      journey.classList.remove("is-pinned");
+      journey.style.height = "";
+      journeyDistance = 0;
+      return;
+    }
+    journey.style.height = `${journeyPin.offsetHeight + journeyDistance}px`;
+    moveJourney();
+  };
+  if (journeyTrack && !reduceMotion) {
+    addEventListener("resize", measureJourney);
+    // The cards change size when the fonts arrive or the language changes.
+    new ResizeObserver(measureJourney).observe(journeyTrack);
+  }
+
   /* ---------- rAF-throttled scroll handler ----------
      A single passive listener sets a flag; the work happens at most once per
-     frame. Handles: solid nav, FAB visibility and the mobile action bar. */
+     frame. Handles: solid nav, FAB visibility, the mobile action bar and the
+     timeline. */
   const nav = document.getElementById("nav");
   const fab = document.getElementById("fab");
   const mobilebar = document.getElementById("mobilebar");
@@ -167,6 +204,7 @@
     const y = scrollY;
 
     if (hasHero) nav.classList.toggle("nav--solid", y > 60);
+    if (journeyDistance) moveJourney();
     if (fab) fab.classList.toggle("show", y > innerHeight * 0.8);
 
     // Sticky action bar only appears once the Farms section is reached
