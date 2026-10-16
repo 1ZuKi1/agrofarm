@@ -255,7 +255,7 @@ HTML,
 <!-- ============ SERVICES ============ -->
 <section class="services" id="services">
   <div class="services__head">
-    <h2<?= ta('services.we-build-and-run') ?>><?= tx('services.we-build-and-run') ?></h2>
+    <h2<?= ta('services.from-blueprint-to-bottling') ?>><?= tx('services.from-blueprint-to-bottling') ?></h2>
   </div>
   <div class="services__grid">
     <article class="svc">
