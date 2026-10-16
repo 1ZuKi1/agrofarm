@@ -117,8 +117,8 @@ HTML,
 
 <!-- ============ JOURNEY / TIMELINE ============ -->
 <section class="journey" id="journey">
-  <!-- The timeline runs left to right. script.js pins this block while the
-       page scrolls and moves the row along; without it the row scrolls sideways. -->
+  <!-- The timeline runs left to right and scrolls sideways; the slider under
+       it (script.js) moves it. The page itself scrolls straight past. -->
   <div class="journey__pin">
   <div class="journey__head">
     <h2<?= ta('journey.a-journey-measured-in') ?>><?= tx('journey.a-journey-measured-in') ?></h2>
@@ -137,6 +137,13 @@ HTML,
     <article class="tl"><span class="tl__year">2027</span><div class="tl__card"><h3<?= ta('journey.the-green-complex-opens') ?>><?= tx('journey.the-green-complex-opens') ?></h3><p<?= ta('journey.the-600-cow-green') ?>><?= tx('journey.the-600-cow-green') ?></p></div></article>
     <article class="tl"><span class="tl__year">2030</span><div class="tl__card tl__card--future"><h3<?= ta('journey.the-select-herd') ?>><?= tx('journey.the-select-herd') ?></h3><p<?= ta('journey.target-import-1-000') ?>><?= tx('journey.target-import-1-000') ?></p></div></article>
     </div>
+  </div>
+  <!-- Drag or click to move along the timeline (script.js); shown only when
+       the row is wider than the screen. -->
+  <div class="tl-slider" aria-hidden="true" hidden>
+    <span class="tl-slider__end">2013</span>
+    <div class="tl-slider__rail"><span class="tl-slider__thumb"></span></div>
+    <span class="tl-slider__end">2030</span>
   </div>
   </div>
 </section>

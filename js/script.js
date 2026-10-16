@@ -150,45 +150,156 @@
     document.querySelectorAll("main > section[id]").forEach((section) => spyObserver.observe(section));
   }
 
-  /* ---------- Timeline: left to right as the page scrolls ----------
-     The section is made as tall as the row is wide; its inner block is
-     sticky, so it stays on screen while scrolling down moves the row left.
-     Off when the visitor asks for reduced motion, or when the block would not
-     fit the screen: the row then simply scrolls sideways (css/style.css). */
+  /* ---------- Timeline: a row that scrolls sideways ----------
+     The page scrolls straight past it. The slider under the row moves it:
+     the pill shows where you are and how much of the row is on screen; drag
+     it or click the rail. Swiping and sideways trackpad scrolling work too. */
   const journey = document.getElementById("journey");
-  const journeyPin = journey && journey.querySelector(".journey__pin");
   const journeyRow = journey && journey.querySelector(".timeline");
   const journeyTrack = journey && journey.querySelector(".timeline__track");
-  let journeyDistance = 0;
-  const moveJourney = () => {
-    if (!journeyDistance) return;
-    const p = Math.min(1, Math.max(0, -journey.getBoundingClientRect().top / journeyDistance));
-    journeyTrack.style.transform = `translate3d(${-Math.round(p * journeyDistance)}px, 0, 0)`;
+  const tlSlider = journey && journey.querySelector(".tl-slider");
+  const tlRail = tlSlider && tlSlider.querySelector(".tl-slider__rail");
+  const tlThumb = tlSlider && tlSlider.querySelector(".tl-slider__thumb");
+  const clamp01 = (n) => Math.min(1, Math.max(0, n));
+  const paintSlider = () => {
+    const max = journeyRow.scrollWidth - journeyRow.clientWidth;
+    const on = max > 4;
+    tlSlider.hidden = !on;
+    journey.classList.toggle("has-slider", on);
+    if (!on) return;
+    const size = Math.max(0.12, journeyRow.clientWidth / journeyRow.scrollWidth);
+    tlThumb.style.width = `${size * 100}%`;
+    tlThumb.style.left = `${clamp01(journeyRow.scrollLeft / max) * (1 - size) * 100}%`;
   };
-  const measureJourney = () => {
-    journey.classList.add("is-pinned");
-    journeyTrack.style.transform = "";
+  const goJourney = (p) => {
+    journeyRow.scrollLeft = p * (journeyRow.scrollWidth - journeyRow.clientWidth);
+  };
+  // After a drag, ease onto the nearest card instead of letting the
+  // browser's snap jump there. The snap stays off (.is-dragging) until then.
+  let settleAnim = 0;
+  const stopSettle = () => { cancelAnimationFrame(settleAnim); settleAnim = 0; };
+  const easeToCard = () => {
+    stopSettle();
+    const done = () => journey.classList.remove("is-dragging", "is-grabbing");
     const pad = parseFloat(getComputedStyle(journeyRow).paddingLeft) || 0;
-    journeyDistance = Math.max(0, journeyTrack.offsetWidth + 2 * pad - journeyRow.clientWidth);
-    if (!journeyDistance || journeyPin.scrollHeight > journeyPin.clientHeight + 1) {
-      journey.classList.remove("is-pinned");
-      journey.style.height = "";
-      journeyDistance = 0;
-      return;
-    }
-    journey.style.height = `${journeyPin.offsetHeight + journeyDistance}px`;
-    moveJourney();
+    const max = journeyRow.scrollWidth - journeyRow.clientWidth;
+    const rowLeft = journeyRow.getBoundingClientRect().left;
+    const from = journeyRow.scrollLeft;
+    let to = from, best = Infinity;
+    journeyTrack.querySelectorAll(".tl").forEach((card) => {
+      const x = Math.min(max, Math.max(0, card.getBoundingClientRect().left - rowLeft + from - pad));
+      if (Math.abs(x - from) < best) { best = Math.abs(x - from); to = x; }
+    });
+    if (reduceMotion || Math.abs(to - from) < 1) { journeyRow.scrollLeft = to; done(); return; }
+    // Slow and soft: starts gently, glides, lands gently (ease-in-out sine).
+    const dur = Math.min(1600, 900 + Math.abs(to - from) * 3);
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / dur);
+      journeyRow.scrollLeft = from + (to - from) * (0.5 - 0.5 * Math.cos(Math.PI * k));
+      if (k < 1) settleAnim = requestAnimationFrame(step);
+      else { settleAnim = 0; done(); }
+    };
+    settleAnim = requestAnimationFrame(step);
   };
-  if (journeyTrack && !reduceMotion) {
-    addEventListener("resize", measureJourney);
+  if (tlRail && journeyRow) {
+    let grab = 0; // where on the pill it was picked up, in px
+    const toP = (e) => {
+      const r = tlRail.getBoundingClientRect();
+      const t = tlThumb.offsetWidth;
+      return clamp01((e.clientX - r.left - grab) / Math.max(1, r.width - t));
+    };
+    tlRail.addEventListener("pointerdown", (e) => {
+      stopSettle();
+      const t = tlThumb.getBoundingClientRect();
+      // On the pill: keep the grip point. On the rail: centre the pill there.
+      grab = e.target === tlThumb ? e.clientX - t.left : t.width / 2;
+      tlRail.setPointerCapture(e.pointerId);
+      tlSlider.classList.add("is-dragging");
+      journey.classList.add("is-dragging");
+      goJourney(toP(e));
+      e.preventDefault();
+    });
+    tlRail.addEventListener("pointermove", (e) => {
+      if (tlRail.hasPointerCapture(e.pointerId)) goJourney(toP(e));
+    });
+    const drop = () => {
+      if (!tlSlider.classList.contains("is-dragging")) return;
+      tlSlider.classList.remove("is-dragging");
+      easeToCard();
+    };
+    tlRail.addEventListener("pointerup", drop);
+    tlRail.addEventListener("pointercancel", drop);
+    journeyRow.addEventListener("scroll", paintSlider, { passive: true });
+    addEventListener("resize", paintSlider);
     // The cards change size when the fonts arrive or the language changes.
-    new ResizeObserver(measureJourney).observe(journeyTrack);
+    new ResizeObserver(paintSlider).observe(journeyTrack);
+    paintSlider();
+  }
+
+  /* Grab the cards with the mouse and pull them sideways. Let go and the row
+     keeps gliding at the speed it was thrown, easing to a stop. (Touch
+     screens already swipe natively, so this is for mice only.) */
+  if (journeyRow) {
+    let down = false, moved = false, startX = 0, startLeft = 0;
+    let lastX = 0, lastT = 0, v = 0, glide = 0;
+    const stopGlide = () => { cancelAnimationFrame(glide); glide = 0; };
+    journeyRow.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "mouse" || e.button !== 0 || !journey.classList.contains("has-slider")) return;
+      stopGlide();
+      stopSettle();
+      down = true; moved = false;
+      startX = lastX = e.clientX; startLeft = journeyRow.scrollLeft;
+      lastT = performance.now(); v = 0;
+      journey.classList.add("is-dragging", "is-grabbing");
+      journeyRow.setPointerCapture(e.pointerId);
+      e.preventDefault(); // no text selection while dragging
+    });
+    journeyRow.addEventListener("pointermove", (e) => {
+      if (!down) return;
+      const now = performance.now();
+      const dt = Math.max(1, now - lastT);
+      // Smoothed speed (px per ms), so the throw matches the hand's speed.
+      v = 0.8 * ((e.clientX - lastX) / dt) + 0.2 * v;
+      lastX = e.clientX; lastT = now;
+      if (Math.abs(e.clientX - startX) > 3) moved = true;
+      journeyRow.scrollLeft = startLeft - (e.clientX - startX);
+    });
+    const release = () => {
+      if (!down) return;
+      down = false;
+      journey.classList.remove("is-grabbing");
+      // A pause before letting go means no throw.
+      if (reduceMotion || performance.now() - lastT > 80 || Math.abs(v) < 0.05) { easeToCard(); return; }
+      let prev = performance.now();
+      const step = (now) => {
+        const dt = now - prev; prev = now;
+        const before = journeyRow.scrollLeft;
+        journeyRow.scrollLeft = before - v * dt;
+        v *= Math.pow(0.94, dt / 16); // friction, the same at any frame rate
+        // Slow enough (or at an end): hand over to the gentle settle onto a card.
+        if (Math.abs(v) < 0.05 || journeyRow.scrollLeft === before) { glide = 0; easeToCard(); return; }
+        glide = requestAnimationFrame(step);
+      };
+      glide = requestAnimationFrame(step);
+    };
+    journeyRow.addEventListener("pointerup", release);
+    journeyRow.addEventListener("pointercancel", release);
+    // A drag is not a click on whatever was under the mouse.
+    journeyRow.addEventListener("click", (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
+    // Sideways trackpad scrolling or the slider takes over from a glide in
+    // progress (an ordinary up/down wheel just scrolls the page past).
+    journeyRow.addEventListener("wheel", (e) => {
+      if ((!glide && !settleAnim) || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      stopGlide(); stopSettle();
+      journey.classList.remove("is-dragging", "is-grabbing");
+    }, { passive: true });
+    if (tlRail) tlRail.addEventListener("pointerdown", () => { stopGlide(); });
   }
 
   /* ---------- rAF-throttled scroll handler ----------
      A single passive listener sets a flag; the work happens at most once per
-     frame. Handles: solid nav, FAB visibility, the mobile action bar and the
-     timeline. */
+     frame. Handles: solid nav, FAB visibility and the mobile action bar. */
   const nav = document.getElementById("nav");
   const fab = document.getElementById("fab");
   const mobilebar = document.getElementById("mobilebar");
@@ -204,7 +315,6 @@
     const y = scrollY;
 
     if (hasHero) nav.classList.toggle("nav--solid", y > 60);
-    if (journeyDistance) moveJourney();
     if (fab) fab.classList.toggle("show", y > innerHeight * 0.8);
 
     // Sticky action bar only appears once the Farms section is reached
