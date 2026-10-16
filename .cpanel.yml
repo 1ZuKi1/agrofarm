@@ -7,6 +7,9 @@ deployment:
     - /bin/cp -f .htaccess *.php $DEPLOYPATH
     - /bin/cp -Rf inc lang admin api css js $DEPLOYPATH
     - /bin/cp -f img/*.* $DEPLOYPATH/img/
+    # Equipment catalogue photos (sql/hoof-care-seed.sql and later imports point here).
+    - /bin/mkdir -p $DEPLOYPATH/img/equipment
+    - /bin/cp -f img/equipment/*.* $DEPLOYPATH/img/equipment/
     # Old copies of files that moved (2026-10 restructure). Copying never
     # deletes, and these must not linger as a second, stale version.
     # .htaccess already sends their addresses to the new files.

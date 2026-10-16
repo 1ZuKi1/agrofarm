@@ -1279,6 +1279,8 @@ input, textarea, select{ font-size:16px !important; }
 .eq-card__link{ display:block; flex:1; text-decoration:none; color:inherit; }
 .eq-card__media{ aspect-ratio:4/3; background:var(--cream-dark);
   display:flex; align-items:center; justify-content:center; overflow:hidden; }
+/* Product photos are shot on white: a white tile, not a white box on beige. */
+.eq-card__media:has(img){ background:#fff; }
 .eq-card__media img{ width:100%; height:100%; object-fit:contain; padding:.8rem; }
 .eq-card__noimg{ width:46%; aspect-ratio:2/1; background:url("/img/naf_logo_full.svg") center/contain no-repeat; opacity:.3; filter:grayscale(.4); }
 .eq-card__body{ padding:1.1rem 1.2rem 1.4rem; }

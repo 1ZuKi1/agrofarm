@@ -161,7 +161,10 @@ limit on unpaid orders: 4 open at once, 20 an hour per address — until it is
 run the checkout works but is not limited), then `orders-schema-v8.sql` (a
 product or option that has been sold can be deleted from the admin; past
 orders keep their own copy of its name and price — until it is run, only
-never-ordered items can be deleted). Each is run once. Until v6 is run,
+never-ordered items can be deleted). Each is run once. The equipment catalogue
+has its own files: `equipment-schema.sql`, then `equipment-seed.sql` and
+`hoof-care-seed.sql` (the hoof-care range: 5 shop sections, 31 products, their
+photos in `img/equipment/`; safe to run again). Until v6 is run,
 `/admin/login` says which file is missing; the public site works either way. Secrets live in `config.php`, outside `public_html`.
 
 ## Browser Support
