@@ -30,6 +30,21 @@ function ce(?string $s): string {
 }
 
 /**
+ * Content-Security-Policy: tells the browser what a page may load, so that
+ * text injected by mistake could not run as a script or send data elsewhere.
+ *   'strict'  shop, checkout and admin pages: scripts only from this site.
+ *   'basic'   pages that embed the Facebook feed (home, news): that widget
+ *             pulls scripts and frames from hosts we cannot test from here,
+ *             so only the directives that cannot break it are sent.
+ */
+function naf_send_csp(string $mode = 'strict'): void {
+  $base = "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
+  $strict = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+          . "font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; ";
+  header('Content-Security-Policy: ' . ($mode === 'basic' ? '' : $strict) . $base);
+}
+
+/**
  * URL of a file in the site root, with its modification time appended as a
  * version (?v=…). A deploy that changes style.css or shop.js changes the URL,
  * so no browser keeps running yesterday's copy from its cache.
@@ -85,6 +100,7 @@ function layout_extra($x): void {
  *               menu links as #anchors
  *   active      NAF_NAV key of the current section ('shop', 'news') — marked
  *               is-current and aria-current="page"
+ *   csp         'strict' (default) or 'basic' — see naf_send_csp()
  *   head        extra HTML for <head> (page-only <style>, preloads)
  *   body_start  extra HTML before the header
  *   after_nav   extra HTML between the header and <main>
@@ -92,6 +108,7 @@ function layout_extra($x): void {
  * function when the HTML calls ta()/tx()).
  */
 function page_start(array $o): void {
+  naf_send_csp($o['csp'] ?? 'strict');
   $multi  = !empty($o['multilang']);
   $home   = !empty($o['home']);
   $active = $o['active'] ?? null;

@@ -124,7 +124,7 @@ order, a request, a product or a setting is logged with who did it, and each
 order and request shows its history. A password needs 8 characters; five wrong
 tries lock the account for 15 minutes; a forgotten password is reset by an
 Админ (a temporary one, changed at the next login). Тусламж (/admin/help) is
-the staff guide, in Mongolian. Staff stay logged in for 14 days on a device; their
+the staff guide, in Mongolian. Staff stay logged in for 3 days on a device; their
 sessions are kept in a `naf-sessions` folder next to `config.php` (made
 automatically), because cPanel clears the shared session folder after about
 24 idle minutes.
@@ -156,8 +156,10 @@ code that needs them, in order: `orders-schema-v3.sql`, then
 `orders-schema-v4.sql` (delivery / pick-up, the `settings` table), then
 `orders-schema-v5.sql` (product categories, the cow statue and the book), then
 `orders-schema-v6.sql` (staff accounts, the activity log, notes on quote
-requests). Each is run once. Until v6 is run, `/admin/login` says which file is
-missing; the public site works either way. Secrets live in `config.php`, outside `public_html`.
+requests), then `orders-schema-v7.sql` (which address placed an order, for the
+limit on unpaid orders: 4 open at once, 20 an hour per address — until it is
+run the checkout works but is not limited). Each is run once. Until v6 is run,
+`/admin/login` says which file is missing; the public site works either way. Secrets live in `config.php`, outside `public_html`.
 
 ## Browser Support
 

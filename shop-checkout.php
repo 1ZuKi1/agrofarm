@@ -128,7 +128,7 @@ $iconShop = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-w
     </aside>
   </div>
 
-  <div class="checkout-pay" id="checkoutPay" hidden></div>
+  <div class="checkout-pay" id="checkoutPay" role="region" aria-label="Төлбөр" tabindex="-1" hidden></div>
 
   <div class="checkout-empty" id="checkoutEmpty" hidden>
     <p>Сагс хоосон байна.</p>
