@@ -452,10 +452,10 @@ return [
   ],
 
   // ---- Home — Services ----
-  'services.we-build-and-run' => [
-    'en' => 'We build and run<br><em>dairy farms.</em>',
-    'mn' => 'Сүүний фермийг<br><em>барьж, ажиллуулна.</em>',
-    'zh' => '建设与运营，<em>奶牛牧场</em>',
+  'services.from-blueprint-to-bottling' => [
+    'en' => 'From blueprint<br><em>to bottling.</em>',
+    'mn' => 'Зураг төслөөс<br><em>савлагаа хүртэл.</em>',
+    'zh' => '从一纸蓝图，<em>到一瓶好奶</em>',
   ],
   'services.farm-construction' => [
     'en' => 'Farm Construction',

@@ -191,7 +191,27 @@ def write_index_csv(record, own, out_dir):
 
 
 # --------------------------------------------------------------------- stage 2
-def download(record, own, out_dir, wanted, max_images):
+def plan_from_mapping(path):
+    """How many photos each supplier listing needs to contribute.
+
+    A product page shows 3–4 images. When several supplier listings feed one
+    of our products (three claw sizes, say) we want a couple from the main
+    listing and one from each of the others, so the gallery shows real
+    variety instead of five angles of the same item. Downloading to that plan
+    instead of six-per-listing cuts the job by about three quarters.
+    """
+    import json as _json
+    with open(path, encoding="utf-8") as f:
+        mapping = _json.load(f)
+    need = {}
+    for folders in mapping.values():
+        for i, f in enumerate(folders):
+            n = 3 if len(folders) == 1 else (2 if i == 0 else 1)
+            need[f] = max(need.get(f, 0), n)
+    return need
+
+
+def download(record, own, out_dir, wanted, max_images, caps=None):
     rows, failed = [], 0
     targets = [(u, r) for u, r in record.items() if not wanted or r["slug"] in wanted]
     if wanted:
@@ -203,7 +223,7 @@ def download(record, own, out_dir, wanted, max_images):
 
     for n, (url, rec) in enumerate(targets, 1):
         slug = rec["slug"]
-        imgs = own[url][:max_images]
+        imgs = own[url][:(caps.get(slug, max_images) if caps else max_images)]
         folder = os.path.join(out_dir, slug)
         os.makedirs(folder, exist_ok=True)
         print("[%d/%d] %s — %d image(s)" % (n, len(targets), slug, len(imgs)))
@@ -241,6 +261,8 @@ def main():
     ap.add_argument("--out", default="img/equipment/_source")
     ap.add_argument("--index", action="store_true", help="crawl and index only, download nothing")
     ap.add_argument("--only", metavar="FILE", help="text file of slugs, one per line")
+    ap.add_argument("--plan", metavar="FILE",
+                    help="image-mapping.json — fetch only what the site will actually show")
     ap.add_argument("--max-images", type=int, default=8)
     ap.add_argument("--shared-at", type=int, default=2,
                     help="an image seen on this many pages or more is a related-product thumb")
@@ -274,7 +296,13 @@ def main():
                     wanted.add(line)
         print("slugs requested:", len(wanted))
 
-    download(record, own, args.out, wanted, args.max_images)
+    caps = None
+    if args.plan:
+        caps = plan_from_mapping(args.plan)
+        wanted = wanted or set(caps)
+        print("plan: %d listing(s), %d image(s) to fetch" % (len(caps), sum(caps.values())))
+
+    download(record, own, args.out, wanted, args.max_images, caps)
 
 
 if __name__ == "__main__":
