@@ -21,6 +21,7 @@ require_once __DIR__ . '/admin-data.php'; // admin_counts() for the menu badges
 const ADMIN_NAV = [
   ['home',     'Нүүр',          '/admin/',         'home',     'staff'],
   ['orders',   'Захиалга',      '/admin/orders',   'orders',   'staff'],
+  ['sales',    'Борлуулалт',    '/admin/sales',    'chart',    'staff'],
   ['quotes',   'Үнийн санал',   '/admin/quotes',   'inbox',    'staff'],
   ['products', 'Бүтээгдэхүүн',  '/admin/products', 'box',      'staff'],
   ['news',     'Мэдээ',         '/admin/news',     'news',     'staff'],
@@ -90,7 +91,7 @@ function admin_head(string $title, string $extra = ''): void {
     . '<title>' . ce($title) . ' · NAF ажлын орчин</title>'
     . '<link rel="icon" href="/img/naf_logo_full.svg" type="image/svg+xml">'
     . '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-    . '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">'
+    . '<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">'
     . '<link rel="stylesheet" href="' . ce(asset('/admin/admin.css')) . '">'
     . $extra . '</head>';
 }

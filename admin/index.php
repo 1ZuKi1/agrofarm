@@ -6,6 +6,7 @@
  *   Хоцорсон      paid orders whose day has passed (only when there are any), first, in red
  *   Өнөөдөр, Маргааш   one row per paid order for that day, with "Хүргэсэн"
  *   side column   new quote requests, low stock, sales this week / month
+ *                 (the full report is /admin/sales)
  *
  * "Хүргэсэн" posts to the order page (admin/order.php) with back=/admin/, so
  * the logic and the messages live in one place.
@@ -141,7 +142,7 @@ admin_page_start($pdo, $me, [
     </section>
 
     <section class="ad-panel" id="sales" aria-labelledby="sales-h">
-      <div class="ad-panel__head"><h2 id="sales-h"><?= ad_icon('chart') ?> Борлуулалт</h2></div>
+      <div class="ad-panel__head"><h2 id="sales-h"><?= ad_icon('chart') ?> Борлуулалт</h2><a href="/admin/sales">Дэлгэрэнгүй →</a></div>
       <dl class="ad-kv">
         <?php foreach (['week' => 'Энэ 7 хоног', 'month' => 'Энэ сар'] as $k => $label): $s = $sales[$k]; ?>
         <dt><?= ce($label) ?></dt>

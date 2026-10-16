@@ -1,7 +1,8 @@
 <?php
 /**
  * inc/admin-data.php — what the /admin/ pages read: the menu counters, Нүүр's
- * jobs, low stock and sales, and the orders list / one order.
+ * jobs, low stock and sales, the Борлуулалт report, and the orders list / one
+ * order.
  *
  * "Today" and "tomorrow" are calendar days in Ulaanbaatar (fulfillment_now()),
  * and an order's own delivery_date decides which day it belongs to.
@@ -123,6 +124,66 @@ function admin_sales(PDO $pdo, DateTimeImmutable $now): array {
   return $out;
 }
 
+/** Борлуулалт periods: key → [label, step ('day' | 'month'), how many]. */
+const ADMIN_SALES_PERIODS = [
+  '7d'  => ['7 хоног', 'day', 7],
+  '30d' => ['30 хоног', 'day', 30],
+  '12m' => ['12 сар', 'month', 12],
+];
+
+/**
+ * The Борлуулалт report (admin/sales.php): paid and delivered orders by the
+ * day (or month) they were paid, UB time, ending today.
+ *   'now'    ['orders', 'revenue', 'fees', 'items'] for the period
+ *   'before' the same for the equal period just before it
+ *   'series' one row per day/month: ['start' => DateTimeImmutable, 'revenue', 'orders']
+ *   'top'    best-selling options by money taken: ['name', 'qty', 'revenue'], at most 8
+ * Revenue is what buyers paid, delivery fees included; 'fees' is that part.
+ */
+function admin_sales_report(PDO $pdo, string $period, DateTimeImmutable $now): array {
+  [, $step, $n] = ADMIN_SALES_PERIODS[$period];
+  $today = $now->setTime(0, 0);
+  if ($step === 'day') {
+    $start = $today->modify('-' . ($n - 1) . ' days');
+    $end = $today->modify('+1 day');
+    $before = $start->modify("-$n days");
+  } else {
+    $start = $today->modify('first day of this month')->modify('-' . ($n - 1) . ' months');
+    $end = $today->modify('first day of next month');
+    $before = $start->modify("-$n months");
+  }
+  $f = 'Y-m-d H:i:s';
+  $paid = "o.status IN ('paid', 'fulfilled') AND o.paid_at >= ? AND o.paid_at < ?";
+
+  $totals = $pdo->prepare("SELECT COUNT(*) AS orders, COALESCE(SUM(o.total), 0) AS revenue, COALESCE(SUM(o.delivery_fee), 0) AS fees,
+      COALESCE((SELECT SUM(oi.quantity) FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE $paid), 0) AS items
+    FROM orders o WHERE $paid");
+  $sum = function (DateTimeImmutable $a, DateTimeImmutable $b) use ($totals, $f): array {
+    $totals->execute([$a->format($f), $b->format($f), $a->format($f), $b->format($f)]);
+    return array_map('intval', $totals->fetch());
+  };
+
+  $key = $step === 'day' ? "DATE_FORMAT(o.paid_at, '%Y-%m-%d')" : "DATE_FORMAT(o.paid_at, '%Y-%m')";
+  $st = $pdo->prepare("SELECT $key AS k, COUNT(*) AS orders, SUM(o.total) AS revenue FROM orders o WHERE $paid GROUP BY k");
+  $st->execute([$start->format($f), $end->format($f)]);
+  $by = [];
+  foreach ($st as $r) $by[$r['k']] = $r;
+  $series = [];
+  for ($d = $start; $d < $end; $d = $d->modify($step === 'day' ? '+1 day' : '+1 month')) {
+    $k = $d->format($step === 'day' ? 'Y-m-d' : 'Y-m');
+    $series[] = ['start' => $d, 'revenue' => (int)($by[$k]['revenue'] ?? 0), 'orders' => (int)($by[$k]['orders'] ?? 0)];
+  }
+
+  // By the name on the order line, so a renamed or deleted option still counts.
+  $st = $pdo->prepare("SELECT oi.variant_name_snapshot AS name, SUM(oi.quantity) AS qty, SUM(oi.line_total) AS revenue
+    FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE $paid
+    GROUP BY oi.variant_name_snapshot ORDER BY revenue DESC, qty DESC LIMIT 8");
+  $st->execute([$start->format($f), $end->format($f)]);
+  $top = array_map(function ($r) { return ['name' => $r['name'], 'qty' => (int)$r['qty'], 'revenue' => (int)$r['revenue']]; }, $st->fetchAll());
+
+  return ['now' => $sum($start, $end), 'before' => $sum($before, $start), 'series' => $series, 'top' => $top, 'step' => $step];
+}
+
 /**
  * Active options (of active products) with at most $max left to sell, sold out
  * first. 'available' = stock minus everything reserved — the same reservation
@@ -235,6 +296,13 @@ function admin_when(?string $dt): string {
 /** 28000 → '28,000₮' */
 function admin_money(int $n): string {
   return number_format($n) . '₮';
+}
+
+/** Short amounts for a chart axis: 150000 → '150 мян', 1500000 → '1.5 сая'. */
+function admin_money_short(int $n): string {
+  if ($n >= 1000000) return rtrim(rtrim(number_format($n / 1000000, 1), '0'), '.') . ' сая';
+  if ($n >= 1000) return rtrim(rtrim(number_format($n / 1000, 1), '0'), '.') . ' мян';
+  return (string)$n;
 }
 
 /** "Өнөөдөр · 10-р сарын 15, Пүрэв" (and the old time slot when there is one). */

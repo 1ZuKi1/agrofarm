@@ -59,7 +59,7 @@ new-naf/
 ├── api/                # JSON/form endpoints: shop-data, checkout-options,
 │                         order-create, order-status, inquiry-create
 ├── admin/              # /admin/ — the staff workspace: one page per section
-│                         (index, orders, order, quotes, products, news,
+│                         (index, orders, order, sales, quotes, products, news,
 │                         settings, account, help, login), admin.css, js/, and
 │                         the editors' JSON endpoints (products-admin, publish)
 ├── css/style.css       # all styles
