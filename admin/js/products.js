@@ -4,9 +4,13 @@
  * token and sends staff to the login page when the session has ended.
  *
  *   renderProductsTab()   fetch the list, then paintProducts()
- *   paintProducts()       stats, the stock tabs and the table, from the cache
- *   openProductEditor()   dialog: slug, names, category, descriptions, active
+ *   paintProducts()       stats, the filter tabs and one card per product
+ *                         (its options as rows: name, price, how many can
+ *                         still be sold), from the cache
+ *   openProductEditor()   dialog: slug, names, category, descriptions, shown
  *   openVariantEditor()   dialog: names, price, stock, texts, image, ingredients
+ *   openDeleteDialog()    dialog: what deleting a product / an option means,
+ *                         then "Тийм, устгах"
  */
 (() => {
   "use strict";
@@ -63,14 +67,14 @@
     return "in";
   }
 
-  /** Stats + filter tabs + the table, from productsCache (no fetch). */
+  /** Stats + filter tabs + one card per product, from productsCache (no fetch). */
   function paintProducts() {
     const allVariants = productsCache.flatMap((p) => p.variants);
     const counts = {
       all: allVariants.length,
-      in: allVariants.filter((v) => variantState(v) === "in").length,
       low: allVariants.filter((v) => variantState(v) === "low").length,
       out: allVariants.filter((v) => variantState(v) === "out").length,
+      hidden: allVariants.filter((v) => variantState(v) === "hidden").length,
     };
     const unitsAvailable = allVariants.reduce((sum, v) => sum + Number(v.available || 0), 0);
     const restock = counts.low + counts.out;
@@ -78,15 +82,15 @@
     document.getElementById("productStats").innerHTML = `
       <div class="ad-stat"><strong>${productsCache.length}</strong><span>Бүтээгдэхүүн</span></div>
       <div class="ad-stat"><strong>${counts.all}</strong><span>Төрөл</span></div>
-      <div class="ad-stat"><strong>${unitsAvailable.toLocaleString("en-US")}</strong><span>Бэлэн тоо</span></div>
-      <div class="ad-stat${restock > 0 ? " is-hot" : ""}"><strong>${restock}</strong><span>Нөөц дүүргэх шаардлагатай</span></div>
+      <div class="ad-stat"><strong>${unitsAvailable.toLocaleString("en-US")}</strong><span>Зарах боломжтой (ш)</span></div>
+      <div class="ad-stat${restock > 0 ? " is-hot" : ""}"><strong>${restock}</strong><span>Нөөц нэмэх хэрэгтэй</span></div>
     `;
 
     const tabs = [
       ["all", "Бүгд", counts.all],
-      ["in", "Нөөцөд бий", counts.in],
-      ["low", "Бага нөөцтэй", counts.low],
+      ["low", "Цөөхөн үлдсэн", counts.low],
       ["out", "Дууссан", counts.out],
+      ["hidden", "Нуугдсан", counts.hidden],
     ];
     const tabsEl = document.getElementById("productTabs");
     tabsEl.innerHTML = tabs.map(([key, label, n]) =>
@@ -101,89 +105,150 @@
       return;
     }
 
+    // Only the exceptions get a label; an option that is simply for sale needs none.
     const STATUS = {
-      in:     ["ad-tag--ok", "Нөөцөд бий"],
-      low:    ["ad-tag--warn", "Бага нөөцтэй"],
-      out:    ["ad-tag--bad", "Дууссан"],
-      hidden: ["ad-tag--mute", "Нуугдсан"],
+      low:    (v) => `<span class="ad-tag ad-tag--warn">${v.available} үлдсэн</span>`,
+      out:    () => `<span class="ad-tag ad-tag--bad">Дууссан</span>`,
+      hidden: () => `<span class="ad-tag ad-tag--mute">Нуугдсан</span>`,
+      in:     () => "",
     };
 
-    // Each product contributes a header row plus its matching options; a
-    // product whose options are all filtered out drops away entirely.
+    // A product whose options are all filtered out drops away entirely.
     const groups = productsCache.map((product) => {
+      const hiddenProduct = Number(product.active) === 0;
       const visible = product.variants.filter((v) => {
-        const state = variantState(v);
+        const state = hiddenProduct ? "hidden" : variantState(v);
         const passesFilter = productFilter === "all" || state === productFilter;
         return passesFilter && matchesSearch(v.name_mn, v.name_en, product.name_mn, product.name_en);
       });
       return { product, visible };
-    }).filter((g) => g.visible.length > 0 || (productFilter === "all" && matchesSearch(g.product.name_mn, g.product.name_en)));
+    }).filter((g) => g.visible.length > 0
+      || (productFilter === "all" && matchesSearch(g.product.name_mn, g.product.name_en))
+      || (productFilter === "hidden" && Number(g.product.active) === 0 && matchesSearch(g.product.name_mn, g.product.name_en)));
 
     if (groups.length === 0) {
       productsTab.innerHTML = `<p class="ad-empty">Энэ шүүлтэд тохирох зүйл алга.</p>`;
       return;
     }
 
-    productsTab.innerHTML = `
-      <div class="ad-table-wrap">
-        <table class="ad-table ad-table--cards">
+    productsTab.innerHTML = groups.map(({ product, visible }) => {
+      const pid = Number(product.id);
+      const hiddenProduct = Number(product.active) === 0;
+      const n = product.variants.length;
+      const meta = [
+        product.category_id ? escHtml(categoryName(product.category_id)) : "Ангилалгүй (дэлгүүрт «Бусад» хэсэгт)",
+        `${n} төрөл`,
+      ].join(" · ");
+      return `
+      <article class="ad-prod" aria-labelledby="prod-${pid}">
+        <header class="ad-prod__head">
+          <div class="ad-prod__title">
+            <h2 id="prod-${pid}">${escHtml(product.name_mn)}${hiddenProduct ? ` <span class="ad-tag ad-tag--mute">Дэлгүүрт нуугдсан</span>` : ""}</h2>
+            <p class="ad-prod__meta">${meta}</p>
+          </div>
+          <div class="ad-btn-row">
+            <button type="button" class="ad-btn ad-btn--sm edit-product-btn" data-id="${pid}">Засах<span class="ad-sr"> — ${escHtml(product.name_mn)}</span></button>
+            <button type="button" class="ad-btn ad-btn--sm ad-btn--danger delete-product-btn" data-id="${pid}">Устгах<span class="ad-sr"> — ${escHtml(product.name_mn)}</span></button>
+          </div>
+        </header>
+        ${visible.length ? `
+        <table class="ad-table ad-prod__table">
           <thead><tr>
-            <th scope="col">Төрөл</th><th scope="col">Жин</th><th scope="col" class="ad-r">Үнэ</th><th scope="col" class="ad-r">Нөөц</th>
-            <th scope="col" class="ad-r">Бэлэн</th><th scope="col">Төлөв</th><th scope="col"><span class="ad-sr">Үйлдэл</span></th>
+            <th scope="col">Төрөл</th><th scope="col" class="ad-r">Үнэ</th>
+            <th scope="col" class="ad-r">Зарах боломжтой</th><th scope="col"><span class="ad-sr">Төлөв</span></th><th scope="col"><span class="ad-sr">Үйлдэл</span></th>
           </tr></thead>
           <tbody>
-            ${groups.map(({ product, visible }) => `
-              <tr class="ad-group">
-                <td colspan="7">
-                  <div class="ad-group__row">
-                    <div>
-                      <strong>${escHtml(product.name_mn)}</strong>${Number(product.active) ? "" : ` <span class="ad-tag ad-tag--mute">Нуугдсан</span>`}
-                      <span class="ad-sub">${product.category_id ? escHtml(categoryName(product.category_id)) : "Ангилалгүй — дэлгүүрт «Бусад» хэсэгт гарна"}</span>
-                    </div>
-                    <div class="ad-btn-row">
-                      <button type="button" class="ad-btn ad-btn--sm edit-product-btn" data-id="${product.id}">Бүтээгдэхүүн засах</button>
-                      <button type="button" class="ad-btn ad-btn--sm add-variant-btn" data-product-id="${product.id}">+ Төрөл нэмэх</button>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-              ${visible.length === 0
-                ? `<tr><td colspan="7" class="ad-muted ad-small">Одоогоор төрөл алга.</td></tr>`
-                : visible.map((v) => {
-                    const [cls, label] = STATUS[variantState(v)];
-                    return `
-                      <tr>
-                        <td><strong>${escHtml(v.name_mn)}</strong></td>
-                        <td>${escHtml(v.weight_label || "—")}</td>
-                        <td class="ad-r ad-num">${money(v.price)}</td>
-                        <td class="ad-r ad-num"><span class="ad-cardlabel">Нөөц </span>${v.stock}</td>
-                        <td class="ad-r ad-num"><span class="ad-cardlabel">Бэлэн </span>${v.available}</td>
-                        <td><span class="ad-tag ${cls}">${label}</span></td>
-                        <td><button type="button" class="ad-btn ad-btn--sm edit-variant-btn" data-id="${v.id}" data-product-id="${product.id}">Засах<span class="ad-sr"> — ${escHtml(v.name_mn)}</span></button></td>
-                      </tr>
-                    `;
-                  }).join("")}
-            `).join("")}
+            ${visible.map((v) => {
+              const state = hiddenProduct ? "in" : variantState(v);
+              const reserved = Number(v.stock) - Number(v.available);
+              return `
+              <tr>
+                <th scope="row"><span class="ad-prod__opt">${escHtml(v.name_mn)}</span>${v.weight_label ? ` <span class="ad-muted">${escHtml(v.weight_label)}</span>` : ""}</th>
+                <td class="ad-r ad-num"><span class="ad-cardlabel">Үнэ: </span>${money(v.price)}</td>
+                <td class="ad-r ad-num"><span class="ad-cardlabel">Зарах боломжтой: </span><strong>${Number(v.available).toLocaleString("en-US")} ш</strong>
+                  ${reserved > 0 ? `<span class="ad-sub">нийт нөөц ${v.stock} · захиалсан ${reserved}</span>` : ""}</td>
+                <td>${STATUS[state](v)}</td>
+                <td class="ad-r"><button type="button" class="ad-btn ad-btn--sm edit-variant-btn" data-id="${v.id}" data-product-id="${pid}">Засах<span class="ad-sr"> — ${escHtml(v.name_mn)}</span></button></td>
+              </tr>`;
+            }).join("")}
           </tbody>
-        </table>
-      </div>
-    `;
+        </table>` : `<p class="ad-prod__none">${n ? "Энэ шүүлтэд тохирох төрөл алга." : "Төрөл алга — үнэ, нөөцтэй төрөл нэмсний дараа дэлгүүрт гарна."}</p>`}
+        <div class="ad-prod__foot">
+          <button type="button" class="ad-btn ad-btn--sm add-variant-btn" data-product-id="${pid}">+ Төрөл нэмэх<span class="ad-sr"> — ${escHtml(product.name_mn)}</span></button>
+        </div>
+      </article>`;
+    }).join("");
 
+    const findProduct = (id) => productsCache.find((p) => Number(p.id) === Number(id));
     productsTab.querySelectorAll(".edit-product-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        openProductEditor(productsCache.find((p) => Number(p.id) === Number(btn.dataset.id)));
-      });
+      btn.addEventListener("click", () => openProductEditor(findProduct(btn.dataset.id)));
+    });
+    productsTab.querySelectorAll(".delete-product-btn").forEach((btn) => {
+      btn.addEventListener("click", () => openDeleteDialog(findProduct(btn.dataset.id), null));
     });
     productsTab.querySelectorAll(".edit-variant-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const productId = Number(btn.dataset.productId);
-        const product = productsCache.find((p) => Number(p.id) === productId);
+        const product = findProduct(productId);
         const variant = product && product.variants.find((v) => Number(v.id) === Number(btn.dataset.id));
         openVariantEditor(variant, productId);
       });
     });
     productsTab.querySelectorAll(".add-variant-btn").forEach((btn) => {
       btn.addEventListener("click", () => openVariantEditor(null, Number(btn.dataset.productId)));
+    });
+  }
+
+  /**
+   * Asks before deleting a product (variant = null) or one option, and says
+   * plainly what happens. Refused (by the server too) while an unfinished
+   * order holds it.
+   */
+  function openDeleteDialog(product, variant) {
+    const variants = variant ? [variant] : product.variants;
+    const open = variants.reduce((n, v) => n + Number(v.open_orders || 0), 0);
+    const what = variant ? `${product.name_mn} — ${variant.name_mn}` : product.name_mn;
+    const lead = variant
+      ? "Энэ төрөл дэлгүүрээс бүр мөсөн алга болно."
+      : `Бүтээгдэхүүн ${variants.length ? variants.length + " төрлийн хамт " : ""}дэлгүүрээс бүр мөсөн алга болно.`;
+    openDialog(`
+      <div class="ad-modal__card ad-confirm" role="document">
+        <h2 id="editorHeading">«${escHtml(what)}»-г устгах уу?</h2>
+        ${open ? `
+          <p class="ad-flash ad-flash--err">Дуусаагүй ${open} захиалгад байгаа тул одоо устгах боломжгүй. Захиалгыг хүргэсний (эсвэл цуцалсны) дараа устгана уу.</p>
+        ` : `
+          <ul class="ad-confirm__list">
+            <li>${lead} Буцааж сэргээх боломжгүй.</li>
+            <li>Өмнөх захиалга, Борлуулалтын тайланд нэр, үнэ нь хэвээр үлдэнэ.</li>
+          </ul>
+          <p class="ad-note">Түр зарахгүй бол устгахын оронд «Засах» → «Дэлгүүрт харуулах»-ыг унтраагаарай. Дараа нь буцааж асаахад хангалттай.</p>
+        `}
+        <p class="ad-flash ad-flash--err" id="deleteError" role="alert" hidden></p>
+        <div class="ad-form-actions ad-btn-row">
+          ${open ? "" : `<button type="button" class="ad-btn ad-btn--danger-solid" id="confirmDelete">Тийм, устгах</button>`}
+          <button type="button" class="ad-btn" id="cancelDelete">${open ? "Хаах" : "Болих"}</button>
+        </div>
+      </div>
+    `);
+    document.getElementById("cancelDelete").addEventListener("click", closeEditor);
+    if (open) { document.getElementById("cancelDelete").focus(); return; }
+    // Focus starts on "Болих": Enter right after opening must not delete.
+    document.getElementById("cancelDelete").focus();
+    const go = document.getElementById("confirmDelete");
+    go.addEventListener("click", async () => {
+      const errEl = document.getElementById("deleteError");
+      errEl.hidden = true;
+      go.disabled = true;
+      try {
+        const res = await post("/admin/products-admin.php", { action: variant ? "delete_variant" : "delete_product", id: variant ? variant.id : product.id });
+        const data = await readJson(res);
+        if (!res.ok) { showError(errEl, data.error || "Устгаж чадсангүй"); go.disabled = false; return; }
+        closeEditor();
+        renderProductsTab();
+      } catch (err) {
+        showError(errEl, NET_ERROR);
+        go.disabled = false;
+      }
     });
   }
 
@@ -260,7 +325,7 @@
           <p class="ad-hint" style="margin:8px 0 0">Бусад мэдээлэл (зураг, найрлага…) — жагсаалтын "Засах" товчоор.</p>
         </fieldset>` : ""}
 
-        <label class="ad-check"><input type="checkbox" id="pf_active" ${!product || Number(product.active) ? "checked" : ""}> Идэвхтэй (дэлгүүрт харагдана)</label>
+        <label class="ad-check"><input type="checkbox" id="pf_active" ${!product || Number(product.active) ? "checked" : ""}> Дэлгүүрт харуулах</label>
 
         <p class="ad-flash ad-flash--err" id="productFormError" role="alert" hidden></p>
         <div class="ad-form-actions ad-btn-row">
@@ -357,7 +422,7 @@
           <span class="ad-hint" id="vf_image_hint">JPG, PNG, WEBP эсвэл GIF, дээд тал нь 5 MB.</span>
           ${variant && variant.image_path ? `<img class="ad-thumb" src="${escAttr(siteUrl(variant.image_path))}" alt="Одоогийн зураг">` : ""}</div>
 
-        <label class="ad-check"><input type="checkbox" id="vf_active" ${!variant || Number(variant.active) ? "checked" : ""}> Идэвхтэй (дэлгүүрт харагдана)</label>
+        <label class="ad-check"><input type="checkbox" id="vf_active" ${!variant || Number(variant.active) ? "checked" : ""}> Дэлгүүрт харуулах</label>
 
         <fieldset class="ad-fieldset">
           <legend>Найрлага</legend>
@@ -369,11 +434,18 @@
         <div class="ad-form-actions ad-btn-row">
           <button type="submit" class="ad-btn ad-btn--primary">Хадгалах</button>
           <button type="button" class="ad-btn" id="cancelVariantEdit">Болих</button>
+          ${variant ? `<button type="button" class="ad-btn ad-btn--danger ad-push-right" id="deleteVariantBtn">Энэ төрлийг устгах</button>` : ""}
         </div>
       </form>
     `);
 
     document.getElementById("cancelVariantEdit").addEventListener("click", closeEditor);
+    if (variant) {
+      document.getElementById("deleteVariantBtn").addEventListener("click", () => {
+        const product = productsCache.find((p) => Number(p.id) === Number(productId));
+        openDeleteDialog(product, variant);
+      });
+    }
     document.getElementById("addIngredientRow").addEventListener("click", () => {
       document.getElementById("ingredientRows").insertAdjacentHTML("beforeend", ingredientRow(null));
       const rows = document.querySelectorAll("#ingredientRows .ing-name");

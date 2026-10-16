@@ -4,8 +4,10 @@
  * options (төрөл), prices, stock and ingredients.
  *
  * The page gives the frame; admin/js/products.js (moved from the old one-page
- * admin.js) fills it from admin/products-admin.php and opens the editors in a
- * dialog. Saves are logged (product_save / variant_save) with who did them.
+ * admin.js) fills it from admin/products-admin.php — one card per product,
+ * its options as rows — and opens the editors and the delete confirmation in
+ * a dialog. Saves and deletes are logged (product_save / variant_save /
+ * product_delete / variant_delete) with who did them.
  */
 
 require dirname(__DIR__) . '/inc/admin-layout.php';
@@ -17,7 +19,7 @@ $me = admin_require($pdo);
 admin_page_start($pdo, $me, [
   'title' => 'Бүтээгдэхүүн',
   'active' => 'products',
-  'sub' => 'Дэлгүүрийн бараа, төрөл, үнэ, нөөц. "Бэлэн" = нөөцөөс захиалгад орсныг хассан тоо.',
+  'sub' => 'Дэлгүүрийн бараа, төрөл, үнэ. «Зарах боломжтой» = нийт нөөцөөс захиалсныг хассан тоо.',
   'actions' => '<button type="button" class="ad-btn ad-btn--primary" id="addProductBtn">+ Бүтээгдэхүүн нэмэх</button>',
 ]);
 ?>

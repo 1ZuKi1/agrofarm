@@ -158,7 +158,10 @@ code that needs them, in order: `orders-schema-v3.sql`, then
 `orders-schema-v6.sql` (staff accounts, the activity log, notes on quote
 requests), then `orders-schema-v7.sql` (which address placed an order, for the
 limit on unpaid orders: 4 open at once, 20 an hour per address — until it is
-run the checkout works but is not limited). Each is run once. Until v6 is run,
+run the checkout works but is not limited), then `orders-schema-v8.sql` (a
+product or option that has been sold can be deleted from the admin; past
+orders keep their own copy of its name and price — until it is run, only
+never-ordered items can be deleted). Each is run once. Until v6 is run,
 `/admin/login` says which file is missing; the public site works either way. Secrets live in `config.php`, outside `public_html`.
 
 ## Browser Support

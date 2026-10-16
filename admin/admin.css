@@ -356,3 +356,53 @@ body.ad-noscroll { overflow: hidden; }
 .ad-share { display: block; height: 8px; border-radius: 4px; background: var(--sunk); overflow: hidden; }
 .ad-share span { display: block; height: 100%; border-radius: 4px; background: var(--chart); }
 @media (max-width: 760px) { .ad-best__bar { width: auto; padding-top: 6px !important; } }
+
+/* ---- Бүтээгдэхүүн: one card per product, its options (төрөл) as rows ----
+   The card names the product and its section; each row says what a buyer
+   sees (price) and what can still be sold. Only exceptions get a label
+   (Дууссан, N үлдсэн, Нуугдсан). */
+.ad-prod { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; }
+.ad-prod__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; padding: 16px 18px 12px; }
+.ad-prod__title { min-width: 0; }
+.ad-prod__title h2 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0; font-size: 1.12rem; }
+.ad-prod__meta { margin: 3px 0 0; font-size: .86rem; color: var(--ink-3); }
+.ad-prod__table { border-top: 1px solid var(--line); table-layout: fixed; }
+/* Same column widths in every card, so prices and counts line up down the page. */
+.ad-prod__table th:nth-child(1) { width: 38%; }
+.ad-prod__table th:nth-child(2) { width: 17%; }
+.ad-prod__table th:nth-child(3) { width: 23%; }
+.ad-prod__table th:nth-child(4) { width: 12%; }
+.ad-prod__table th:nth-child(5) { width: 10%; }
+.ad-prod__table thead th { background: none; padding-top: 8px; padding-bottom: 6px; font-size: .8rem; font-weight: 500; color: var(--ink-3); }
+.ad-prod__table tr:last-child th { border-bottom: 0; }
+.ad-prod__table th, .ad-prod__table td { vertical-align: middle; }
+.ad-prod__table tbody th { font-weight: 400; font-size: .94rem; color: var(--ink); background: none; text-align: left; white-space: normal; }
+.ad-prod__opt { font-weight: 600; }
+.ad-prod__table th:first-child, .ad-prod__table td:first-child { padding-left: 18px; }
+.ad-prod__table th:last-child, .ad-prod__table td:last-child { padding-right: 18px; }
+.ad-prod__none { margin: 0; padding: 14px 18px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: .9rem; }
+.ad-prod__foot { padding: 10px 18px 14px; border-top: 1px solid var(--line); }
+/* Phones: each option is a small block — name, then price and what's left side by side. */
+@media (max-width: 600px) {
+  .ad-prod__table thead { display: none; }
+  .ad-prod__table, .ad-prod__table tbody { display: block; }
+  .ad-prod__table tr { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .ad-prod__table tr:last-child { border-bottom: 0; }
+  .ad-prod__table th, .ad-prod__table td, .ad-prod__table td.ad-r { display: block; padding: 0 !important; border: 0; text-align: left; width: auto !important; }
+  .ad-prod__table td:last-child { text-align: right; }
+  .ad-prod__table tbody th { grid-column: 1; }
+  .ad-prod__table td:nth-child(2) { grid-column: 1; }
+  .ad-prod__table td:nth-child(3) { grid-column: 1; }
+  .ad-prod__table td:nth-child(4):empty { display: none; }
+  .ad-prod__table td:last-child { grid-column: 2; grid-row: 1 / span 3; }
+  .ad-prod__table .ad-cardlabel { display: inline; color: var(--ink-3); }
+}
+
+/* Delete: a quiet red button where it is offered, a solid one only in the
+   confirmation, and "Болих" next to it with the focus. */
+.ad-btn--danger-solid { --bg: var(--bad); --fg: #fff; --bd: var(--bad); }
+.ad-btn--danger-solid:hover { --bg: #861c14; --bd: #861c14; }
+.ad-push-right { margin-left: auto; }
+.ad-confirm h2 { font-size: 1.2rem; }
+.ad-confirm__list { margin: 0 0 14px; padding-left: 1.2em; }
+.ad-confirm__list li { margin-bottom: 6px; }

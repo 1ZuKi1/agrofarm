@@ -39,6 +39,12 @@ if ($action === 'list') {
      JOIN orders o ON o.id = oi.order_id
      WHERE oi.variant_id = ? AND o.status IN ('pending','paid','fulfilled')"
   );
+  // Orders not finished yet (awaiting payment, or paid and not delivered):
+  // an option in one of these can't be deleted (see delete_variant).
+  $openStmt = $pdo->prepare(
+    "SELECT COUNT(DISTINCT o.id) FROM order_items oi JOIN orders o ON o.id = oi.order_id
+     WHERE oi.variant_id = ? AND o.status IN ('pending','paid')"
+  );
 
   foreach ($products as &$product) {
     $variantStmt->execute([$product['id']]);
@@ -49,6 +55,8 @@ if ($action === 'list') {
       $reservedStmt->execute([$variant['id']]);
       $reserved = (int)$reservedStmt->fetchColumn();
       $variant['available'] = max(0, (int)$variant['stock'] - $reserved);
+      $openStmt->execute([$variant['id']]);
+      $variant['open_orders'] = (int)$openStmt->fetchColumn();
     }
     unset($variant);
     $product['variants'] = $variants;
@@ -299,19 +307,62 @@ if ($action === 'save_ingredients') {
   exit;
 }
 
-if ($action === 'delete_variant') {
+/**
+ * Orders not finished yet that contain these options. Deleting is refused
+ * while there are any: staff still have to deliver them, or the buyer may
+ * still pay. Returns the order numbers ("#000128").
+ */
+function open_orders_for(PDO $pdo, array $variantIds): array {
+  if (!$variantIds) return [];
+  $in = implode(',', array_map('intval', $variantIds));
+  $ids = $pdo->query("SELECT DISTINCT o.id FROM order_items oi JOIN orders o ON o.id = oi.order_id
+                      WHERE oi.variant_id IN ($in) AND o.status IN ('pending','paid') ORDER BY o.id")->fetchAll(PDO::FETCH_COLUMN);
+  return array_map(function ($id) { return '#' . str_pad((string)$id, 6, '0', STR_PAD_LEFT); }, $ids);
+}
+
+/**
+ * Delete a product (with all its options) or one option. Past orders keep
+ * their own copy of the name and price, so they and the Борлуулалт report
+ * read the same afterwards. Until sql/orders-schema-v8.sql has been run, an
+ * option that was ever ordered can't be deleted (the database refuses).
+ */
+if ($action === 'delete_variant' || $action === 'delete_product') {
   $id = (int)($_POST['id'] ?? 0);
-  if ($id <= 0) {
-    http_response_code(400);
-    echo json_encode(['error' => 'id заавал шаардлагатай']);
+  $isProduct = $action === 'delete_product';
+  $row = $pdo->prepare($isProduct ? 'SELECT id, name_mn FROM products WHERE id = ?'
+                                  : 'SELECT v.id, v.name_mn, p.name_mn AS product FROM product_variants v JOIN products p ON p.id = v.product_id WHERE v.id = ?');
+  $row->execute([$id]);
+  $item = $row->fetch();
+  if (!$item) {
+    http_response_code(404);
+    echo json_encode(['error' => $isProduct ? 'Бүтээгдэхүүн олдсонгүй' : 'Төрөл олдсонгүй']);
     exit;
   }
+  if ($isProduct) {
+    $v = $pdo->prepare('SELECT id FROM product_variants WHERE product_id = ?');
+    $v->execute([$id]);
+    $variantIds = $v->fetchAll(PDO::FETCH_COLUMN);
+  } else {
+    $variantIds = [$id];
+  }
+  $open = open_orders_for($pdo, $variantIds);
+  if ($open) {
+    http_response_code(409);
+    echo json_encode(['error' => 'Дуусаагүй захиалгад байгаа тул одоо устгах боломжгүй: ' . implode(', ', $open)
+      . '. Захиалгыг хүргэсний (эсвэл цуцалсны) дараа устгана уу.']);
+    exit;
+  }
+  $name = $isProduct ? $item['name_mn'] : $item['product'] . ' — ' . $item['name_mn'];
   try {
-    $pdo->prepare('DELETE FROM product_variants WHERE id = ?')->execute([$id]);
+    $pdo->prepare($isProduct ? 'DELETE FROM products WHERE id = ?' : 'DELETE FROM product_variants WHERE id = ?')->execute([$id]);
+    admin_log($pdo, $me, $isProduct ? 'product_delete' : 'variant_delete', $isProduct ? 'product' : 'variant', $id, $name);
     echo json_encode(['ok' => true]);
   } catch (PDOException $e) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Устгаж чадсангүй — энэ төрөлд захиалга байна. Оронд нь идэвхгүй болгоно уу.']);
+    error_log('products-admin ' . $action . ': ' . $e->getMessage());
+    http_response_code(409);
+    echo json_encode(['error' => strpos($e->getMessage(), 'foreign key') !== false
+      ? 'Өмнө нь зарагдсан тул устгаж чадсангүй. phpMyAdmin дээр sql/orders-schema-v8.sql-ийг нэг удаа ажиллуулсны дараа устгах боломжтой. Түр зуур: «Засах» → «Дэлгүүрт харуулах»-ыг унтраавал дэлгүүрээс нуугдана.'
+      : 'Устгаж чадсангүй']);
   }
   exit;
 }
