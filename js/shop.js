@@ -118,11 +118,15 @@
 
   /* ---------- /shop rows ----------
      A big category is one row that scrolls sideways (shop.php). The arrows
-     move it by one screen of cards and show only when there is more to see. */
+     move it by one screen of cards and show only when there is more to see.
+     The category row under the heading works the same way, with its arrows
+     beside the heading; is-clipped-start/-end fade the edge that has more. */
   function initRows() {
-    document.querySelectorAll(".eq-section").forEach((section) => {
-      const row = section.querySelector("[data-row]");
-      const btns = section.querySelectorAll("[data-row-step]");
+    const groups = [...document.querySelectorAll(".eq-section")]
+      .map((section) => [section.querySelector("[data-row]"), section.querySelectorAll("[data-row-step]")]);
+    const cats = document.querySelector(".shop-cats");
+    if (cats) groups.push([cats, document.querySelectorAll(".shop-head [data-row-step]")]);
+    groups.forEach(([row, btns]) => {
       if (!row || !btns.length) return;
       const update = () => {
         const max = row.scrollWidth - row.clientWidth;
@@ -131,6 +135,8 @@
           b.hidden = !scrolls;
           b.disabled = Number(b.dataset.rowStep) < 0 ? row.scrollLeft <= 6 : row.scrollLeft >= max - 6;
         });
+        row.classList.toggle("is-clipped-start", scrolls && row.scrollLeft > 6);
+        row.classList.toggle("is-clipped-end", scrolls && row.scrollLeft < max - 6);
       };
       btns.forEach((b) => b.addEventListener("click", () => {
         row.scrollBy({ left: Number(b.dataset.rowStep) * row.clientWidth * 0.9 });

@@ -20,9 +20,9 @@ try {
 if (!$cat) {
   http_response_code(404);
   catalog_head('Ангилал олдсонгүй — Нүүдэлчин Агро Ферм',
-    'Хүссэн ангилал олдсонгүй.', '/shop/equipment');
+    'Хүссэн ангилал олдсонгүй.', '/shop');
   echo '<section class="eq-wrap"><h1 class="eq-404">Ангилал олдсонгүй</h1>'
-     . '<p><a class="btn" href="/shop/equipment">Каталог руу буцах</a></p></section>';
+     . '<p><a class="btn" href="/shop">Дэлгүүр рүү буцах</a></p></section>';
   catalog_foot();
   exit;
 }
@@ -46,7 +46,6 @@ catalog_head(
   <?php catalog_crumbs([
     ['Нүүр', '/'],
     ['Дэлгүүр', '/shop'],
-    ['Тоног төхөөрөмж', '/shop/equipment'],
     [$cat['name'], null],
   ]); ?>
 

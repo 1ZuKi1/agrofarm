@@ -415,7 +415,7 @@ INSERT INTO equipment_products
   (category_id, slug, sku, name, intro, features, spec_table, meta_title, meta_description, sort_order)
 VALUES (
   (SELECT id FROM categories WHERE slug = 'tuurain-archilgaa'),
-  'tuurain-vann', 'NAF-TA-127', 'Үнээний туурайн ванн',
+  'tuurain-vann-3-hemjee', 'NAF-TA-127', 'Үнээний туурайн ванн',
   'Саалийн танхимын гарц дээр тавьж үнээг туурайн уусмалаар дамжуулах ванн. Импортын полиэтилен, удаан эдэлгээтэй. Гурван хэмжээтэй.',
   '["Импортын полиэтилен", "1230–2800 мм урттай", "Хос ванн хувилбартай"]',
   '{"columns": ["Код", "Хэмжээ (У×Ө×Ө)", "Жин"], "rows": [["NAF-TA-127-01", "1850×800×170 мм", "13.5 кг"], ["NAF-TA-127-02", "2800×900×190 мм", "20 кг"], ["NAF-TA-127-03", "1230×870×180 мм, хос", "14.2 кг"]]}',

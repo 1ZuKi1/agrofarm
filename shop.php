@@ -49,8 +49,16 @@ page_start([
 ?>
 
 <section class="shop shop-page">
-  <div class="shop-head">
+  <div class="shop-head<?= $sections ? ' shop-head--rows' : '' ?>">
     <h1>Дэлгүүр</h1>
+    <?php if ($sections): // arrows for the category row; shown only when it really scrolls (js/shop.js) ?>
+    <div class="eq-section__tools">
+      <button type="button" class="eq-row__btn" data-row-step="-1" aria-label="Өмнөх ангиллууд" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button>
+      <button type="button" class="eq-row__btn" data-row-step="1" aria-label="Дараагийн ангиллууд" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+    </div>
+    <?php endif; ?>
   </div>
 
 <?php if ($sections === null): ?>

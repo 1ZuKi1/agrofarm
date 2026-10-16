@@ -29,9 +29,9 @@ try {
 if (!$p) {
   http_response_code(404);
   catalog_head('Бүтээгдэхүүн олдсонгүй — Нүүдэлчин Агро Ферм',
-    'Хүссэн бүтээгдэхүүн олдсонгүй.', '/shop/equipment');
+    'Хүссэн бүтээгдэхүүн олдсонгүй.', '/shop');
   echo '<section class="eq-wrap"><h1 class="eq-404">Бүтээгдэхүүн олдсонгүй</h1>'
-     . '<p><a class="btn" href="/shop/equipment">Каталог руу буцах</a></p></section>';
+     . '<p><a class="btn" href="/shop">Дэлгүүр рүү буцах</a></p></section>';
   catalog_foot();
   exit;
 }
@@ -69,7 +69,6 @@ catalog_head(
   <?php catalog_crumbs([
     ['Нүүр', '/'],
     ['Дэлгүүр', '/shop'],
-    ['Тоног төхөөрөмж', '/shop/equipment'],
     [$p['cat_name'], '/shop/equipment/' . $p['cat_slug']],
     [$p['name'], null],
   ]); ?>
