@@ -74,7 +74,7 @@ RewriteRule ^shop/?$ shop.php [L]
 # Shop — one address scheme for everything we sell:
 #   /shop                                    storefront
 #   /shop/<product>                          a priced product
-#   /shop/equipment                          equipment catalogue
+#   /shop/equipment                          -> /shop (old landing page)
 #   /shop/equipment/<category>               one category
 #   /shop/equipment/<category>/<product>     one equipment product
 # The catalogue used to live at /equipment/…; those addresses redirect.
@@ -82,7 +82,8 @@ RewriteRule ^shop/?$ shop.php [L]
 # to a normal 404 rather than reaching PHP.
 # ------------------------------------------------------------------
 RewriteRule ^equipment(/.*)?$ /shop/equipment$1 [R=301,L]
-RewriteRule ^shop/equipment/?$ equipment.php [L]
+# The separate catalogue landing page is retired: everything is on /shop.
+RewriteRule ^shop/equipment/?$ /shop [R=301,L]
 RewriteRule ^shop/equipment/([a-z0-9-]+)/?$ category.php?cat=$1 [QSA,L]
 RewriteRule ^shop/equipment/([a-z0-9-]+)/([a-z0-9-]+)/?$ product.php?cat=$1&slug=$2 [QSA,L]
 # The checkout page comes before the product rule below, so "checkout" can
