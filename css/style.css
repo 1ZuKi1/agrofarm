@@ -1564,7 +1564,10 @@ html[lang="zh"] .green__lede{ max-width:42rem; margin-left:auto; margin-right:au
 @media (prefers-reduced-motion:reduce){ .eq-row{ scroll-behavior:auto; } }
 
 /* Cards: the basket button is a round icon; the quote line is centred. */
-.eq-card__foot{ min-height:3.6rem; }
+/* Every bottom line is as tall as the round basket button (42px + padding +
+   border), so a card with "Сонгох" or "Үнийн санал авах" lines up with one
+   that has the basket button. */
+.eq-card__foot{ min-height:calc(42px + 1.6rem + 1px); }
 .eq-card--quote .eq-card__foot{ justify-content:center; }
 .eq-card__price--quote{ text-align:center; white-space:nowrap; }
 .eq-card__add{ position:relative; display:grid; place-items:center; width:42px; height:42px; padding:0;
@@ -1575,7 +1578,7 @@ html[lang="zh"] .green__lede{ max-width:42rem; margin-left:auto; margin-right:au
 .eq-card__add.is-added .eq-card__done{ opacity:1; transform:none; }
 .eq-card__price{ font-size:1.02rem; }
 @media (max-width:520px){
-  .eq-card__foot{ flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.4rem; }
+  .eq-card__foot{ flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.4rem; min-height:3.6rem; }
   .eq-card__choose{ flex:1 0 100%; }
   .eq-card--quote .eq-card__foot{ justify-content:center; }
   .eq-card__add{ width:38px; height:38px; padding:0; }
@@ -1708,3 +1711,4 @@ overflow:hidden; }
   .eq-card__add{ width:44px; height:44px; }
   .eq-card__choose{ min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
 }
+@media (pointer:coarse) and (min-width:521px){ .eq-card__foot{ min-height:calc(44px + 1.6rem + 1px); } }
