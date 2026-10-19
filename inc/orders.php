@@ -124,7 +124,7 @@ function order_notify_paid(PDO $pdo, int $orderId, bool $late = false): void {
     $lines[] = '';
     $lines[] = 'Нийт:     ' . number_format((int)$o['total']) . '₮ (QPay-ээр төлсөн)';
     $lines[] = '';
-    $lines[] = ($pickup ? 'Барааг өгсний' : 'Хүргэсний') . ' дараа админд "Хүргэсэн" гэж тэмдэглэнэ үү: https://agrofarm.mn/admin/';
+    $lines[] = ($pickup ? 'Барааг өгсний' : 'Хүргэсний') . ' дараа админд "' . ($pickup ? 'Ирж авсан' : 'Хүргэсэн') . '" гэж тэмдэглэнэ үү: https://agrofarm.mn/admin/';
 
     $subject = "Шинэ захиалга $no — $job — " . number_format((int)$o['total']) . '₮' . ($late ? ' (хугацаа хэтэрсэн)' : '');
     $sent = @mail(
@@ -242,7 +242,7 @@ function order_state_message(PDO $pdo, array $order, string $tried): string {
 
 /** paid → fulfilled. Returns ['ok' => bool, 'message' => string]. */
 function order_fulfill(PDO $pdo, int $id, array $me): array {
-  $st = $pdo->prepare('SELECT id, status, fulfilled_at FROM orders WHERE id = ?');
+  $st = $pdo->prepare('SELECT id, status, fulfillment, fulfilled_at FROM orders WHERE id = ?');
   $st->execute([$id]);
   $order = $st->fetch();
   if (!$order) return ['ok' => false, 'message' => 'Захиалга олдсонгүй'];
@@ -254,7 +254,7 @@ function order_fulfill(PDO $pdo, int $id, array $me): array {
     return ['ok' => false, 'message' => order_state_message($pdo, $st->fetch() ?: $order, 'fulfill')];
   }
   admin_log($pdo, $me, 'order_fulfill', 'order', $id);
-  return ['ok' => true, 'message' => order_number($id) . ' — хүргэсэн гэж тэмдэглэлээ.'];
+  return ['ok' => true, 'message' => order_number($id) . ' — ' . ($order['fulfillment'] === 'pickup' ? 'ирж авсан' : 'хүргэсэн') . ' гэж тэмдэглэлээ.'];
 }
 
 /**

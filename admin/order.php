@@ -40,7 +40,7 @@ if (!$o) {
 
 $now = fulfillment_now();
 $no = order_number((int)$o['id']);
-[$statusLabel, $statusTag] = admin_order_status($o['status']);
+[$statusLabel, $statusTag] = admin_order_status($o['status'], $o['fulfillment']);
 $pickup = $o['fulfillment'] === 'pickup';
 $tel = preg_replace('/[^\d+]/', '', $o['buyer_phone']);
 $canFulfil = $o['status'] === 'paid';
@@ -78,10 +78,10 @@ admin_page_start($pdo, $me, [
       <div class="ad-btn-row" style="margin-top:16px">
         <?php if ($canFulfil): ?>
         <form class="ad-inline" method="post" action="/admin/orders/<?= (int)$o['id'] ?>"
-              data-confirm="<?= ce($no . ': ' . ($pickup ? 'барааг өгсөн' : 'хүргэсэн') . ' гэж тэмдэглэх үү?') ?>">
+              data-confirm="<?= ce($no . ': ' . ($pickup ? 'ирж авсан' : 'хүргэсэн') . ' гэж тэмдэглэх үү?') ?>">
           <input type="hidden" name="csrf" value="<?= ce(admin_csrf()) ?>">
           <input type="hidden" name="action" value="fulfill">
-          <button type="submit" class="ad-btn ad-btn--primary"><?= ad_icon('check') ?> Хүргэсэн</button>
+          <button type="submit" class="ad-btn ad-btn--primary"><?= ad_icon('check') ?> <?= $pickup ? 'Ирж авсан' : 'Хүргэсэн' ?></button>
         </form>
         <?php endif; ?>
         <?php if ($canCancel): ?>

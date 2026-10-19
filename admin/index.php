@@ -55,11 +55,11 @@ function home_job(array $o, DateTimeImmutable $now, bool $showDay): void {
       <?php if ($o['buyer_note']): ?><br><em><?= ce($o['buyer_note']) ?></em><?php endif; ?>
     </div>
     <form class="ad-job__act" method="post" action="/admin/orders/<?= (int)$o['id'] ?>"
-          data-confirm="<?= ce($no . ' — ' . $o['buyer_name'] . ': ' . ($pickup ? 'барааг өгсөн' : 'хүргэсэн') . ' гэж тэмдэглэх үү?') ?>">
+          data-confirm="<?= ce($no . ' — ' . $o['buyer_name'] . ': ' . ($pickup ? 'ирж авсан' : 'хүргэсэн') . ' гэж тэмдэглэх үү?') ?>">
       <input type="hidden" name="csrf" value="<?= ce(admin_csrf()) ?>">
       <input type="hidden" name="action" value="fulfill">
       <input type="hidden" name="back" value="/admin/">
-      <button type="submit" class="ad-btn ad-btn--primary ad-btn--sm"><?= ad_icon('check') ?> Хүргэсэн</button>
+      <button type="submit" class="ad-btn ad-btn--primary ad-btn--sm"><?= ad_icon('check') ?> <?= $pickup ? 'Ирж авсан' : 'Хүргэсэн' ?></button>
     </form>
   </li>
   <?php

@@ -29,12 +29,13 @@ const ADMIN_ORDER_TABS = [
 /** Day filter: key → label. */
 const ADMIN_ORDER_DAYS = ['' => 'Бүх өдөр', 'today' => 'Өнөөдөр', 'tomorrow' => 'Маргааш', 'week' => 'Ойрын 7 хоног'];
 
-/** Status → [label, tag modifier]. Colour is never the only signal. */
-function admin_order_status(string $status): array {
+/** Status → [label, tag modifier]. Colour is never the only signal.
+ *  A fulfilled pick-up reads "Ирж авсан", not "Хүргэсэн". */
+function admin_order_status(string $status, string $fulfillment = 'delivery'): array {
   $map = [
     'pending'   => ['Төлбөр хүлээгдэж буй', 'info'],
     'paid'      => ['Төлсөн — хүргэх', 'warn'],
-    'fulfilled' => ['Хүргэсэн', 'ok'],
+    'fulfilled' => [$fulfillment === 'pickup' ? 'Ирж авсан' : 'Хүргэсэн', 'ok'],
     'cancelled' => ['Цуцлагдсан', 'mute'],
     'expired'   => ['Хугацаа дууссан', 'mute'],
   ];
@@ -269,16 +270,17 @@ function admin_order(PDO $pdo, int $id): ?array {
   $events = [['at' => $o['created_at'], 'text' => 'Захиалга үүссэн']];
   if ($o['paid_at']) $events[] = ['at' => $o['paid_at'], 'text' => 'Төлсөн (QPay)'];
   $loggedFulfil = false;
+  $doneText = $o['fulfillment'] === 'pickup' ? 'Ирж авсан' : 'Хүргэсэн';
   foreach (array_reverse(admin_history($pdo, 'order', $id)) as $h) {
     if ($h['action'] === 'order_fulfill') {
       $loggedFulfil = true;
-      $events[] = ['at' => $h['created_at'], 'text' => 'Хүргэсэн — ' . $h['user_name']];
+      $events[] = ['at' => $h['created_at'], 'text' => $doneText . ' — ' . $h['user_name']];
     } elseif ($h['action'] === 'order_cancel') {
       $events[] = ['at' => $h['created_at'], 'text' => 'Цуцалсан — ' . $h['user_name'] . ($h['detail'] === 'was_paid' ? ' (төлбөрийг гараар буцаана)' : '')];
     }
   }
   if ($o['status'] === 'fulfilled' && !$loggedFulfil && $o['fulfilled_at']) {
-    $events[] = ['at' => $o['fulfilled_at'], 'text' => 'Хүргэсэн'];
+    $events[] = ['at' => $o['fulfilled_at'], 'text' => $doneText];
   }
   if ($o['status'] === 'expired') {
     $events[] = ['at' => $o['expires_at'], 'text' => 'Хугацаа дууссан — төлбөр төлөгдөөгүй'];

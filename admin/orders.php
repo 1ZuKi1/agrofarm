@@ -77,7 +77,7 @@ admin_page_start($pdo, $me, [
     </tr></thead>
     <tbody>
       <?php foreach ($list['rows'] as $o):
-        [$label, $tag] = admin_order_status($o['status']);
+        [$label, $tag] = admin_order_status($o['status'], $o['fulfillment']);
         $tel = preg_replace('/[^\d+]/', '', $o['buyer_phone']); ?>
       <tr data-order="<?= (int)$o['id'] ?>">
         <td><a class="ad-row-link ad-num" href="/admin/orders/<?= (int)$o['id'] ?>"><?= ce(order_number((int)$o['id'])) ?></a>
