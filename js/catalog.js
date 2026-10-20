@@ -42,16 +42,21 @@
     box.className = "cart-drawer__quotes";
     box.innerHTML = `
       <p class="cart-drawer__group">Үнийн санал авах бараа</p>
+      <p class="cart-drawer__group-note">Үнэ тогтоогдоогүй — хүсэлтээ илгээвэл бид үнийн санал өгнө.</p>
       ${items.map((i) => `
       <div class="cart-drawer__item">
-        <div>
-          <p class="cart-drawer__item-name">${esc(i.name)}</p>
-          <p class="cart-drawer__sku">${esc(i.sku)}</p>
+        <div class="cart-drawer__item-name">${esc(i.name)} <span class="cart-drawer__muted">(${esc(i.sku)})</span></div>
+        <div class="cart-drawer__item-row">
+          <div class="sp__qty">
+            <button type="button" data-step="-1" aria-label="Нэгээр хасах"${(Number(i.quantity) || 1) <= 1 ? " disabled" : ""}>−</button>
+            <input type="number" class="cart-drawer__qty" min="1" max="9999" step="1"
+                   value="${Number(i.quantity) || 1}" data-sku="${esc(i.sku)}" aria-label="Тоо ширхэг">
+            <button type="button" data-step="1" aria-label="Нэгээр нэмэх"${(Number(i.quantity) || 1) >= 9999 ? " disabled" : ""}>+</button>
+          </div>
+          <span class="cart-drawer__line-total cart-drawer__line-total--quote">Үнийн санал авах</span>
+          <button type="button" class="cart-drawer__remove" data-sku="${esc(i.sku)}"
+                  aria-label="Хасах">✕</button>
         </div>
-        <input type="number" class="cart-drawer__qty" min="1" max="9999"
-               value="${Number(i.quantity) || 1}" data-sku="${esc(i.sku)}" aria-label="Тоо ширхэг">
-        <button type="button" class="cart-drawer__remove" data-sku="${esc(i.sku)}"
-                aria-label="Хасах">✕</button>
       </div>`).join("")}
       <form class="eq-form eq-form--drawer" method="post" action="/api/inquiry-create.php">
         <input type="hidden" name="items" class="inquiry-payload">
@@ -70,6 +75,13 @@
       input.addEventListener("change", () => {
         const q = Math.max(1, Math.min(9999, parseInt(input.value, 10) || 1));
         write(read().map((i) => (i.sku === input.dataset.sku ? { ...i, quantity: q } : i)));
+      });
+    });
+    box.querySelectorAll(".cart-drawer__item [data-step]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const input = btn.parentElement.querySelector("input");
+        input.value = Number(input.value) + Number(btn.dataset.step);
+        input.dispatchEvent(new Event("change"));
       });
     });
     box.querySelectorAll(".cart-drawer__remove").forEach((btn) => {
@@ -133,6 +145,7 @@
       missing: ["Нэр, утасны дугаараа бөглөнө үү.", "is-err"],
       bademail: ["И-мэйл хаяг буруу байна.", "is-err"],
       empty: ["Жагсаалт хоосон байна.", "is-err"],
+      toomany: ["Хэт олон хүсэлт илгээлээ. Түр хүлээгээд дахин оролдоно уу, эсвэл бидэнтэй утсаар холбогдоно уу.", "is-err"],
       error: ["Түр зуурын алдаа гарлаа. Дахин оролдоно уу.", "is-err"],
     };
     const [text, cls] = messages[status] || messages.error;

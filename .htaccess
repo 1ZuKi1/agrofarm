@@ -26,6 +26,11 @@ DirectoryIndex index.php index.html
 # are included by pages, never requested directly.
 RewriteRule ^(inc|lang)(/|$) - [F,L]
 
+# img/news/ and img/products/ hold files staff upload. They are checked to be
+# real images and named by the server, but as a second lock nothing in them is
+# ever run as a script, whatever it is called.
+RewriteRule ^img/(news|products)/.*\.(php[0-9]?|phtml|phar|pl|py|cgi|sh)$ - [F,L]
+
 # ------------------------------------------------------------------
 # Files that moved into folders (2026-10 tidy-up). Their old addresses keep
 # working — a page cached in someone's browser, a half-finished checkout,

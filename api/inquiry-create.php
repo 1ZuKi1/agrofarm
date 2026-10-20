@@ -18,6 +18,21 @@ require dirname(__DIR__) . '/inc/db.php';
 const NAF_INQUIRY_TO = 'info@agrofarm.mn';
 const NAF_INQUIRY_FROM = 'no-reply@agrofarm.mn';   // must be on our own domain for SPF
 
+// Per visitor address (REMOTE_ADDR). Many phones share one address on Mongolian
+// mobile networks, so this is generous: a buyer never meets it, a script does.
+const NAF_INQUIRY_MAX_PER_HOUR_PER_IP = 10;
+
+/** Whether sql/orders-schema-v9.sql has been run (the limit is skipped until it has). */
+function inquiries_has_client_ip(PDO $pdo): bool {
+  return (bool)$pdo->query("SHOW COLUMNS FROM inquiries LIKE 'client_ip'")->fetch();
+}
+
+function inquiries_ip_limited(PDO $pdo, string $ip): bool {
+  $st = $pdo->prepare('SELECT COUNT(*) FROM inquiries WHERE client_ip = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)');
+  $st->execute([$ip]);
+  return (int)$st->fetchColumn() >= NAF_INQUIRY_MAX_PER_HOUR_PER_IP;
+}
+
 function back_with(string $status, ?string $token = null): void {
   $ref = $_SERVER['HTTP_REFERER'] ?? '/shop';
   // Only ever redirect within this site.
@@ -62,6 +77,14 @@ $posted = array_slice($posted, 0, 50);
 try {
   $pdo = naf_db();
 
+  // Too many requests from this address in the last hour: nothing is stored
+  // or emailed.
+  $clientIp = substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45);
+  $limitOn = $clientIp !== '' && inquiries_has_client_ip($pdo);
+  if ($limitOn && inquiries_ip_limited($pdo, $clientIp)) {
+    back_with('toomany');
+  }
+
   // Resolve every posted SKU against the catalogue. Unknown SKUs are dropped.
   $wanted = [];
   foreach ($posted as $row) {
@@ -87,6 +110,7 @@ try {
   );
   $ins->execute([$token, $name, $phone, ($email ?: null), ($company ?: null), ($message ?: null)]);
   $inquiryId = (int)$pdo->lastInsertId();
+  if ($limitOn) $pdo->prepare('UPDATE inquiries SET client_ip = ? WHERE id = ?')->execute([$clientIp, $inquiryId]);
 
   $insItem = $pdo->prepare(
     'INSERT INTO inquiry_items (inquiry_id, product_id, product_name_snapshot,

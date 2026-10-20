@@ -409,7 +409,7 @@
     const title = post.title?.[lang] || post.title?.en || "";
     const body = post.body?.[lang] || post.body?.en || "";
     const date = post.date ? new Date(post.date).toLocaleDateString(lang === "mn" ? "mn-MN" : "en-US", { year: "numeric", month: "long", day: "numeric" }) : "";
-    const imgHtml = post.image ? `<img src="${post.image}" alt="" class="news__post-img" loading="lazy">` : "";
+    const imgHtml = post.image ? `<img src="${escHtml(post.image).replace(/"/g, "&quot;")}" alt="" class="news__post-img" loading="lazy">` : "";
 
     return `
       <article class="news__post">
@@ -428,7 +428,7 @@
     const body = post.body?.[lang] || post.body?.en || "";
     const excerpt = body.length > 160 ? body.slice(0, 160).trimEnd() + "…" : body;
     const date = post.date ? new Date(post.date).toLocaleDateString(lang === "mn" ? "mn-MN" : lang === "zh" ? "zh-CN" : "en-US", { year: "numeric", month: "long", day: "numeric" }) : "";
-    const imgHtml = post.image ? `<img src="${post.image}" alt="" class="news__card-img" loading="lazy">` : "";
+    const imgHtml = post.image ? `<img src="${escHtml(post.image).replace(/"/g, "&quot;")}" alt="" class="news__card-img" loading="lazy">` : "";
     return `
       <a class="news__card" href="/news">
         ${imgHtml}
