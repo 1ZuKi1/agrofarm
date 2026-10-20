@@ -119,7 +119,7 @@ $iconShop = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-w
         </summary>
         <ul class="checkout-summary__lines" id="summaryLines"></ul>
         <dl class="checkout-summary__totals">
-          <div><dt>Бүтээгдэхүүн</dt><dd id="sumSubtotal"></dd></div>
+          <div id="sumSubtotalRow" hidden><dt>Бүтээгдэхүүн</dt><dd id="sumSubtotal"></dd></div>
           <div class="checkout-summary__fee" id="sumFeeRow" hidden><dt>Хүргэлт</dt><dd id="sumFee"></dd></div>
           <div class="checkout-summary__total"><dt>Нийт</dt><dd id="sumTotal"></dd></div>
         </dl>

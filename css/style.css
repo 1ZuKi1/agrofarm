@@ -68,6 +68,10 @@ h1,h2,h3{ font-family:var(--serif); font-weight:600; line-height:1.1; }
    (<em>) is set apart by colour only, never italic. */
 h2{ font-size:clamp(2.6rem, 5.6vw, 4.7rem); letter-spacing:-.022em; line-height:1.14; }
 h1 em, h2 em{ font-style:normal; color:var(--green); }
+/* A heading stays on one line when it fits. When it doesn't, the green half
+   moves down whole — never a word or a character of it on its own (the Chinese
+   headings used to break mid-phrase on phones). */
+h2 em{ display:inline-block; }
 section{ position:relative; }
 
 /* Reduced motion: kill transforms/animations, keep content visible */
@@ -261,6 +265,9 @@ main:focus{ outline:none; box-shadow:none; }
    ABOUT
    ========================================================================== */
 .about{ padding:var(--section-y) var(--gutter); }
+/* Straight after the numbers, on the same cream: the band's own bottom padding
+   is gap enough. */
+.stats + .about{ padding-top:clamp(.5rem, 2vw, 1.5rem); }
 .about__grid{
   display:grid; grid-template-columns:1.15fr .85fr; gap:2.4rem 4.5rem;
   max-width:1240px; margin:0 auto; align-items:stretch;
@@ -656,7 +663,10 @@ main:focus{ outline:none; box-shadow:none; }
 @media (max-width: 820px){
   .nav__links{
     position:fixed; inset:0; z-index:-1;
-    flex-direction:column; align-items:center; justify-content:center; gap:2rem;
+    flex-direction:column; align-items:center; justify-content:center; gap:clamp(.4rem, 2.5vh, 2rem);
+    /* Clear of the logo bar; on a short screen it scrolls rather than
+       spilling up under the logo. */
+    padding:5.5rem 1rem 2rem; overflow-y:auto;
     background:var(--cream);
     color:var(--charcoal); font-size:1.4rem;
     /* Same typeface + weight as the desktop nav (--sans, 500) — this used to
@@ -875,11 +885,11 @@ input, textarea, select{ font-size:16px !important; }
    ========================================================================== */
 .shop{ padding:8rem var(--gutter) 6rem; background:var(--cream); min-height:60vh; }
 .shop__head{ text-align:center; max-width:600px; margin:0 auto 3.5rem; padding-top:2rem; }
-.shop__head h1{ font-size:clamp(2.4rem, 5.1vw, 4.1rem); font-family:var(--serif); font-weight:600; line-height:1.12; }
+.shop__head h1{ font-size:clamp(1.5rem, 3vw, 1.9rem); font-family:var(--sans); font-weight:700; line-height:1.2; }
 .shop__head h1 em{ color:var(--green); }
 .shop__empty{
   text-align:center; color:var(--ink-soft);
-  font-family:var(--serif); font-style:italic; font-size:1.15rem;
+  font-family:var(--sans); font-size:1rem;
   padding:2rem 0;
 }
 
@@ -890,7 +900,10 @@ input, textarea, select{ font-size:16px !important; }
 /* ---------- /shop: heading, category buttons, sections (shop.php) ---------- */
 .shop-page{ padding-top:7.5rem; }
 .shop-head{ max-width:var(--shop-max); margin:0 auto 1.4rem; }
-.shop-head h1{ font-size:clamp(2.2rem, 4.4vw, 3.2rem); }
+/* Like the checkout, the shop is a working page, not a landing page: all its
+   headings use the plain bold sans. The serif stays on the home page and news. */
+:is(.shop, .eq-wrap) :is(h1, h2, h3, h4){ font-family:var(--sans); font-weight:700; letter-spacing:0; }
+.shop-head h1{ font-size:clamp(1.5rem, 3vw, 1.9rem); }
 .shop-head__lead{ max-width:46rem; margin-top:.6rem; color:var(--ink-soft); line-height:1.7; }
 .shop-page [id]{ scroll-margin-top:6.5rem; }
 
@@ -901,7 +914,7 @@ input, textarea, select{ font-size:16px !important; }
   color:var(--ink-soft); transition:color .25s;
 }
 @media (hover:hover) and (pointer:fine){ .shop-product__back:hover{ color:var(--green); } }
-.shop-product__title{ font-family:var(--serif); font-size:clamp(2rem, 4vw, 2.8rem); color:var(--charcoal); margin-bottom:1.6rem; }
+.shop-product__title{ font-family:var(--sans); font-weight:700; font-size:clamp(1.5rem, 3vw, 1.9rem); color:var(--charcoal); margin-bottom:1.6rem; }
 .shop-product__switcher-label{
   font-size:.72rem; letter-spacing:.28em; text-transform:uppercase;
   color:var(--gold-text); font-weight:600; margin-bottom:.9rem;
@@ -921,7 +934,7 @@ input, textarea, select{ font-size:16px !important; }
   background:#fff; border-radius:var(--radius); padding:2.5rem;
 }
 .shop-variant__img{ width:100%; border-radius:var(--radius); max-height:420px; object-fit:cover; }
-.shop-variant__name{ font-family:var(--serif); font-size:2.2rem; color:var(--green); margin-bottom:.5rem; }
+.shop-variant__name{ font-family:var(--sans); font-weight:700; font-size:1.5rem; color:var(--green); margin-bottom:.5rem; }
 .shop-variant__price{ font-size:1.5rem; font-weight:700; color:var(--charcoal); margin-bottom:.4rem; }
 .shop-variant__weight{ font-size:.9rem; font-weight:400; color:var(--ink-soft); }
 .shop-variant__stock{ font-size:.85rem; color:var(--ink-soft); margin-bottom:1.4rem; }
@@ -985,6 +998,10 @@ input, textarea, select{ font-size:16px !important; }
 .checkout-page{ padding-top:7.5rem; }
 .checkout-page__head{ max-width:1240px; margin:0 auto 2rem; }
 .checkout-page__head h1{ font-size:clamp(2rem, 4vw, 3rem); margin-top:.6rem; }
+/* The checkout is a form, not a landing page: every heading on it (this one,
+   the numbered steps, "Таны захиалга", the QPay screens) uses the plain sans
+   of the form itself, bold. */
+.checkout-page__head h1{ font-family:var(--sans); font-weight:700; letter-spacing:0; font-size:clamp(1.5rem, 3vw, 1.9rem); }
 .checkout-page__back{ font-size:.88rem; color:var(--ink-soft); text-decoration:none; }
 @media (hover:hover) and (pointer:fine){ .checkout-page__back:hover{ color:var(--green); } }
 .checkout-page__fail{ max-width:1240px; margin:0 auto; color:#b3261e; }
@@ -1000,7 +1017,7 @@ input, textarea, select{ font-size:16px !important; }
 .checkout-step[hidden]{ display:none; }
 /* A <legend> normally sits ON the fieldset's top edge; floating it puts it
    inside the card like any heading. */
-.checkout-step__title{ float:left; width:100%; display:flex; align-items:center; gap:.7rem; padding:0; margin-bottom:1rem; font-family:var(--serif); font-size:1.45rem; font-weight:600; color:var(--charcoal); }
+.checkout-step__title{ float:left; width:100%; display:flex; align-items:center; gap:.7rem; padding:0; margin-bottom:1rem; font-family:var(--sans); font-size:1.15rem; font-weight:700; color:var(--charcoal); }
 .checkout-step__title + *{ clear:both; }
 .checkout-step__no{ display:inline-grid; place-items:center; width:1.8rem; height:1.8rem; border-radius:50%; background:var(--green); color:#fff; font-family:var(--sans); font-size:.85rem; font-weight:700; flex:none; }
 
@@ -1051,7 +1068,7 @@ input, textarea, select{ font-size:16px !important; }
 
 .checkout-summary{ position:sticky; top:6.5rem; }
 .checkout-summary__box{ background:#fff; border-radius:var(--radius);padding:1.4rem 1.5rem; }
-.checkout-summary__toggle{ display:flex; justify-content:space-between; align-items:baseline; gap:1rem; list-style:none; font-family:var(--serif); font-size:1.35rem; font-weight:600; }
+.checkout-summary__toggle{ display:flex; justify-content:space-between; align-items:baseline; gap:1rem; list-style:none; font-family:var(--sans); font-size:1.1rem; font-weight:700; }
 .checkout-summary__toggle::-webkit-details-marker{ display:none; }
 .checkout-summary__mini{ font-family:var(--sans); font-size:.95rem; font-weight:700; color:var(--green); }
 .checkout-summary__lines{ list-style:none; margin:1rem 0 0; padding:0; }
@@ -1082,7 +1099,7 @@ input, textarea, select{ font-size:16px !important; }
 }
 
 .checkout-pay{ max-width:520px; margin:0 auto; background:#fff; border-radius:var(--radius);padding:1rem 1.5rem 1.5rem; }
-.checkout-pay__title{ font-size:1.7rem; margin-bottom:.6rem; }
+.checkout-pay__title{ font-family:var(--sans); font-weight:700; letter-spacing:0; font-size:1.35rem; margin-bottom:.6rem; }
 .order-confirmation__plan{ margin:1rem 0; padding:1rem; border-radius:var(--radius); background:var(--cream); text-align:left; font-size:.95rem; }
 .order-confirmation__plan p + p{ margin-top:.35rem; }
 .order-confirmation__plan a{ color:var(--green); }
@@ -1263,8 +1280,8 @@ input, textarea, select{ font-size:16px !important; }
    ========================================================================== */
 
 .eq-hero{ padding:9rem var(--gutter) 2.5rem; background:var(--cream); text-align:center; }
-.eq-hero h1{ font-family:var(--serif); font-weight:600; line-height:1.12;
-  font-size:clamp(2.4rem,5.1vw,4.1rem); color:var(--charcoal); }
+.eq-hero h1{ font-family:var(--sans); font-weight:700; line-height:1.2;
+  font-size:clamp(1.5rem, 3vw, 1.9rem); color:var(--charcoal); }
 .eq-hero h1 em{ color:var(--green); }
 .eq-hero__lead{ max-width:46rem; margin:1.4rem auto 0; color:var(--ink-soft); line-height:1.8; }
 
@@ -1272,7 +1289,7 @@ input, textarea, select{ font-size:16px !important; }
    .eq-hero above it already supplies the clearance. */
 .eq-wrap{ background:var(--cream); padding:8rem var(--gutter) 6rem; min-height:60vh; }
 .eq-wrap--full{ padding-top:1rem; }
-.eq-404{ font-family:var(--serif); font-size:2.2rem; margin:4rem 0 1.5rem; }
+.eq-404{ font-family:var(--sans); font-weight:700; font-size:clamp(1.5rem, 3vw, 1.9rem); margin:4rem 0 1.5rem; }
 
 /* ---------- breadcrumbs ---------- */
 .crumbs{ max-width:var(--shop-max); margin:0 auto 1.8rem; font-size:.85rem; color:var(--ink-soft); }
@@ -1299,7 +1316,7 @@ input, textarea, select{ font-size:16px !important; }
 @media (hover:hover) and (pointer:fine){ .cat-side__sub a:hover{ color:var(--green); background:rgba(26,94,42,.05); } }
 .cat-side__sub a.is-current{ color:var(--green); font-weight:600; }
 
-.eq-main__title{ font-family:var(--serif); font-size:clamp(1.9rem,3.6vw,2.7rem);
+.eq-main__title{ font-family:var(--sans); font-weight:700; font-size:clamp(1.5rem, 3vw, 1.9rem);
   color:var(--charcoal); margin-bottom:.35rem; }
 .eq-main__count{ color:var(--ink-soft); font-size:.9rem; margin-bottom:2.2rem; }
 
@@ -1354,7 +1371,7 @@ input, textarea, select{ font-size:16px !important; }
 .eq-section{ max-width:var(--shop-max); margin:0 auto 3.2rem; }
 .eq-section__head{ display:flex; align-items:baseline; justify-content:space-between;
   gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
-.eq-section__head h2{ font-family:var(--serif); font-size:1.75rem; color:var(--charcoal); }
+.eq-section__head h2{ font-family:var(--sans); font-weight:700; font-size:1.2rem; color:var(--charcoal); }
 .eq-section__more{ font-size:.88rem; color:var(--green); text-decoration:none; font-weight:600; }
 @media (hover:hover) and (pointer:fine){ .eq-section__more:hover{ text-decoration:underline; } }
 
@@ -1371,7 +1388,7 @@ input, textarea, select{ font-size:16px !important; }
 .eq-gallery__thumb img{ width:100%; height:100%; object-fit:contain; }
 .eq-gallery__thumb.is-active{ border-color:var(--gold); }
 
-.eq-detail__intro h1{ font-family:var(--serif); font-size:clamp(1.8rem,3.4vw,2.5rem);
+.eq-detail__intro h1{ font-family:var(--sans); font-weight:700; font-size:clamp(1.5rem, 3vw, 1.9rem);
   color:var(--charcoal); line-height:1.2; }
 .eq-detail__sku{ font-size:.82rem; color:var(--ink-soft); letter-spacing:.04em;
   margin:.6rem 0 1.3rem; }
@@ -1381,7 +1398,7 @@ input, textarea, select{ font-size:16px !important; }
 .eq-detail__note{ font-size:.82rem; color:var(--ink-soft); line-height:1.65; margin-top:1.2rem; }
 
 .eq-block{ margin-bottom:3.5rem; }
-.eq-block > h2{ font-family:var(--serif); font-size:1.6rem; color:var(--charcoal);
+.eq-block > h2{ font-family:var(--sans); font-weight:700; font-size:1.2rem; color:var(--charcoal);
   margin-bottom:1.2rem; }
 
 /* Wide spec tables scroll inside their own box — the page never scrolls sideways. */
@@ -1453,7 +1470,7 @@ input, textarea, select{ font-size:16px !important; }
 
 /* ---------- quote half of the shared basket drawer ---------- */
 .inq-block{ margin-top:1.6rem; padding-top:1.4rem; border-top:2px solid rgba(26,94,42,.18); }
-.inq-block__title{ font-family:var(--serif); font-size:1.15rem; color:var(--green);
+.inq-block__title{ font-family:var(--sans); font-weight:700; font-size:1.1rem; color:var(--green);
   margin-bottom:.2rem; }
 .inq-block__note{ font-size:.8rem; color:var(--ink-soft); margin-bottom:1rem; }
 .inq-qty{ width:60px; padding:.45rem; border:1px solid rgba(44,44,44,.2); border-radius:8px;
@@ -1491,7 +1508,9 @@ html[lang="zh"] .contact__intro p[lang="mn"]{ font-style:normal; }
    replaces; the centred section heads are sized for English measure (600–660px)
    and would break the Chinese line at an arbitrary point. Widening them for
    Chinese only keeps every headline on one line at full display size. */
-html[lang="zh"] :is(.journey__head, .services__head, .products__head, .green__head){ max-width:56rem; }
+/* Not .journey__head: it is already wider (960px plus its side padding), and
+   56rem would narrow it and break 不以年月计，以畜群丈量 onto two lines. */
+html[lang="zh"] :is(.services__head, .products__head, .green__head){ max-width:56rem; }
 html[lang="zh"] .green__lede{ max-width:42rem; margin-left:auto; margin-right:auto; }
 /* Two-column heads: the extra room goes to the headline column instead.
    Gated on min-width because both collapse to one column at 820px, and an
@@ -1569,7 +1588,7 @@ html[lang="zh"] .green__lede{ max-width:42rem; margin-left:auto; margin-right:au
 @media (max-width:880px){ .shop-sections .eq-section[data-n="3"], .shop-sections .eq-section[data-n="4"]{ grid-column:1 / -1; --rowcols:var(--cols); } }
 .eq-section__head{ align-items:center; margin-bottom:1.1rem; }
 .eq-section__title{ display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap; min-width:0; }
-.eq-section__head h2{ font-size:1.6rem; line-height:1.2; }
+.eq-section__head h2{ font-size:1.2rem; line-height:1.2; }
 .eq-section__count{ font-size:.85rem; color:var(--ink-soft); white-space:nowrap; }
 .eq-section__tools{ display:flex; align-items:center; gap:.5rem; margin-left:auto; }
 .eq-row__btn{ display:grid; place-items:center; width:40px; height:40px; border-radius:50%;
@@ -1644,7 +1663,7 @@ overflow:hidden; }
 .sp__photo--empty{ background:var(--cream-dark); box-shadow:none; }
 .sp__photo--empty::before{ content:""; width:42%; aspect-ratio:2/1; background:url("/img/naf_logo_full.svg") center/contain no-repeat;
   opacity:.32; filter:grayscale(.4); }
-.sp__title{ font-family:var(--serif); font-size:clamp(2rem, 3.6vw, 2.8rem); line-height:1.1; color:var(--charcoal); margin-bottom:.8rem; }
+.sp__title{ font-family:var(--sans); font-weight:700; font-size:clamp(1.5rem, 3vw, 1.9rem); line-height:1.2; color:var(--charcoal); margin-bottom:.8rem; }
 .sp__desc{ color:var(--ink-soft); line-height:1.75; max-width:40rem; margin-bottom:1.6rem; }
 .sp__label{ font-size:.85rem; font-weight:600; color:var(--charcoal); margin-bottom:.6rem; }
 .sp .shop-product__switcher{ margin-bottom:1.6rem; }

@@ -155,8 +155,8 @@ return [
     'zh' => '企业简介',
   ],
   'about.nomadic-heritage-modern-agriculture' => [
-    'en' => 'Nomadic heritage,<br><em>modern agriculture.</em>',
-    'mn' => 'Нүүдэлчин өв уламжлал,<br><em>орчин үеийн хөдөө аж ахуй.</em>',
+    'en' => 'Nomadic heritage, <em>modern agriculture.</em>',
+    'mn' => 'Нүүдэлчин өв уламжлал, <em>орчин үеийн хөдөө аж ахуй.</em>',
     'zh' => '游牧千年，<em>现代牧业</em>',
   ],
   'about.nuudelchin-agro-farm-llc' => [
@@ -202,8 +202,8 @@ return [
 
   // ---- Home — Journey (timeline) ----
   'journey.a-journey-measured-in' => [
-    'en' => 'A journey measured<br><em>in herds, not years.</em>',
-    'mn' => 'Он жилээр бус,<br><em>сүргээр хэмжигдэх замнал.</em>',
+    'en' => 'A journey measured <em>in herds, not years.</em>',
+    'mn' => 'Он жилээр бус, <em>сүргээр хэмжигдэх замнал.</em>',
     'zh' => '不以年月计，<em>以畜群丈量</em>',
   ],
   'journey.before-the-company' => [
@@ -314,8 +314,8 @@ return [
 
   // ---- Home — Green energy ----
   'green.from-the-barn-floor' => [
-    'en' => 'From the barn floor<br><em>to the grid.</em>',
-    'mn' => 'Хашааны бууцнаас<br><em>эрчим хүч рүү.</em>',
+    'en' => 'From the barn floor <em>to the grid.</em>',
+    'mn' => 'Хашааны бууцнаас <em>эрчим хүч рүү.</em>',
     'zh' => '从圈舍粪污，<em>到清洁能源</em>',
   ],
   'green.the-next-step-is' => [
@@ -396,8 +396,8 @@ return [
     'zh' => '2025 年建成 · 规模最大的集群',
   ],
   'farms.four-clusters-one-steppe' => [
-    'en' => 'Four clusters,<br><em>one steppe.</em>',
-    'mn' => 'Дөрвөн кластер,<br><em>нэг тал нутаг.</em>',
+    'en' => 'Four clusters, <em>one steppe.</em>',
+    'mn' => 'Дөрвөн кластер, <em>нэг тал нутаг.</em>',
     'zh' => '四座集群，<em>一片草原</em>',
   ],
   'farms.each-cluster-farm-unites' => [
@@ -453,8 +453,8 @@ return [
 
   // ---- Home — Services ----
   'services.from-blueprint-to-bottling' => [
-    'en' => 'From blueprint<br><em>to bottling.</em>',
-    'mn' => 'Зураг төслөөс<br><em>савлагаа хүртэл.</em>',
+    'en' => 'From blueprint <em>to bottling.</em>',
+    'mn' => 'Зураг төслөөс <em>савлагаа хүртэл.</em>',
     'zh' => '从一纸蓝图，<em>到一瓶好奶</em>',
   ],
   'services.farm-construction' => [
@@ -520,8 +520,8 @@ return [
 
   // ---- Home — Products ----
   'products.what-the-steppe-provides' => [
-    'en' => 'What the steppe<br><em>provides.</em>',
-    'mn' => 'Тал нутгийн<br><em>өгөөж.</em>',
+    'en' => 'What the steppe <em>provides.</em>',
+    'mn' => 'Тал нутгийн <em>өгөөж.</em>',
     'zh' => '草原的<em>馈赠</em>',
   ],
   'products.farm-equipment' => [
@@ -572,8 +572,8 @@ return [
 
   // ---- Home — Recognition ----
   'recognition.a-national-movement-a' => [
-    'en' => 'A national movement,<br><em>a presidential visit.</em>',
-    'mn' => 'Үндэсний хөдөлгөөн,<br><em>Ерөнхийлөгчийн айлчлал.</em>',
+    'en' => 'A national movement, <em>a presidential visit.</em>',
+    'mn' => 'Үндэсний хөдөлгөөн, <em>Ерөнхийлөгчийн айлчлал.</em>',
     'zh' => '一场国家运动，<em>一次总统到访</em>',
   ],
   'recognition.on-december-10-2024' => [
@@ -686,8 +686,8 @@ return [
 
   // ---- Home — Contact ----
   'contact.lets-build-the-next' => [
-    'en' => 'Let\'s build the next<br><em>cluster together.</em>',
-    'mn' => 'Дараагийн кластерыг<br><em>хамтдаа байгуулъя.</em>',
+    'en' => 'Let\'s build the next <em>cluster together.</em>',
+    'mn' => 'Дараагийн кластерыг <em>хамтдаа байгуулъя.</em>',
     'zh' => '共建<em>下一座集群</em>',
   ],
   'contact.rural-development-solution' => [

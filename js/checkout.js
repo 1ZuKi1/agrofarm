@@ -106,6 +106,8 @@
   function renderTotals() {
     const f = fee();
     $("sumSubtotal").textContent = money(subtotal);
+    // With no delivery fee the subtotal is the total: one line is enough.
+    $("sumSubtotalRow").hidden = f === 0;
     $("sumFeeRow").hidden = f === 0;
     $("sumFee").textContent = money(f);
     $("sumTotal").textContent = money(subtotal + f);
