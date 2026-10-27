@@ -10,6 +10,10 @@ deployment:
     # Equipment catalogue photos (sql/hoof-care-seed.sql and later imports point here).
     - /bin/mkdir -p $DEPLOYPATH/img/equipment
     - /bin/cp -f img/equipment/*.* $DEPLOYPATH/img/equipment/
+    # Shop product photos kept in git (sql/orders-schema-v10.sql points here).
+    # /admin/ uploads go to img/products/ on the server instead and are not in git.
+    - /bin/mkdir -p $DEPLOYPATH/img/shop
+    - /bin/cp -f img/shop/*.* $DEPLOYPATH/img/shop/
     # Old copies of files that moved (2026-10 restructure). Copying never
     # deletes, and these must not linger as a second, stale version.
     # .htaccess already sends their addresses to the new files.
