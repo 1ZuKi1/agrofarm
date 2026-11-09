@@ -37,7 +37,12 @@ HTML,
 
 <!-- ============ HERO ============ -->
 <section class="hero" id="hero">
-  <div class="hero__bg"></div>
+  <div class="hero__bg">
+    <video class="hero__video" autoplay muted loop playsinline preload="auto" poster="/img/hero/hero-poster.jpg" aria-hidden="true">
+      <source src="/img/hero/hero-720.mp4" type="video/mp4" media="(max-width: 900px)">
+      <source src="/img/hero/hero-1080.mp4" type="video/mp4">
+    </video>
+  </div>
   <div class="hero__veil"></div>
   <div class="hero__inner">
     <p class="hero__kicker"<?= ta('hero.est-2015') ?>><?= tx('hero.est-2015') ?></p>

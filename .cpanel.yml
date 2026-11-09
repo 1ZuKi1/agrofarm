@@ -14,6 +14,9 @@ deployment:
     # /admin/ uploads go to img/products/ on the server instead and are not in git.
     - /bin/mkdir -p $DEPLOYPATH/img/shop
     - /bin/cp -f img/shop/*.* $DEPLOYPATH/img/shop/
+    # Homepage hero video loop and its poster.
+    - /bin/mkdir -p $DEPLOYPATH/img/hero
+    - /bin/cp -f img/hero/*.* $DEPLOYPATH/img/hero/
     # Old copies of files that moved (2026-10 restructure). Copying never
     # deletes, and these must not linger as a second, stale version.
     # .htaccess already sends their addresses to the new files.
