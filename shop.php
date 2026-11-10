@@ -66,15 +66,17 @@ page_start([
 <?php elseif (!$sections): ?>
   <p class="shop__empty" style="display:block">Одоогоор бүтээгдэхүүн алга — удахгүй дахин орно уу.</p>
 <?php else: ?>
+  <div class="shop-cats-bar">
   <nav class="shop-cats" aria-label="Ангилал" style="--n:<?= count($sections) ?>">
     <?php foreach ($sections as $s): ?>
       <a href="#<?= ce($s['slug']) ?>"><strong><?= ce($s['name']) ?></strong><span><?= (int)$s['count'] ?> бараа</span></a>
     <?php endforeach; ?>
   </nav>
+  </div>
 
   <div class="shop-sections">
-  <?php foreach ($sections as $s): $n = (int)$s['count']; ?>
-  <section class="eq-section" id="<?= ce($s['slug']) ?>" data-n="<?= $n ?>" aria-labelledby="sec-<?= ce($s['slug']) ?>">
+  <?php foreach ($sections as $i => $s): $n = (int)$s['count']; ?>
+  <section class="eq-section" id="<?= ce($s['slug']) ?>" data-n="<?= $n ?>"<?= $i > 2 ? ' data-reveal' : '' ?> aria-labelledby="sec-<?= ce($s['slug']) ?>">
     <div class="eq-section__head">
       <div class="eq-section__title">
         <h2 id="sec-<?= ce($s['slug']) ?>"><?= ce($s['name']) ?></h2>

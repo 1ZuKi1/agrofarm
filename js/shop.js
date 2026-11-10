@@ -90,6 +90,7 @@
         const input = document.getElementById(`shopQty-${id}`);
         const qty = Math.max(1, Math.min(max, Number(input?.value) || 1));
         if (window.addToCart) window.addToCart(id, qty);
+        shopToast(document.querySelector(".sp__title")?.textContent);
         const text = btn.querySelector("span") || btn;
         const label = text.textContent;
         text.textContent = t("Added ✓", "Сагсанд нэмэгдлээ ✓");
@@ -107,6 +108,7 @@
       const label = btn.getAttribute("aria-label");
       btn.addEventListener("click", () => {
         if (window.addToCart) window.addToCart(Number(btn.dataset.variantId), 1);
+        shopToast(btn.closest(".eq-card")?.querySelector("h3")?.textContent);
         // The basket icon turns into a tick for a moment; screen readers hear it too.
         btn.classList.add("is-added");
         btn.setAttribute("aria-label", "Сагсанд нэмэгдлээ");
@@ -114,6 +116,50 @@
         btn._reset = setTimeout(() => { btn.classList.remove("is-added"); btn.setAttribute("aria-label", label); }, 1800);
       });
     });
+  }
+
+  /* ---------- "Added to basket" toast ----------
+     One toast at a time, bottom corner, gone after a few seconds; its button
+     opens the basket. The basket count pops at the same moment. */
+  let toastTimer = null;
+  function shopToast(itemName) {
+    let toast = document.getElementById("shopToast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "shopToast";
+      toast.className = "shop-toast";
+      toast.setAttribute("role", "status");
+      toast.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>'
+        + '<div><strong>Сагсанд нэмлээ</strong><span></span></div><button type="button">Сагс харах</button>';
+      toast.querySelector("button").addEventListener("click", () => { toast.classList.remove("is-shown"); openCartDrawer(); });
+      document.body.appendChild(toast);
+      toast.offsetWidth; // so the first showing animates too
+    }
+    toast.querySelector("span").textContent = itemName || "";
+    toast.classList.add("is-shown");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-shown"), 3600);
+
+    const badge = document.getElementById("cartBadge");
+    if (badge) { badge.classList.remove("is-bump"); badge.offsetWidth; badge.classList.add("is-bump"); }
+  }
+
+  /* ---------- /shop: mark the category being read ----------
+     The category row stays under the header (style.css); the tile of the
+     section crossing the upper part of the screen is marked and kept in view. */
+  function initCategorySpy() {
+    const cats = document.querySelector(".shop-cats");
+    if (!cats || !("IntersectionObserver" in window)) return;
+    const links = new Map([...cats.querySelectorAll("a")].map((a) => [a.getAttribute("href").slice(1), a]));
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const link = links.get(entry.target.id);
+        if (!entry.isIntersecting || !link) return;
+        links.forEach((a) => a.classList.toggle("is-current", a === link));
+        cats.scrollTo({ left: link.offsetLeft - (cats.clientWidth - link.offsetWidth) / 2 });
+      });
+    }, { rootMargin: "-25% 0px -65% 0px" });
+    document.querySelectorAll(".eq-section[id]").forEach((section) => spy.observe(section));
   }
 
   /* ---------- /shop rows ----------
@@ -167,7 +213,7 @@
   }
 
   window.getShopProducts = () => shopProducts;
-  document.addEventListener("DOMContentLoaded", () => { initProductPage(); initCardButtons(); initRows(); initQtySteppers(); loadShop(); });
+  document.addEventListener("DOMContentLoaded", () => { initProductPage(); initCardButtons(); initRows(); initCategorySpy(); initQtySteppers(); loadShop(); });
 
   /* ---------- Cart drawer ----------
      Renders window.getCart() lines against the product data already loaded
@@ -175,6 +221,20 @@
      side and from localStorage (via window.addToCart) on the other, so all
      lookups compare with Number(...) === Number(...) rather than raw ===
      to stay safe regardless of how either side's id was typed. */
+  // The drawer's total counts from the amount it last showed to the new one.
+  let shownTotal = null;
+  function rollTotal(el, total) {
+    const from = shownTotal === null ? total : shownTotal;
+    shownTotal = total;
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches || from === total;
+    const start = performance.now(), duration = 450;
+    (function tick(now) {
+      const p = still ? 1 : Math.min((now - start) / duration, 1);
+      el.textContent = Math.round(from + (total - from) * (1 - Math.pow(1 - p, 3))).toLocaleString() + "₮";
+      if (p < 1 && shownTotal === total) requestAnimationFrame(tick);
+    })(start);
+  }
+
   function renderCartDrawer() {
     const cart = getCart();
     const items = document.getElementById("cartDrawerItems");
@@ -253,7 +313,8 @@
       `;
     }).join("");
 
-    totalEl.innerHTML = `<span data-en="Total" data-mn="Нийт">${escHtmlShop(t("Total", "Нийт"))}</span>: ${total.toLocaleString()}₮`;
+    totalEl.innerHTML = `<span data-en="Total" data-mn="Нийт">${escHtmlShop(t("Total", "Нийт"))}</span>: <b></b>`;
+    rollTotal(totalEl.querySelector("b"), total);
 
     items.querySelectorAll(".cart-drawer__qty").forEach((input) => {
       input.addEventListener("change", () => {
@@ -297,6 +358,14 @@
   }
   function openCartDrawer() {
     renderCartDrawer();
+    // Lines arrive one after another on opening only (style.css), not on
+    // every change to a quantity.
+    const items = document.getElementById("cartDrawerItems");
+    if (!document.getElementById("cartDrawer").classList.contains("is-open")) {
+      [...items.children].forEach((line, i) => line.style.setProperty("--i", i));
+      items.classList.add("is-fresh");
+      setTimeout(() => items.classList.remove("is-fresh"), 1200);
+    }
     showDrawer();
   }
   // catalog.js opens the same drawer after "Хүсэлтийн жагсаалтад нэмэх" and

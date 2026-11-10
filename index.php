@@ -65,7 +65,7 @@ HTML,
 
 <!-- ============ STATS ============ -->
 <section class="stats" id="stats">
-  <div class="stats__grid">
+  <div class="stats__grid" data-reveal>
     <div class="stat">
       <span class="stat__num" data-count="1620">1,620</span>
       <span class="stat__label"<?= ta('stats.cows-across-four-cluster') ?>><?= tx('stats.cows-across-four-cluster') ?></span>
@@ -92,10 +92,10 @@ HTML,
 <!-- ============ ABOUT ============ -->
 <section class="about" id="about">
   <div class="about__grid">
-    <div class="about__head">
+    <div class="about__head" data-reveal>
       <h2<?= ta('about.nomadic-heritage-modern-agriculture') ?>><?= tx('about.nomadic-heritage-modern-agriculture') ?></h2>
     </div>
-    <div class="about__text">
+    <div class="about__text" data-reveal>
       <p<?= ta('about.nuudelchin-agro-farm-llc') ?>><?= tx('about.nuudelchin-agro-farm-llc') ?></p>
       <div class="about__mv">
         <div class="mv">
@@ -109,7 +109,7 @@ HTML,
         </div>
       </div>
     </div>
-    <figure class="about__media">
+    <figure class="about__media" data-reveal="clip">
       <div class="about__photo"></div>
       <figcaption<?= ta('about.first-cluster-farm-opening') ?>><?= tx('about.first-cluster-farm-opening') ?></figcaption>
       <div class="about__badge">
@@ -125,20 +125,20 @@ HTML,
   <!-- The timeline runs left to right and scrolls sideways; the slider under
        it (script.js) moves it. The page itself scrolls straight past. -->
   <div class="journey__pin">
-  <div class="journey__head">
+  <div class="journey__head" data-reveal>
     <h2<?= ta('journey.a-journey-measured-in') ?>><?= tx('journey.a-journey-measured-in') ?></h2>
   </div>
 
-  <div class="timeline" id="timeline">
+  <div class="timeline" id="timeline" data-reveal="wipe">
     <div class="timeline__track">
     <article class="tl"><span class="tl__year">2013–14</span><div class="tl__card"><span class="tl__tag"<?= ta('journey.before-the-company') ?>><?= tx('journey.before-the-company') ?></span><h3<?= ta('journey.french-bloodlines') ?>><?= tx('journey.french-bloodlines') ?></h3><p<?= ta('journey.montbeliarde-heifers-imported') ?>><?= tx('journey.montbeliarde-heifers-imported') ?></p></div></article>
     <article class="tl"><span class="tl__year">2015</span><div class="tl__card tl__card--major"><h3<?= ta('journey.the-company-is-founded') ?>><?= tx('journey.the-company-is-founded') ?></h3><p<?= ta('journey.nuudelchin-agro-farm-llc') ?>><?= tx('journey.nuudelchin-agro-farm-llc') ?></p></div></article>
     <article class="tl"><span class="tl__year">2016</span><div class="tl__card"><h3<?= ta('journey.on-the-national-stage') ?>><?= tx('journey.on-the-national-stage') ?></h3><p<?= ta('journey.director-j-battugs-speaks') ?>><?= tx('journey.director-j-battugs-speaks') ?></p></div></article>
-    <article class="tl"><span class="tl__year">2017</span><div class="tl__card tl__card--major"><h3<?= ta('journey.first-cluster-farm') ?>><?= tx('journey.first-cluster-farm') ?></h3><p<?= ta('journey.mongolias-first-400-cow') ?>><?= tx('journey.mongolias-first-400-cow') ?></p></div></article>
+    <article class="tl"><span class="tl__year">2017</span><div class="tl__card tl__card--major"><img class="tl__photo" src="img/opening-ceremony.jpg" loading="lazy" decoding="async" draggable="false" alt="Ribbon cutting at the opening of the first cluster farm"><h3<?= ta('journey.first-cluster-farm') ?>><?= tx('journey.first-cluster-farm') ?></h3><p<?= ta('journey.mongolias-first-400-cow') ?>><?= tx('journey.mongolias-first-400-cow') ?></p></div></article>
     <article class="tl"><span class="tl__year">2019–20</span><div class="tl__card"><h3<?= ta('journey.growing-the-herd') ?>><?= tx('journey.growing-the-herd') ?></h3><p<?= ta('journey.france-mongolia-animal-husbandry') ?>><?= tx('journey.france-mongolia-animal-husbandry') ?></p></div></article>
     <article class="tl"><span class="tl__year">2023</span><div class="tl__card"><h3<?= ta('journey.third-cluster') ?>><?= tx('journey.third-cluster') ?></h3><p<?= ta('journey.240-cow-cluster-farm') ?>><?= tx('journey.240-cow-cluster-farm') ?></p></div></article>
-    <article class="tl"><span class="tl__year">2024</span><div class="tl__card tl__card--major"><h3<?= ta('journey.presidential-visit') ?>><?= tx('journey.presidential-visit') ?></h3><p<?= ta('journey.h-e-khurelsukh-ukhnaa') ?>><?= tx('journey.h-e-khurelsukh-ukhnaa') ?></p></div></article>
-    <article class="tl"><span class="tl__year">2025</span><div class="tl__card tl__card--major"><h3<?= ta('journey.fourth-cluster-first-holsteins') ?>><?= tx('journey.fourth-cluster-first-holsteins') ?></h3><p<?= ta('journey.the-500-cow-bayan') ?>><?= tx('journey.the-500-cow-bayan') ?></p></div></article>
+    <article class="tl"><span class="tl__year">2024</span><div class="tl__card tl__card--major"><img class="tl__photo" src="img/president-visit-2024.jpg" loading="lazy" decoding="async" draggable="false" alt="The presidential delegation walking through the farm"><h3<?= ta('journey.presidential-visit') ?>><?= tx('journey.presidential-visit') ?></h3><p<?= ta('journey.h-e-khurelsukh-ukhnaa') ?>><?= tx('journey.h-e-khurelsukh-ukhnaa') ?></p></div></article>
+    <article class="tl"><span class="tl__year">2025</span><div class="tl__card tl__card--major"><img class="tl__photo" src="img/hero-cattle-arrival.jpg" loading="lazy" decoding="async" draggable="false" alt="Cattle stepping off the transport truck at the farm"><h3<?= ta('journey.fourth-cluster-first-holsteins') ?>><?= tx('journey.fourth-cluster-first-holsteins') ?></h3><p<?= ta('journey.the-500-cow-bayan') ?>><?= tx('journey.the-500-cow-bayan') ?></p></div></article>
     <article class="tl"><span class="tl__year">2027</span><div class="tl__card"><h3<?= ta('journey.the-green-complex-opens') ?>><?= tx('journey.the-green-complex-opens') ?></h3><p<?= ta('journey.the-600-cow-green') ?>><?= tx('journey.the-600-cow-green') ?></p></div></article>
     <article class="tl"><span class="tl__year">2030</span><div class="tl__card tl__card--future"><h3<?= ta('journey.the-select-herd') ?>><?= tx('journey.the-select-herd') ?></h3><p<?= ta('journey.target-import-1-000') ?>><?= tx('journey.target-import-1-000') ?></p></div></article>
     </div>
@@ -156,11 +156,11 @@ HTML,
 <!-- ============ GREEN ENERGY ============ -->
 <section class="green" id="green">
   <div class="green__inner">
-    <div class="green__head">
+    <div class="green__head" data-reveal>
       <h2<?= ta('green.from-the-barn-floor') ?>><?= tx('green.from-the-barn-floor') ?></h2>
       <p class="green__lede"<?= ta('green.the-next-step-is') ?>><?= tx('green.the-next-step-is') ?></p>
     </div>
-    <div class="green__grid">
+    <div class="green__grid" data-reveal-group>
       <article class="gcard">
         <svg class="gcard__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z"/></svg>
         <h3<?= ta('green.energy-from-manure') ?>><?= tx('green.energy-from-manure') ?></h3>
@@ -183,45 +183,50 @@ HTML,
 <!-- ============ FARMS ============ -->
 <section class="farms" id="farms">
   <div class="farms__layout">
-  <div class="farms__grid">
-    <article class="farm">
-      <div class="farm__photo"><img src="img/farm-bayandelger.jpg" width="1200" height="675" loading="lazy" decoding="async" alt="Aerial view of the Bayandelger cluster farm at sunset"></div>
-      <div class="farm__body">
-        <span class="farm__count">400</span>
-        <h3<?= ta('farms.bayandelger') ?>><?= tx('farms.bayandelger') ?></h3>
-        <p class="farm__meta"<?= ta('farms.established-2017-mongolias-first') ?>><?= tx('farms.established-2017-mongolias-first') ?></p>
-      </div>
-    </article>
-    <article class="farm">
-      <div class="farm__photo"><img src="img/farm-argalant.jpg" width="1200" height="902" loading="lazy" decoding="async" alt="The Argalant cluster farm buildings with green roofs and landscaped grounds"></div>
-      <div class="farm__body">
-        <span class="farm__count">480</span>
-        <h3<?= ta('farms.argalant') ?>><?= tx('farms.argalant') ?></h3>
-        <p class="farm__meta"<?= ta('farms.established-2020-second-cluster') ?>><?= tx('farms.established-2020-second-cluster') ?></p>
-      </div>
-    </article>
-    <article class="farm">
-      <div class="farm__photo"><img src="img/farm-bayankhangai.jpg" width="1200" height="519" loading="lazy" decoding="async" alt="Aerial view of the Bayankhangai cluster farm laid out around a central circle"></div>
-      <div class="farm__body">
-        <span class="farm__count">240</span>
-        <h3<?= ta('farms.bayankhangai') ?>><?= tx('farms.bayankhangai') ?></h3>
-        <p class="farm__meta"<?= ta('farms.established-2023-third-cluster') ?>><?= tx('farms.established-2023-third-cluster') ?></p>
-      </div>
-    </article>
-    <article class="farm">
-      <div class="farm__photo"><img src="img/farm-bayan.jpg" width="1200" height="675" loading="lazy" decoding="async" alt="Aerial view of the Bayan cluster farm barns on open steppe"></div>
-      <div class="farm__body">
-        <span class="farm__count">500</span>
-        <h3<?= ta('farms.bayan') ?>><?= tx('farms.bayan') ?></h3>
-        <p class="farm__meta"<?= ta('farms.established-2025-our-largest') ?>><?= tx('farms.established-2025-our-largest') ?></p>
-      </div>
-    </article>
-  </div>
-  <div class="farms__head">
+  <div class="farms__head" data-reveal>
     <div class="farms__title">
       <h2<?= ta('farms.four-clusters-one-steppe') ?>><?= tx('farms.four-clusters-one-steppe') ?></h2>
     </div>
     <p class="farms__lede"<?= ta('farms.each-cluster-farm-unites') ?>><?= tx('farms.each-cluster-farm-unites') ?></p>
+  </div>
+  <!-- One stage, four farms: the tabs swap the photo and the herd figure.
+       Without JavaScript the four farms read as a plain row under the first
+       photo (see .js .farms__stage in style.css). -->
+  <div class="farms__stage" data-reveal="clip">
+    <div class="farms__photos">
+      <img class="farms__photo is-active" src="img/farm-bayandelger.jpg" width="1200" height="675" loading="lazy" decoding="async" alt="Aerial view of the Bayandelger cluster farm at sunset">
+      <img class="farms__photo" src="img/farm-argalant.jpg" width="1200" height="902" loading="lazy" decoding="async" alt="The Argalant cluster farm buildings with green roofs and landscaped grounds">
+      <img class="farms__photo" src="img/farm-bayankhangai.jpg" width="1200" height="519" loading="lazy" decoding="async" alt="Aerial view of the Bayankhangai cluster farm laid out around a central circle">
+      <img class="farms__photo" src="img/farm-bayan.jpg" width="1200" height="675" loading="lazy" decoding="async" alt="Aerial view of the Bayan cluster farm barns on open steppe">
+    </div>
+    <div class="farms__panels">
+      <article class="farm is-active" id="farm-bayandelger" role="tabpanel" aria-labelledby="farm-tab-bayandelger">
+        <p class="farm__herd"><span class="farm__count" data-count>400</span> <span<?= ta('farms.cows') ?>><?= tx('farms.cows') ?></span></p>
+        <h3<?= ta('farms.bayandelger') ?>><?= tx('farms.bayandelger') ?></h3>
+        <p class="farm__meta"<?= ta('farms.established-2017-mongolias-first') ?>><?= tx('farms.established-2017-mongolias-first') ?></p>
+      </article>
+      <article class="farm" id="farm-argalant" role="tabpanel" aria-labelledby="farm-tab-argalant">
+        <p class="farm__herd"><span class="farm__count" data-count>480</span> <span<?= ta('farms.cows') ?>><?= tx('farms.cows') ?></span></p>
+        <h3<?= ta('farms.argalant') ?>><?= tx('farms.argalant') ?></h3>
+        <p class="farm__meta"<?= ta('farms.established-2020-second-cluster') ?>><?= tx('farms.established-2020-second-cluster') ?></p>
+      </article>
+      <article class="farm" id="farm-bayankhangai" role="tabpanel" aria-labelledby="farm-tab-bayankhangai">
+        <p class="farm__herd"><span class="farm__count" data-count>240</span> <span<?= ta('farms.cows') ?>><?= tx('farms.cows') ?></span></p>
+        <h3<?= ta('farms.bayankhangai') ?>><?= tx('farms.bayankhangai') ?></h3>
+        <p class="farm__meta"<?= ta('farms.established-2023-third-cluster') ?>><?= tx('farms.established-2023-third-cluster') ?></p>
+      </article>
+      <article class="farm" id="farm-bayan" role="tabpanel" aria-labelledby="farm-tab-bayan">
+        <p class="farm__herd"><span class="farm__count" data-count>500</span> <span<?= ta('farms.cows') ?>><?= tx('farms.cows') ?></span></p>
+        <h3<?= ta('farms.bayan') ?>><?= tx('farms.bayan') ?></h3>
+        <p class="farm__meta"<?= ta('farms.established-2025-our-largest') ?>><?= tx('farms.established-2025-our-largest') ?></p>
+      </article>
+    </div>
+    <div class="farms__tabs" role="tablist">
+      <button class="farms__tab is-active" type="button" role="tab" id="farm-tab-bayandelger" aria-controls="farm-bayandelger" aria-selected="true"<?= ta('farms.bayandelger') ?>><?= tx('farms.bayandelger') ?></button>
+      <button class="farms__tab" type="button" role="tab" id="farm-tab-argalant" aria-controls="farm-argalant" aria-selected="false" tabindex="-1"<?= ta('farms.argalant') ?>><?= tx('farms.argalant') ?></button>
+      <button class="farms__tab" type="button" role="tab" id="farm-tab-bayankhangai" aria-controls="farm-bayankhangai" aria-selected="false" tabindex="-1"<?= ta('farms.bayankhangai') ?>><?= tx('farms.bayankhangai') ?></button>
+      <button class="farms__tab" type="button" role="tab" id="farm-tab-bayan" aria-controls="farm-bayan" aria-selected="false" tabindex="-1"<?= ta('farms.bayan') ?>><?= tx('farms.bayan') ?></button>
+    </div>
   </div>
   </div>
 
@@ -259,51 +264,77 @@ HTML,
 
 <!-- ============ SERVICES ============ -->
 <section class="services" id="services">
-  <div class="services__head">
-    <h2<?= ta('services.from-blueprint-to-bottling') ?>><?= tx('services.from-blueprint-to-bottling') ?></h2>
-  </div>
-  <div class="services__grid">
-    <article class="svc">
+  <div class="services__layout">
+    <div class="services__aside">
+      <div class="services__head" data-reveal>
+        <h2<?= ta('services.from-blueprint-to-bottling') ?>><?= tx('services.from-blueprint-to-bottling') ?></h2>
+      </div>
+      <!-- Decorative: the photo follows the service being pointed at, focused
+           or (on touch screens) scrolled to. -->
+      <div class="services__media" data-reveal="clip" aria-hidden="true">
+      <img class="services__photo is-active" src="img/farm-barn.jpg" loading="lazy" decoding="async" alt="">
+      <img class="services__photo" src="img/ugtaal-project.jpg" loading="lazy" decoding="async" alt="">
+      <img class="services__photo" src="img/cattle-handover.jpg" loading="lazy" decoding="async" alt="">
+      <img class="services__photo" src="img/cows-feeding.jpg" loading="lazy" decoding="async" alt="">
+      <img class="services__photo" src="img/cow-holstein.jpg" loading="lazy" decoding="async" alt="">
+      <img class="services__photo" src="img/hero-cattle-arrival.jpg" loading="lazy" decoding="async" alt="">
+      </div>
+    </div>
+    <ul class="services__list" data-reveal-group>
+    <li class="svc is-active">
+      <div class="svc__text">
+        <h3<?= ta('services.farm-construction') ?>><?= tx('services.farm-construction') ?></h3>
+        <p<?= ta('services.planning-engineering-infrastructure-and') ?>><?= tx('services.planning-engineering-infrastructure-and') ?></p>
+      </div>
       <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg>
-      <h3<?= ta('services.farm-construction') ?>><?= tx('services.farm-construction') ?></h3>
-      <p<?= ta('services.planning-engineering-infrastructure-and') ?>><?= tx('services.planning-engineering-infrastructure-and') ?></p>
-    </article>
-    <article class="svc">
+    </li>
+    <li class="svc">
+      <div class="svc__text">
+        <h3<?= ta('services.consulting') ?>><?= tx('services.consulting') ?></h3>
+        <p<?= ta('services.business-plans-investment-models') ?>><?= tx('services.business-plans-investment-models') ?></p>
+      </div>
       <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3m0 12v3m9-9h-3M6 12H3m14.5-5.5-2 2m-7 7-2 2m11 0-2-2m-7-7-2-2"/><circle cx="12" cy="12" r="3.5"/></svg>
-      <h3<?= ta('services.consulting') ?>><?= tx('services.consulting') ?></h3>
-      <p<?= ta('services.business-plans-investment-models') ?>><?= tx('services.business-plans-investment-models') ?></p>
-    </article>
-    <article class="svc svc--training">
+    </li>
+    <li class="svc">
+      <div class="svc__text">
+        <h3<?= ta('services.training') ?>><?= tx('services.training') ?></h3>
+        <p<?= ta('services.professional-courses-and-hands') ?>><?= tx('services.professional-courses-and-hands') ?></p>
+      </div>
       <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V6a2 2 0 0 1 2-2h14v13H6a2 2 0 0 0-2 2Zm0 0a2 2 0 0 0 2 2h14"/><path d="M9 8h7M9 12h5"/></svg>
-      <h3<?= ta('services.training') ?>><?= tx('services.training') ?></h3>
-      <p<?= ta('services.professional-courses-and-hands') ?>><?= tx('services.professional-courses-and-hands') ?></p>
-    </article>
-    <article class="svc">
+    </li>
+    <li class="svc">
+      <div class="svc__text">
+        <h3<?= ta('services.feed-nutrition') ?>><?= tx('services.feed-nutrition') ?></h3>
+        <p<?= ta('services.formulation-pasture-planning-and') ?>><?= tx('services.formulation-pasture-planning-and') ?></p>
+      </div>
       <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4.5-2.5-8-5.5-8-10a8 8 0 0 1 16 0c0 4.5-3.5 7.5-8 10Z"/><path d="M12 3c2 3 2 7 0 10-2-3-2-7 0-10Z"/></svg>
-      <h3<?= ta('services.feed-nutrition') ?>><?= tx('services.feed-nutrition') ?></h3>
-      <p<?= ta('services.formulation-pasture-planning-and') ?>><?= tx('services.formulation-pasture-planning-and') ?></p>
-    </article>
-    <article class="svc">
+    </li>
+    <li class="svc">
+      <div class="svc__text">
+        <h3<?= ta('services.milk-processing') ?>><?= tx('services.milk-processing') ?></h3>
+        <p<?= ta('services.collection-cooling-processing-lines') ?>><?= tx('services.collection-cooling-processing-lines') ?></p>
+      </div>
       <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v4L6 15a4.5 4.5 0 0 0 4 6.5h4A4.5 4.5 0 0 0 18 15L14 7V3"/><path d="M7.5 13h9"/></svg>
-      <h3<?= ta('services.milk-processing') ?>><?= tx('services.milk-processing') ?></h3>
-      <p<?= ta('services.collection-cooling-processing-lines') ?>><?= tx('services.collection-cooling-processing-lines') ?></p>
-    </article>
-    <article class="svc">
+    </li>
+    <li class="svc">
+      <div class="svc__text">
+        <h3<?= ta('services.value-chain-development') ?>><?= tx('services.value-chain-development') ?></h3>
+        <p<?= ta('services.connecting-production-to-market') ?>><?= tx('services.connecting-production-to-market') ?></p>
+      </div>
       <svg class="svc__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7 7.5 10.5 16M17 7.5 13.5 16M7.5 6h9"/></svg>
-      <h3<?= ta('services.value-chain-development') ?>><?= tx('services.value-chain-development') ?></h3>
-      <p<?= ta('services.connecting-production-to-market') ?>><?= tx('services.connecting-production-to-market') ?></p>
-    </article>
+    </li>
+    </ul>
   </div>
 </section>
 
 <!-- ============ PRODUCTS ============ -->
 <section class="products" id="products">
-  <div class="products__head">
+  <div class="products__head" data-reveal>
     <h2<?= ta('products.what-the-steppe-provides') ?>><?= tx('products.what-the-steppe-provides') ?></h2>
   </div>
-  <div class="products__grid">
+  <div class="products__grid" data-reveal-group>
     <article class="prod">
-      <a href="/equipment" style="display:block;text-decoration:none;color:inherit">
+      <a href="/equipment">
       <div class="prod__media prod__media--equipment"></div>
       <div class="prod__body">
         <h3<?= ta('products.farm-equipment') ?>><?= tx('products.farm-equipment') ?></h3>
@@ -326,7 +357,7 @@ HTML,
       </div>
     </article>
     <article class="prod">
-      <a href="/shop" style="display:block;text-decoration:none;color:inherit">
+      <a href="/shop">
         <div class="prod__media" id="shopCardMedia" style="background:var(--green)"></div>
         <div class="prod__body">
           <h3<?= ta('products.erdest-doloots') ?>><?= tx('products.erdest-doloots') ?></h3>
@@ -340,15 +371,15 @@ HTML,
 <!-- ============ RECOGNITION & VOICES ============ -->
 <section class="recognition" id="recognition">
   <div class="recognition__inner">
-    <h2<?= ta('recognition.a-national-movement-a') ?>><?= tx('recognition.a-national-movement-a') ?></h2>
-    <p class="recognition__body"<?= ta('recognition.on-december-10-2024') ?>><?= tx('recognition.on-december-10-2024') ?></p>
+    <h2 data-reveal<?= ta('recognition.a-national-movement-a') ?>><?= tx('recognition.a-national-movement-a') ?></h2>
+    <p class="recognition__body" data-reveal<?= ta('recognition.on-december-10-2024') ?>><?= tx('recognition.on-december-10-2024') ?></p>
 
-    <figure class="recognition__photo">
+    <figure class="recognition__photo" data-reveal="clip">
       <img src="img/president-visit-2024.jpg" width="1800" height="1200" loading="lazy" decoding="async" alt="The presidential delegation and farm staff walking through the Nuudelchin Agro Farm site during the December 2024 visit">
       <figcaption<?= ta('recognition.the-presidential-delegation-touring') ?>><?= tx('recognition.the-presidential-delegation-touring') ?></figcaption>
     </figure>
 
-      <div class="quotes">
+      <div class="quotes" data-reveal-group>
       <blockquote class="quote">
         <p<?= ta('recognition.if-this-incentive-is') ?>><?= tx('recognition.if-this-incentive-is') ?></p>
         <footer<?= ta('recognition.j-battugs-director-nuudelchin') ?>><?= tx('recognition.j-battugs-director-nuudelchin') ?></footer>
@@ -359,7 +390,7 @@ HTML,
       </blockquote>
     </div>
 
-    <div class="story">
+    <div class="story" data-reveal>
       <h3<?= ta('recognition.a-herders-story') ?>><?= tx('recognition.a-herders-story') ?></h3>
       <p<?= ta('recognition.the-family-of-b') ?>><?= tx('recognition.the-family-of-b') ?></p>
       <p class="story__src"<?= ta('recognition.source-montsame-news-agency') ?>><?= tx('recognition.source-montsame-news-agency') ?></p>
@@ -367,7 +398,7 @@ HTML,
 
     <div class="partners">
       <h3<?= ta('recognition.partners') ?>><?= tx('recognition.partners') ?></h3>
-      <ul>
+      <ul data-reveal-group>
         <li><strong<?= ta('recognition.khan-bank') ?>><?= tx('recognition.khan-bank') ?></strong><span<?= ta('recognition.financing-partner-for-cluster') ?>><?= tx('recognition.financing-partner-for-cluster') ?></span></li>
         <li><strong<?= ta('recognition.french-government') ?>><?= tx('recognition.french-government') ?></strong><span<?= ta('recognition.animal-husbandry-cooperation') ?>><?= tx('recognition.animal-husbandry-cooperation') ?></span></li>
         <li><strong<?= ta('recognition.mongolian-government') ?>><?= tx('recognition.mongolian-government') ?></strong><span<?= ta('recognition.food-supply-and-security') ?>><?= tx('recognition.food-supply-and-security') ?></span></li>
@@ -380,7 +411,7 @@ HTML,
 
 <!-- ============ NEWS (admin posts once news-data.json has any, then the Facebook feed) ============ -->
 <section class="news" id="news">
-  <div class="news__head">
+  <div class="news__head" data-reveal>
     <h2<?= ta('news.news-updates') ?>><?= tx('news.news-updates') ?></h2>
   </div>
 
@@ -402,11 +433,11 @@ HTML,
 <!-- ============ CONTACT ============ -->
 <section class="contact" id="contact">
   <div class="contact__grid">
-    <div class="contact__intro">
+    <div class="contact__intro" data-reveal>
       <h2<?= ta('contact.lets-build-the-next') ?>><?= tx('contact.lets-build-the-next') ?></h2>
       <p lang="mn"<?= ta('contact.rural-development-solution') ?>><?= tx('contact.rural-development-solution') ?></p>
     </div>
-    <ul class="contact__list">
+    <ul class="contact__list" data-reveal-group>
       <li>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
         <div><span<?= ta('contact.email') ?>><?= tx('contact.email') ?></span><a href="mailto:info@agrofarm.mn">info@agrofarm.mn</a></div>

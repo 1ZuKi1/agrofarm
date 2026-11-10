@@ -7,7 +7,7 @@
 - **URL**: [agrofarm.mn](https://agrofarm.mn)
 - **Type**: Static site — plain HTML, CSS, and vanilla JavaScript
 - **Languages**: English (default) + Mongolian (Монгол), toggled via the **MN / EN** button
-- **Design**: Editorial aesthetic — Cormorant Garamond serif + Fira Sans sans-serif, gold-accent palette on a warm cream background; flat surfaces, no decorative motion
+- **Design**: Editorial aesthetic — Cormorant Garamond serif + Fira Sans sans-serif, gold-accent palette on a warm cream background; flat surfaces; sections reveal as they scroll into view, and the motion is switched off for visitors who ask for reduced motion
 
 ## Sections
 

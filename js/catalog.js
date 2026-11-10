@@ -131,6 +131,7 @@
     thumb.addEventListener("click", () => {
       if (!main) return;
       main.src = thumb.dataset.src;
+      main.classList.remove("is-swapping"); main.offsetWidth; main.classList.add("is-swapping");
       document.querySelectorAll(".eq-gallery__thumb")
         .forEach((t) => t.classList.toggle("is-active", t === thumb));
     });

@@ -10,6 +10,9 @@
 (() => {
   "use strict";
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // style.css hides not-yet-revealed elements only under this class, so the
+  // page is whole if this script never runs.
+  document.documentElement.classList.add("js");
 
   /* ---------- Footer year ---------- */
   document.getElementById("year").textContent = new Date().getFullYear();
@@ -36,6 +39,13 @@
   const nextLang = (lang) => LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
   let currentLang = langToggle ? (localStorage.getItem("lang") || "mn") : document.documentElement.lang;
   if (langToggle && !LANGS.includes(currentLang)) currentLang = "mn";
+  /** A stat's text for a value, with the current language's prefix/suffix. */
+  function statText(el, value) {
+    const Lang = currentLang[0].toUpperCase() + currentLang.slice(1);
+    const prefix = el.dataset[`prefix${Lang}`] || el.dataset.prefix || "";
+    const suffix = el.dataset[`suffix${Lang}`] || el.dataset.suffix || "";
+    return prefix + value.toLocaleString() + suffix;
+  }
   function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem("lang", lang);
@@ -44,13 +54,7 @@
       el.innerHTML = el.getAttribute(`data-${lang}`) || el.getAttribute("data-en");
     });
     // Re-render the stat numbers with language-aware prefix/suffix (data-suffix-en / -mn / -zh)
-    const Lang = lang[0].toUpperCase() + lang.slice(1);
-    document.querySelectorAll(".stat__num").forEach((el) => {
-      const target = +el.dataset.count;
-      const prefix = el.dataset[`prefix${Lang}`] || el.dataset.prefix || "";
-      const suffix = el.dataset[`suffix${Lang}`] || el.dataset.suffix || "";
-      el.textContent = prefix + target.toLocaleString() + suffix;
-    });
+    document.querySelectorAll(".stat__num").forEach((el) => { el.textContent = statText(el, +el.dataset.count); });
     document.documentElement.lang = lang;
     // The button shows the language you would switch TO
     langToggle.textContent = LANG_LABEL[nextLang(lang)];
@@ -457,6 +461,101 @@
       newsGrid.innerHTML = posts.slice(0, 3).map(renderNewsCard).join("");
       newsGrid.hidden = false;
     });
+  }
+
+  /* ---------- Reveal on scroll ----------
+     [data-reveal] elements and the children of a [data-reveal-group] settle
+     into place once, when they enter the screen. "reveal" is dispatched so a
+     section can start its own moment (the farms' herd count) at that point. */
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      revealObserver.unobserve(entry.target);
+      entry.target.classList.add("is-in");
+      // Photos waiting behind the first one (farms, services) load now, so
+      // switching to them never shows an empty frame.
+      entry.target.querySelectorAll('img[loading="lazy"]').forEach((img) => { img.loading = "eager"; });
+      entry.target.dispatchEvent(new CustomEvent("reveal"));
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll("[data-reveal], [data-reveal-group]").forEach((el) => {
+    if (el.hasAttribute("data-reveal-group")) {
+      [...el.children].forEach((child, i) => child.style.setProperty("--i", i));
+    }
+    revealObserver.observe(el);
+  });
+
+  /** Counts a number element from one whole number to another. `format`
+      turns each step into the text shown (the stats add their units). */
+  function countTo(el, from, to, format = String) {
+    if (reduceMotion || from === to) { el.textContent = format(to); return; }
+    const start = performance.now(), duration = 900;
+    el._count = start; // a newer count on the same element takes over
+    (function tick(now) {
+      if (el._count !== start) return;
+      const p = Math.min((now - start) / duration, 1);
+      el.textContent = format(Math.round(from + (to - from) * (1 - Math.pow(1 - p, 4))));
+      if (p < 1) requestAnimationFrame(tick);
+    })(start);
+  }
+
+  /* ---------- Stats: the figures count up when the panel arrives ---------- */
+  const statsGrid = document.querySelector(".stats__grid");
+  if (statsGrid) {
+    statsGrid.addEventListener("reveal", () => {
+      statsGrid.querySelectorAll(".stat__num").forEach((el) => countTo(el, 0, +el.dataset.count, (n) => statText(el, n)));
+    });
+  }
+
+  /* ---------- Farms: one stage, four tabs ---------- */
+  const farmTabs = [...document.querySelectorAll(".farms__tab")];
+  if (farmTabs.length) {
+    const stage = document.querySelector(".farms__stage");
+    const photos = [...stage.querySelectorAll(".farms__photo")];
+    const panels = [...stage.querySelectorAll(".farm")];
+    const counts = panels.map((p) => p.querySelector("[data-count]"));
+    const herds = counts.map((c) => Number(c.textContent));
+    let current = 0;
+    const showFarm = (i) => {
+      if (i === current) return;
+      [farmTabs, photos, panels].forEach((set) => set.forEach((el, n) => el.classList.toggle("is-active", n === i)));
+      farmTabs.forEach((tab, n) => {
+        tab.setAttribute("aria-selected", n === i);
+        tab.tabIndex = n === i ? 0 : -1;
+      });
+      countTo(counts[i], herds[current], herds[i]);
+      current = i;
+    };
+    farmTabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => showFarm(i));
+      tab.addEventListener("mouseenter", () => showFarm(i));
+      tab.addEventListener("keydown", (e) => {
+        const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: farmTabs.length - 1 }[e.key];
+        if (to === undefined) return;
+        e.preventDefault();
+        const next = (to + farmTabs.length) % farmTabs.length;
+        showFarm(next);
+        farmTabs[next].focus();
+      });
+    });
+    stage.addEventListener("reveal", () => countTo(counts[current], 0, herds[current]));
+  }
+
+  /* ---------- Services: the photo follows the service being read ----------
+     With a mouse that is the row under the pointer; on touch screens it is the
+     row crossing the middle of the screen. */
+  const svcRows = [...document.querySelectorAll(".svc")];
+  if (svcRows.length) {
+    const svcPhotos = [...document.querySelectorAll(".services__photo")];
+    const showService = (i) => [svcRows, svcPhotos].forEach((set) => set.forEach((el, n) => el.classList.toggle("is-active", n === i)));
+    if (matchMedia("(hover: hover)").matches) {
+      svcRows.forEach((row, i) => row.addEventListener("mouseenter", () => showService(i)));
+    } else {
+      const middle = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => { if (entry.isIntersecting) showService(svcRows.indexOf(entry.target)); });
+      }, { rootMargin: "-55% 0px -40% 0px" });
+      svcRows.forEach((row) => middle.observe(row));
+    }
   }
 
   // Expose for news.html archive page
