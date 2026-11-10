@@ -409,3 +409,37 @@ body.ad-noscroll { overflow: hidden; }
 .ad-confirm h2 { font-size: 1.2rem; }
 .ad-confirm__list { margin: 0 0 14px; padding-left: 1.2em; }
 .ad-confirm__list li { margin-bottom: 6px; }
+
+/* ---------- motion and feedback (2026-11) ----------
+   Small and quick: this is a workplace. Everything starts from its finished
+   state, so nothing depends on a script, and reduced motion turns it all off. */
+@keyframes ad-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes ad-drop { from { opacity: 0; transform: translateY(-10px); } }
+@keyframes ad-grow { from { transform: scaleY(0); } }
+@keyframes ad-pop { 40% { transform: scale(1.25); } }
+@keyframes ad-spin { to { transform: rotate(360deg); } }
+.ad-wrap { animation: ad-in .35s cubic-bezier(.22, 1, .36, 1) both; }
+.ad-flash { animation: ad-drop .45s cubic-bezier(.22, 1, .36, 1) .15s both; }
+.ad-badge { animation: ad-pop .5s cubic-bezier(.22, 1, .36, 1) .4s both; }
+/* Chart columns rise from the baseline, left to right (--i: admin/js/sales.js). */
+.ad-chart__bar { transform-origin: bottom; animation: ad-grow .7s cubic-bezier(.22, 1, .36, 1) both; animation-delay: calc(var(--i, 0) * 14ms + .2s); }
+
+.ad-btn { transition: background-color .15s, border-color .15s, transform .12s ease-out; }
+.ad-btn:active:not(:disabled) { transform: scale(.97); }
+.ad-nav a:active, .ad-side__link:active { transform: scale(.985); }
+@media (hover:hover) and (pointer:fine){ .ad-table tbody tr:not(.ad-group):hover td{ background: #fdfaf3; } }
+.ad-table td { transition: background-color .15s; }
+
+/* A submitted form's button shows it is working and ignores a second click
+   (admin/js/admin-common.js). */
+.ad-btn.is-busy { pointer-events: none; opacity: .75; }
+.ad-btn.is-busy .ad-ic { display: none; }
+.ad-btn.is-busy::before { content: ""; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: ad-spin .7s linear infinite; }
+
+/* Reduced motion: pages and messages still fade, nothing moves or grows. */
+@keyframes ad-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .ad-wrap, .ad-flash { animation: ad-fade .3s ease both; }
+  .ad-badge, .ad-chart__bar { animation: none; }
+  .ad-btn, .ad-table td { transition: none; }
+}

@@ -3,6 +3,8 @@
  *   - the phone menu ("Цэс"): opens the sidebar as a panel, Escape or a tap
  *     outside closes it, focus goes back to the button;
  *   - data-confirm on a form or button: asks before submitting;
+ *   - a submitted form's button shows a spinner and a second submit is
+ *     ignored; the summary tiles count up to their numbers;
  *   - window.NAF.* helpers for the product and news editors: escaping,
  *     money, dates, the CSRF token (from <meta name="csrf-token">), and a
  *     fetch wrapper that sends staff back to the login page when the
@@ -49,8 +51,33 @@
     const form = e.target;
     const by = e.submitter;
     const msg = (by && by.dataset.confirm) || form.dataset.confirm;
-    if (msg && !window.confirm(msg)) e.preventDefault();
+    if (msg && !window.confirm(msg)) { e.preventDefault(); return; }
+    // Forms the page handles itself (the editors) have already cancelled the
+    // submit by now; the rest leave the page, so mark them as on their way.
+    if (e.defaultPrevented) return;
+    if (form.dataset.sent) { e.preventDefault(); return; }
+    form.dataset.sent = "1";
+    if (by && by.classList.contains("ad-btn")) by.classList.add("is-busy");
   });
+  // Coming back with the Back button restores the page as it was left.
+  window.addEventListener("pageshow", () => {
+    document.querySelectorAll("form[data-sent]").forEach((f) => delete f.dataset.sent);
+    document.querySelectorAll(".ad-btn.is-busy").forEach((b) => b.classList.remove("is-busy"));
+  });
+
+  // ---- summary tiles count up to their number
+  if (!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+    document.querySelectorAll(".ad-stat strong").forEach((el) => {
+      if (!/^\d+$/.test(el.textContent.trim())) return;
+      const to = Number(el.textContent), start = performance.now(), duration = 600;
+      if (!to) return;
+      (function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(tick);
+      })(start);
+    });
+  }
 
   // ---- helpers shared by the editors
   function escHtml(str) {

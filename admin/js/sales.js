@@ -10,6 +10,8 @@
   const chart = document.querySelector("[data-chart]");
   if (!chart) return;
   const tip = chart.querySelector(".ad-chart__tip");
+  // The columns rise one after another (admin.css reads --i).
+  chart.querySelectorAll(".ad-chart__bar").forEach((bar, i) => bar.style.setProperty("--i", i));
   const value = tip.querySelector("strong");
   const label = tip.querySelector("span");
 
